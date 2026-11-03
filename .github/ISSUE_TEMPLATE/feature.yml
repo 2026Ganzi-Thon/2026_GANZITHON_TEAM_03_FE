@@ -1,0 +1,27 @@
+name: 기능 개발
+description: 개발할 기능
+title: "feat: "
+labels: ["feat"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: 무엇을 만드나요?
+      placeholder: 예) 치즈 카드 목록 화면을 만든다
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: 할 일
+      description: "`- [ ] 할 일` 형식으로 적으면 체크박스가 돼요."
+      placeholder: |
+        - [ ] 치즈 카드 UI 구현
+        - [ ] 치즈 목록 API 연결
+    validations:
+      required: true
+  - type: textarea
+    id: note
+    attributes:
+      label: 참고 (선택)
+      placeholder: 디자인 링크, API 명세 등
