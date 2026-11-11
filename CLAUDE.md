@@ -124,17 +124,28 @@ git commit -m "docs: CLAUDE.md 문서 수정 - 어쩌고 저쩌고"
 
 ---
 
-## 이슈 컨벤션
+## 브랜치 (Git Flow 방식)
 
-기능 하나, 버그 하나당 이슈 하나를 만든다. GitHub에서 **New issue**를 누르고 템플릿을 고른다.
-(템플릿 파일: `.github/ISSUE_TEMPLATE/`)
+이슈 없이 브랜치 구조만 Git Flow를 따른다. PR은 선택이다.
 
-| 템플릿 | 제목 | 라벨 | 작성 항목 |
-| --- | --- | --- | --- |
-| 기능 개발 | `feat: 제목` | `feat` | 무엇을 만드나요? / 할 일 / 참고 (선택) |
-| 버그 수정 | `fix: 제목` | `fix` | 어떤 문제인가요? / 어떻게 하면 생기나요? / 원래는 어떻게 돼야 하나요? (선택) |
+| 브랜치 | 역할 | 출발 → 합치는 곳 |
+| --- | --- | --- |
+| `main` | 제출·배포용. 직접 커밋하지 않는다 | `develop`에서만 머지 |
+| `develop` | 개발 통합. 직접 커밋하지 않는다 | `feature/*`를 머지 |
+| `feature/이름` | 기능·화면 하나 (예: `feature/cheese-card`) | `develop` → `develop` |
+| `hotfix/이름` | `main`의 긴급 수정 | `main` → `main`, `develop` 둘 다 |
 
-- 이슈 제목은 커밋 메시지와 같은 `타입: 제목` 형식으로 적는다.
-  - 예: 이슈 `feat: 치즈 카드 목록 화면` → 커밋 `feat: 치즈 카드 목록 화면 구현`
-- 할 일은 `- [ ] 할 일` 체크리스트로 적고, 끝나면 체크한다.
-- 템플릿 이름(`name`)은 3글자 이상이어야 GitHub이 인식한다. 템플릿을 수정할 때 주의한다.
+```
+git checkout develop && git pull origin develop
+git checkout -b feature/cheese-card
+# 작업, 커밋
+git pull --rebase origin develop
+git checkout develop && git merge --no-ff feature/cheese-card
+git push origin develop
+git branch -d feature/cheese-card
+```
+
+- 브랜치는 작게 만들고 빨리 `develop`에 합친다.
+- PR은 자신 없을 때만 올린다(리뷰받고 싶을 때). 간단한 작업은 PR 없이 위처럼 바로 `develop`에 합친다.
+- 합치기 전에 `develop`을 pull해서 충돌을 먼저 푼다.
+- 커밋 메시지는 위의 `타입: 제목` 형식을 따른다.
