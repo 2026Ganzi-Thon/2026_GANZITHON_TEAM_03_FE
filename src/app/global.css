@@ -55,6 +55,68 @@ a {
   text-decoration: none;
 }
 
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-normal);
+  line-height: var(--line-height-normal);
+}
+
 :root {
   /* 디자인 토큰 (색상·간격 등) */
+
+  /* Brand Colors (비율 60 / 20 / 10 / 7 / 3) */
+  --color-brand-60: #fffcf5;
+  --color-brand-20: #f7f3e8;
+  --color-brand-10: #d5ae60;
+  --color-brand-7: #59603b;
+  --color-brand-3: #285c78;
+
+  /* State Colors */
+  --color-info: #2f80ed;
+  --color-success: #27ae60;
+  --color-warning: #e2b93b;
+  --color-error: #eb5757;
+
+  /* Black Colors */
+  --color-black-1: #000000;
+  --color-black-2: #1c1c1c;
+  --color-black-3: #282828;
+  --color-white: #ffffff;
+
+  /* Grey Colors */
+  --color-gray-1: #333333;
+  --color-gray-2: #4f4f4f;
+  --color-gray-3: #828282;
+  --color-gray-4: #bdbdbd;
+  --color-gray-5: #e0e0e0;
+
+  /* Typography - 폰트: 영문 Inter, 한글 Pretendard (영문 우선, 한글은 fallback) */
+  --font-family:
+    'Inter', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui,
+    sans-serif;
+  --font-weight-regular: 400;
+  --font-weight-bold: 700;
+
+  /* Typography - 크기 / 행간 */
+  --font-size-h1: 56px;
+  --line-height-h1: 1.3;
+  --font-size-h2: 48px;
+  --line-height-h2: 1.3;
+  --font-size-h3: 40px;
+  --line-height-h3: 1.3;
+  --font-size-h4: 32px;
+  --line-height-h4: 1.3;
+  --font-size-h5: 24px;
+  --line-height-h5: 1.4;
+  --font-size-h6: 20px;
+  --line-height-h6: 1.4;
+
+  --font-size-large: 20px;
+  --line-height-large: 1.4;
+  --font-size-medium: 18px;
+  --line-height-medium: 1.5;
+  --font-size-normal: 16px;
+  --line-height-normal: 1.5;
+  --font-size-small: 14px;
+  --line-height-small: 1.5;
 }
