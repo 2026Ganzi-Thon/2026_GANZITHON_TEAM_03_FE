@@ -149,3 +149,10 @@ git branch -d feature/cheese-card
 - PR은 자신 없을 때만 올린다(리뷰받고 싶을 때). 간단한 작업은 PR 없이 위처럼 바로 `develop`에 합친다.
 - 합치기 전에 `develop`을 pull해서 충돌을 먼저 푼다.
 - 커밋 메시지는 위의 `타입: 제목` 형식을 따른다.
+
+---
+
+## 참고 자료
+
+- 디자인(Figma): https://www.figma.com/design/NuEcJA8MTLcgK09PLzsk8x/Arithon-3%ED%8C%80?node-id=0-1&p=f&m=dev
+  - 페이지 `Main Product`, 모바일 393×852 기준. 화면 번호(0-0 스플래시 ~ 5 동굴 문 닫기, 섬꾸미기)는 프레임 이름을 따른다.
