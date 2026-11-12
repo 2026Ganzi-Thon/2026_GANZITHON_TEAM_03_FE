@@ -1,0 +1,48 @@
+name: claude-reply PR 브랜치 develop 동기화
+
+# develop 에 새 코드가 들어오면, claude-reply 라벨이 붙은 열린 PR(base: develop)의 브랜치에
+# develop 을 merge 해서 Claude 가 항상 최신 develop 기준으로 답하게 한다.
+# 충돌이 나면 강제로 덮지 않고 PR 에 알림 댓글만 남긴다.
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+concurrency:
+  group: sync-claude-reply-prs
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: develop 을 claude-reply PR 브랜치에 merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          gh pr list --base develop --label claude-reply --state open \
+            --json number,headRefName,isCrossRepository \
+            --jq '.[] | select(.isCrossRepository | not) | "\(.number) \(.headRefName)"' |
+          while read -r number branch; do
+            echo "::group::#$number $branch"
+            git fetch origin "$branch"
+            git checkout -B "$branch" "origin/$branch"
+            if git merge --no-edit -m "chore: develop 변경사항 반영 (자동 동기화)" origin/develop; then
+              git push origin "$branch"
+            else
+              git merge --abort
+              gh pr comment "$number" --body "⚠️ develop 을 이 브랜치에 자동으로 합치다가 충돌이 났어요. \`git pull origin develop\` 으로 직접 충돌을 풀어 주세요. 그 전까지 Claude 답변은 이전 코드 기준입니다."
+            fi
+            echo "::endgroup::"
+          done
