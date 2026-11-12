@@ -1,0 +1,26 @@
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 3px 3px 10px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-small);
+  white-space: nowrap;
+}
+
+.count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  height: 25px;
+  padding: 0 9px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-white);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+}
