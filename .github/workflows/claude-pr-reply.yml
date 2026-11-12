@@ -76,6 +76,11 @@ jobs:
             3. 질문과 관련된 코드를 `Read` / `Grep` 으로 직접 확인한다. 필요하면 `gh pr diff` 도 본다.
             4. `gh pr comment ${{ env.PR_NUMBER }} --body "<답변>"` 으로 PR 에 답변을 남긴다.
 
+            ## 근거 찾는 법
+            - 작업 내역·범위를 묻는 질문("최근 작업", "뭘 만들었나")은 `git log --oneline -n 100` 으로 넓게 보고, `chore: develop 변경사항 반영 (자동 동기화)` 같은 merge 커밋은 빼고 실제 작업 커밋 위주로 묶어 요약한다. `src/` 구조도 `Glob` 으로 같이 확인한다.
+            - 특정 기능·컴포넌트를 묻는 질문은 해당 파일을 직접 `Read` 하고, 관련 커밋은 `git log --oneline -- <경로>` 로 찾는다.
+            - "없다", "안 보인다"고 답하기 전에 반드시 `Grep` / `Glob` / `git log -- <경로>` 로 한 번 더 찾아본다.
+
             ## 답변 규칙
             - 한국어로, 짧고 구체적으로. 근거가 된 파일 경로(`src/shared/ui/Modal/Modal.tsx` 처럼)나 decisions.md 항목을 함께 적는다.
             - 첫 줄은 `🤖 Claude 자동 답변 (ChoRockKim 의 의사결정 기록과 코드 기준)` 으로 시작한다.
