@@ -119,4 +119,61 @@ body {
   --line-height-normal: 1.5;
   --font-size-small: 14px;
   --line-height-small: 1.5;
+
+  /* Typography - 굵기 (Pretendard Light/Regular/Medium/SemiBold 사용) */
+  --font-weight-light: 300;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  /* Semantic Colors (역할별 별칭. 값은 위 팔레트를 참조) */
+  --color-bg: var(--color-brand-60);
+  --color-surface: var(--color-brand-20);
+  --color-primary: var(--color-brand-7);
+  --color-accent: var(--color-brand-10);
+  --color-text: var(--color-black-2);
+  --color-text-muted: var(--color-gray-3);
+  --color-border: var(--color-gray-3);
+  --color-border-subtle: var(--color-gray-5);
+  --color-disabled-bg: var(--color-gray-5);
+  --color-disabled-text: var(--color-gray-3);
+  --color-focus-ring: var(--color-brand-3);
+
+  /* Spacing (4px 기준) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 999px;
+
+  /* Shadow */
+  --shadow-sheet: 0 0 40px rgba(0, 0, 0, 0.15);
+  --shadow-card: 0 4px 4px rgba(205, 166, 99, 0.15);
+  --shadow-float: 0 1px 6px rgba(0, 0, 0, 0.12);
+
+  /* Layer */
+  --z-tabbar: 10;
+  --z-modal: 100;
+
+  /* Layout - 모바일 기준 화면 (393 x 852) */
+  --page-padding-x: 24px;
+  --tabbar-height: 92px;
+}
+
+/* 키보드 포커스 링 - 공용 컴포넌트가 같이 쓴다 */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+body {
+  color: var(--color-text);
+  background-color: var(--color-bg);
 }
