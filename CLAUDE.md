@@ -156,3 +156,4 @@ git branch -d feature/cheese-card
 
 - 디자인(Figma): https://www.figma.com/design/NuEcJA8MTLcgK09PLzsk8x/Arithon-3%ED%8C%80?node-id=0-1&p=f&m=dev
   - 페이지 `Main Product`, 모바일 393×852 기준. 화면 번호(0-0 스플래시 ~ 5 동굴 문 닫기, 섬꾸미기)는 프레임 이름을 따른다.
+- API 명세: [docs/api.md](docs/api.md) — 노션 API 명세서를 도메인별로 정리한 문서 (요청·응답 필드, 오류 코드, 공통 규칙은 `docs/api/common.md`)
