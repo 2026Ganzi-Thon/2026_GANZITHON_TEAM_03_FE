@@ -152,6 +152,19 @@ git branch -d feature/cheese-card
 
 ---
 
+## 의사결정 기록
+
+- 설계·범위·디자인 판단의 이유는 `docs/decisions.md`에 날짜와 함께 남긴다.
+- **Claude로 작업할 때 아래 같은 결정을 하면, 같은 작업 안에서 `docs/decisions.md`에 날짜·결정·이유를 추가하고 관련 커밋에 함께 넣는다.**
+  - 범위: 만들기로 한 것, 일부러 만들지 않기로 한 것
+  - 여러 방법 중 하나를 고른 경우와 그 이유
+  - Figma와 다르게 구현했거나, 디자인이 모호해서 임의로 정한 것
+  - 결론을 못 낸 것은 `미결 사항`에 체크박스로 남긴다
+  - 변수 이름 같은 사소한 구현 디테일은 적지 않는다.
+- PR에 `claude-reply` 라벨이 붙어 있으면 팀원의 댓글에 Claude가 이 문서와 코드를 근거로 대신 답한다(`.github/workflows/claude-pr-reply.yml`). 기록에 없는 내용은 "기록에 없음"이라고 답하므로, 새 결정이 생기면 이 문서를 먼저 고친다.
+
+---
+
 ## 참고 자료
 
 - 디자인(Figma): https://www.figma.com/design/NuEcJA8MTLcgK09PLzsk8x/Arithon-3%ED%8C%80?node-id=0-1&p=f&m=dev
