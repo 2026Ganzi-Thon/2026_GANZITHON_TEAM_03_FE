@@ -2,7 +2,7 @@ name: claude-reply PR 브랜치 develop 동기화
 
 # develop 에 새 코드가 들어오면, claude-reply 라벨이 붙은 열린 PR(base: develop)의 브랜치에
 # develop 을 merge 해서 Claude 가 항상 최신 develop 기준으로 답하게 한다.
-# 충돌이 나면 강제로 덮지 않고 PR 에 알림 댓글만 남긴다.
+# 충돌이 나면 develop 쪽 내용으로 자동 해결한다(develop 이 기준). 댓글은 남기지 않는다.
 on:
   push:
     branches: [develop]
@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
-      pull-requests: write
+      pull-requests: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,11 +38,13 @@ jobs:
             echo "::group::#$number $branch"
             git fetch origin "$branch"
             git checkout -B "$branch" "origin/$branch"
-            if git merge --no-edit -m "chore: develop 변경사항 반영 (자동 동기화)" origin/develop; then
-              git push origin "$branch"
-            else
-              git merge --abort
-              gh pr comment "$number" --body "⚠️ develop 을 이 브랜치에 자동으로 합치다가 충돌이 났어요. \`git pull origin develop\` 으로 직접 충돌을 풀어 주세요. 그 전까지 Claude 답변은 이전 코드 기준입니다."
+            # 충돌 구간은 develop 쪽(-X theirs)으로, 그래도 남는 충돌 파일은 develop 버전으로 맞춘다
+            if ! git merge --no-edit -X theirs -m "chore: develop 변경사항 반영 (자동 동기화)" origin/develop; then
+              git diff --name-only --diff-filter=U | while read -r f; do
+                git checkout --theirs -- "$f" 2>/dev/null && git add -- "$f" || git rm -q -- "$f"
+              done
+              git -c core.editor=true commit --no-edit
             fi
+            git push origin "$branch"
             echo "::endgroup::"
           done
