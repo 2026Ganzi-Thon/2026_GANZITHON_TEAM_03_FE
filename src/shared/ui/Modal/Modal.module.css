@@ -10,6 +10,11 @@
   overflow: auto;
 }
 
+/* 열릴 때 포커스가 dialog 자체로 오는데, 조작 대상이 아니므로 링은 그리지 않는다 */
+.dialog:focus-visible {
+  outline: none;
+}
+
 .dialog::backdrop {
   background-color: rgba(0, 0, 0, 0.4);
 }
