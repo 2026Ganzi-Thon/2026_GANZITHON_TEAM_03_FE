@@ -1,0 +1,83 @@
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+  letter-spacing: -0.35px;
+  cursor: pointer;
+}
+
+/* 실제 input 은 화면에서만 숨기고 키보드·스크린리더 조작은 그대로 둔다 */
+.input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  opacity: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-white);
+  color: var(--color-accent);
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+}
+
+.square {
+  width: 19px;
+  height: 19px;
+  border-radius: var(--radius-sm);
+}
+
+.round {
+  width: 23px;
+  height: 23px;
+  border-radius: var(--radius-full);
+}
+
+.check {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.root:hover .box {
+  border-color: var(--color-accent);
+}
+
+.input:checked + .box {
+  border-color: var(--color-accent);
+}
+
+.input:checked + .box .check {
+  opacity: 1;
+}
+
+.input:focus-visible + .box {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.disabled {
+  color: var(--color-disabled-text);
+  cursor: not-allowed;
+}
+
+.disabled .box,
+.disabled:hover .box {
+  border-color: var(--color-border-subtle);
+  background-color: var(--color-disabled-bg);
+  color: var(--color-disabled-text);
+}
+
+.label {
+  min-width: 0;
+}
