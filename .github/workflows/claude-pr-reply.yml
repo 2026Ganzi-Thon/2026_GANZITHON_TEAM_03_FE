@@ -4,7 +4,7 @@ name: Claude PR 댓글 답변
 # docs/decisions.md(의사결정 기록) + CLAUDE.md + PR 코드를 근거로 대신 답한다.
 #
 # 필요한 설정
-#   - 저장소 시크릿 ANTHROPIC_API_KEY  (또는 claude_code_oauth_token 으로 교체)
+#   - 저장소 시크릿 CLAUDE_CODE_OAUTH_TOKEN (`claude setup-token` 으로 발급, Claude 구독 사용)
 #   - 라벨 `claude-reply` 를 단 PR
 # 주의
 #   - issue_comment(일반 댓글)는 GitHub 규칙상 "기본 브랜치"에 있는 이 파일로 실행된다.
@@ -54,7 +54,7 @@ jobs:
 
       - uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           # 읽기 + 댓글 작성/조회만 허용한다. 코드 수정·push·merge·승인은 할 수 없다.
           claude_args: >-
