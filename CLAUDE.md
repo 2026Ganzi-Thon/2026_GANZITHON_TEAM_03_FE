@@ -154,8 +154,12 @@ git branch -d feature/cheese-card
 
 ## 의사결정 기록
 
-- 설계·범위·디자인 판단의 이유는 `docs/decisions.md`에 날짜와 함께 남긴다.
-- PR에 `claude-reply` 라벨이 붙어 있으면 팀원의 댓글에 Claude가 이 문서와 코드를 근거로 대신 답한다(`.github/workflows/claude-pr-reply.yml`). 기록에 없는 내용은 "기록에 없음"이라고 답하므로, 새 결정이 생기면 이 문서를 먼저 고친다.
+- 설계·범위·디자인 판단의 이유는 `docs/decisions.md`에 남긴다. PR 댓글 자동 답변(Claude)의 근거 문서다.
+- **Claude는 ChorockKim과 작업할 때만 기록한다** (`git config user.name`이 `ChorockKim`일 때). 다른 팀원 작업의 결정은 남기지 않는다.
+- 기록할 것: 만들거나 안 만들기로 한 범위, 여러 방법 중 고른 것, Figma와 다르게·임의로 정한 것, 미결 사항.
+- **핵심만 짧게.** 항목당 한 줄(`- 결정 — 이유`), 날짜는 섹션 제목에 쓴다. 구현 디테일이나 코드를 보면 알 수 있는 내용은 적지 않는다.
+- 결정이 생긴 작업의 커밋에 함께 넣는다.
+- PR에 `claude-reply` 라벨이 붙으면 Claude가 이 문서와 코드를 근거로 댓글에 답한다(`.github/workflows/claude-pr-reply.yml`).
 
 ---
 
