@@ -1,0 +1,10 @@
+.greeting {
+  font-size: var(--font-size-h5);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-h5);
+  word-break: keep-all;
+}
+
+.line {
+  display: block;
+}

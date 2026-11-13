@@ -1,0 +1,36 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  /* 화면 왼쪽 끝까지 붙인다 (페이지 좌우 여백을 상쇄) */
+  margin-left: calc(-1 * var(--page-padding-x));
+  min-width: 0;
+}
+
+.pill {
+  max-width: 220px;
+  padding: var(--space-2) var(--space-6) var(--space-2) var(--space-6);
+  border-radius: 0 var(--radius-full) var(--radius-full) 0;
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  /* 임의 결정(확인 필요): 전용 폰트(BusanDandiScript) 대신 전역 폰트 토큰을 쓴다 */
+  font-family: var(--font-family);
+  font-size: var(--font-size-h5);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-h5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 알약 위·아래에서 화면 가장자리로 이어지는 오목한 모서리 (Figma Vector 183) */
+.corner {
+  width: 24px;
+  height: 24px;
+  background-color: var(--color-primary);
+  -webkit-mask: url('../../assets/images/island-title-corner.svg') no-repeat center / 100% 100%;
+  mask: url('../../assets/images/island-title-corner.svg') no-repeat center / 100% 100%;
+}
+
+.cornerTop {
+  transform: scaleY(-1);
+}

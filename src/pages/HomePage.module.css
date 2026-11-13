@@ -1,0 +1,11 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 100%;
+  padding: env(safe-area-inset-top) var(--page-padding-x) calc(var(--tabbar-height) + var(--space-6));
+  /* 시안 기준 화면(393px)보다 넓어지면 가운데 정렬 */
+  max-width: 393px;
+  margin: 0 auto;
+  overflow-x: hidden;
+}
