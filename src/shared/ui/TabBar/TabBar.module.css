@@ -9,24 +9,22 @@
 .list {
   display: flex;
   justify-content: center;
-  gap: var(--space-1);
+  /* 시안: 항목 60×60, 항목 사이 16px, 5개 묶음이 바 가운데 */
+  gap: var(--space-4);
 }
 
+/* 좁은 화면에서는 항목이 줄어든다 */
 .cell {
-  flex: 1;
-  max-width: 76px;
+  flex: 0 1 60px;
+  min-width: 0;
 }
 
+/* 아이콘·라벨은 시안 좌표(항목 위에서 아이콘 `--icon-top`, 라벨 37px)에 놓는다 */
 .item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  /* 시안: 아이콘은 위에서 10px, 라벨은 위에서 37px */
-  gap: 3px;
+  position: relative;
+  display: block;
   width: 100%;
   height: 60px;
-  padding-top: 10px;
   border-radius: var(--radius-md);
   color: var(--color-text);
   transition: background-color 0.15s;
@@ -40,9 +38,11 @@
   background-color: var(--color-surface);
 }
 
-/* 26px 짜리 동굴 아이콘도 24px 자리만 차지하게 */
-.iconLarge {
-  margin: -1px 0;
+.icon {
+  position: absolute;
+  top: var(--icon-top);
+  left: 50%;
+  translate: -50% 0;
 }
 
 .active {
@@ -50,6 +50,10 @@
 }
 
 .label {
+  position: absolute;
+  top: 37px;
+  left: 50%;
+  translate: -50% 0;
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-semibold);
   line-height: 1.3;

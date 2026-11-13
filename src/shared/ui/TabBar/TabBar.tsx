@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from 'react'
+import type { ComponentPropsWithoutRef, CSSProperties } from 'react'
 import { cx } from '@/shared/lib/cx'
 import { Icon } from '@/shared/ui/Icon'
 import type { IconName } from '@/shared/ui/Icon'
@@ -16,6 +16,11 @@ export interface TabBarProps extends Omit<ComponentPropsWithoutRef<'nav'>, 'onCh
   value: string
   onChange: (value: string) => void
 }
+
+// Figma 측정값(홈 프레임 36:22 탭바 63:1234, 항목 60×60 기준): 아이콘 크기와 항목 위에서 아이콘 윗변까지의 거리(px).
+// 아이콘 모양마다 시각 중심을 맞춰 둔 값이라 아이콘마다 조금씩 다르다. 없는 아이콘은 24px·위 10px.
+const ICON_SIZE: Partial<Record<IconName, number>> = { cave: 26 }
+const ICON_TOP: Partial<Record<IconName, number>> = { home: 11, sheep: 10, cheese: 10, cloud: 9, cave: 8 }
 
 /**
  * 화면 아래 메뉴(홈 / 양 돌보기 / 고민치즈 / 양털모으기 / 동굴 닫기).
@@ -35,8 +40,12 @@ export function TabBar({ items, value, onChange, className, ...rest }: TabBarPro
                 aria-current={active ? 'page' : undefined}
                 onClick={() => onChange(item.value)}
               >
-                {/* 시안: 아이콘 24px, 동굴만 26px(윤곽이 작아 보이지 않게) — 자리는 24px 로 같다 */}
-                <Icon name={item.icon} size={item.icon === 'cave' ? 26 : 24} className={item.icon === 'cave' ? styles.iconLarge : undefined} />
+                <Icon
+                  name={item.icon}
+                  size={ICON_SIZE[item.icon] ?? 24}
+                  className={styles.icon}
+                  style={{ '--icon-top': `${ICON_TOP[item.icon] ?? 10}px` } as CSSProperties}
+                />
                 <span className={styles.label}>{item.label}</span>
               </button>
             </li>
