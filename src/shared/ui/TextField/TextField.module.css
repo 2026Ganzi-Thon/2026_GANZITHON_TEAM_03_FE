@@ -1,0 +1,48 @@
+.control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--color-gray-4);
+  transition: border-color 0.15s;
+}
+
+.control:hover {
+  border-bottom-color: var(--color-gray-3);
+}
+
+.control:focus-within {
+  border-bottom-color: var(--color-primary);
+}
+
+.invalid,
+.invalid:hover,
+.invalid:focus-within {
+  border-bottom-color: var(--color-error);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-small);
+  letter-spacing: -0.35px;
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-light);
+}
+
+/* 밑줄이 포커스 표시를 대신하므로 기본 outline 은 끈다 */
+.input:focus-visible {
+  outline: none;
+}
+
+.input:disabled {
+  color: var(--color-disabled-text);
+  cursor: not-allowed;
+}

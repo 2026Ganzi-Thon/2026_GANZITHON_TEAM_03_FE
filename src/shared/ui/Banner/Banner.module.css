@@ -1,0 +1,33 @@
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-5) 0 var(--space-4);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+  text-align: left;
+  transition: background-color 0.15s;
+}
+
+.banner:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--color-surface) 90%, var(--color-accent));
+}
+
+.banner:active:not(:disabled) {
+  background-color: color-mix(in srgb, var(--color-surface) 80%, var(--color-accent));
+}
+
+.banner:disabled {
+  color: var(--color-disabled-text);
+  cursor: not-allowed;
+}
+
+.text {
+  min-width: 0;
+}
