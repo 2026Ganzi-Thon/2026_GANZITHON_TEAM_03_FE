@@ -1,0 +1,93 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid var(--btn-border, transparent);
+  background-color: var(--btn-bg);
+  color: var(--btn-fg);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+  white-space: nowrap;
+  transition: background-color 0.15s;
+}
+
+.button:hover:not(:disabled) {
+  background-color: var(--btn-bg-hover);
+}
+
+.button:active:not(:disabled) {
+  background-color: var(--btn-bg-active);
+}
+
+.button:disabled {
+  --btn-bg: var(--color-disabled-bg);
+  --btn-fg: var(--color-disabled-text);
+  --btn-border: transparent;
+  cursor: not-allowed;
+}
+
+.icon {
+  display: inline-flex;
+}
+
+/* variant */
+.primary {
+  --btn-bg: var(--color-primary);
+  --btn-bg-hover: color-mix(in srgb, var(--color-primary) 88%, black);
+  --btn-bg-active: color-mix(in srgb, var(--color-primary) 76%, black);
+  --btn-fg: var(--color-white);
+}
+
+.accent {
+  --btn-bg: var(--color-accent);
+  --btn-bg-hover: color-mix(in srgb, var(--color-accent) 90%, black);
+  --btn-bg-active: color-mix(in srgb, var(--color-accent) 80%, black);
+  --btn-fg: var(--color-white);
+}
+
+.outline {
+  --btn-bg: transparent;
+  --btn-bg-hover: var(--color-surface);
+  --btn-bg-active: var(--color-border-subtle);
+  --btn-fg: var(--color-primary);
+  --btn-border: var(--color-primary);
+}
+
+.ghost {
+  --btn-bg: transparent;
+  --btn-bg-hover: var(--color-surface);
+  --btn-bg-active: var(--color-border-subtle);
+  --btn-fg: var(--color-text-muted);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* size */
+.lg {
+  min-height: 46px;
+  padding: 9px var(--space-6);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.4px;
+}
+
+.md {
+  min-height: 38px;
+  padding: 7px 25px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-normal);
+}
+
+.sm {
+  min-height: 35px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-small);
+  letter-spacing: -0.35px;
+}
+
+.fullWidth {
+  display: flex;
+  width: 100%;
+}

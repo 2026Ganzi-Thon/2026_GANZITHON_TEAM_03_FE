@@ -1,0 +1,25 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  /* 터치하기 편하도록 아이콘보다 넓게 잡는다 */
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  color: var(--color-text);
+  transition: background-color 0.15s;
+}
+
+.button:hover:not(:disabled) {
+  background-color: var(--color-surface);
+}
+
+.button:active:not(:disabled) {
+  background-color: var(--color-border-subtle);
+}
+
+.button:disabled {
+  color: var(--color-disabled-text);
+  cursor: not-allowed;
+}
