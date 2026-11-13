@@ -35,7 +35,8 @@ export function TabBar({ items, value, onChange, className, ...rest }: TabBarPro
                 aria-current={active ? 'page' : undefined}
                 onClick={() => onChange(item.value)}
               >
-                <Icon name={item.icon} size={26} />
+                {/* 시안: 아이콘 24px, 동굴만 26px(윤곽이 작아 보이지 않게) — 자리는 24px 로 같다 */}
+                <Icon name={item.icon} size={item.icon === 'cave' ? 26 : 24} className={item.icon === 'cave' ? styles.iconLarge : undefined} />
                 <span className={styles.label}>{item.label}</span>
               </button>
             </li>
