@@ -4,7 +4,7 @@
   gap: var(--space-3);
   min-height: 100%;
   padding: env(safe-area-inset-top) var(--page-padding-x) calc(var(--tabbar-height) + var(--space-6));
-  /* 시안 기준 화면(393px)보다 넓어지면 가운데 정렬 */
+  /* 임의 결정(확인 필요): 시안 폭(393px)보다 넓은 화면에서는 폭을 393px 로 두고 가운데 정렬 — 데스크톱 확인용, 레이아웃 담당자가 바꿀 수 있음 */
   max-width: 393px;
   margin: 0 auto;
   overflow-x: hidden;

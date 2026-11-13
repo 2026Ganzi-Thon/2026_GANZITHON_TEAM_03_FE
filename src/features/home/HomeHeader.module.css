@@ -20,7 +20,7 @@
   width: 107px;
   height: 31px;
   border-radius: var(--radius-full);
-  background-color: var(--color-surface);
+  background-color: var(--color-border-subtle);
   animation: pulse 1.2s ease-in-out infinite;
 }
 
