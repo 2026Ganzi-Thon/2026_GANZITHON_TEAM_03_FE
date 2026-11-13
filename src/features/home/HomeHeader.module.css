@@ -15,23 +15,3 @@
 .settings {
   margin-right: calc(-1 * var(--space-2));
 }
-
-.counterSkeleton {
-  width: 107px;
-  height: 31px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-border-subtle);
-  animation: pulse 1.2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  50% {
-    opacity: 0.5;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .counterSkeleton {
-    animation: none;
-  }
-}

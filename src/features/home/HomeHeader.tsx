@@ -9,20 +9,18 @@ export interface HomeHeaderProps {
   onOpenSettings?: () => void
 }
 
-/** 홈 맨 위: 왼쪽 "OO의 섬" 알약, 오른쪽 "내 양털 N개" + 설정 아이콘. */
+/** 홈 맨 위: 왼쪽 "OO의 섬" 알약, 오른쪽 "내 양털 N개" + 설정 아이콘. 응답을 기다리는 값(이름·개수)만 막대로 둔다. */
 export function HomeHeader({ state, onOpenSettings }: HomeHeaderProps) {
-  // 임의 결정(확인 필요): 섬 이름은 "{닉네임}의 섬"(닉네임 없으면 "폴리"), 불러오는 중·실패일 때는 "나의 섬" — Figma 는 "폴리의 섬" 한 가지만 있음
+  // 임의 결정(확인 필요): 섬 이름은 "{닉네임}의 섬"(닉네임 없으면 "폴리"), 불러오는 동안은 이름 자리만 막대, 불러오기에 실패하면 "나의 섬" — Figma 는 "폴리의 섬" 한 가지뿐
   const islandName =
-    state.status === 'success' ? (state.data.nickname ?? FALLBACK_NAME) : '나'
+    state.status === 'success' ? (state.data.nickname ?? FALLBACK_NAME) : state.status === 'error' ? '나' : null
 
   return (
     <header className={styles.root}>
       <IslandTitle name={islandName} />
       <div className={styles.actions}>
         {state.status === 'success' && <WoolCounter count={state.data.woolBalance} />}
-        {state.status === 'loading' && (
-          <span className={styles.counterSkeleton} role="status" aria-label="양털 불러오는 중" />
-        )}
+        {state.status === 'loading' && <WoolCounter loading />}
         <IconButton icon="settings" aria-label="설정" className={styles.settings} onClick={onOpenSettings} />
       </div>
     </header>

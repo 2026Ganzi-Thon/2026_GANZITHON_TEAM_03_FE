@@ -15,34 +15,14 @@
   box-shadow: inset 0 0 0 1px var(--color-accent);
 }
 
-.skeletonGreeting {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  /* 인사말 두 줄(24px × 1.4 × 2)과 같은 높이 */
-  min-height: calc(var(--font-size-h5) * var(--line-height-h5) * 2);
-  justify-content: center;
-}
-
-.skeletonLine,
-.skeletonBanner {
+/* 배너 글자를 기다리는 동안 */
+.textSkeleton {
   display: block;
-  border-radius: var(--radius-md);
+  width: 9em;
+  height: 12px;
+  border-radius: var(--radius-sm);
   background-color: var(--color-border-subtle);
   animation: pulse 1.2s ease-in-out infinite;
-}
-
-.skeletonLine {
-  width: 80%;
-  height: 24px;
-}
-
-.skeletonLine[data-short] {
-  width: 60%;
-}
-
-.skeletonBanner {
-  height: 44px;
 }
 
 .error {
@@ -76,8 +56,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .skeletonLine,
-  .skeletonBanner {
+  .textSkeleton {
     animation: none;
   }
 }

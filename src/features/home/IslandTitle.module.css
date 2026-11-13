@@ -34,3 +34,26 @@
 .cornerTop {
   transform: scaleY(-1);
 }
+
+/* 닉네임을 기다리는 동안 이름 자리 (임의 결정: 이름 막대 — Figma 에 없음) */
+.nameSkeleton {
+  display: inline-block;
+  width: 2.2em;
+  height: 0.7em;
+  margin-right: 0.1em;
+  border-radius: var(--radius-sm);
+  background-color: color-mix(in srgb, var(--color-white) 45%, transparent);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nameSkeleton {
+    animation: none;
+  }
+}

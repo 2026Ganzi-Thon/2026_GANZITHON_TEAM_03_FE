@@ -21,14 +21,15 @@ export function HomeSummaryPanel({
   greetingIndex,
 }: HomeSummaryPanelProps) {
   if (state.status === 'loading') {
-    // 임의 결정(확인 필요): 로딩은 인사말·배너 자리에 회색 막대(스켈레톤)를 둔다 — Figma 에 없음
+    // 임의 결정(확인 필요): 로딩 중에도 인사말·배너 틀은 바로 보여주고, 응답을 기다리는 값(이름, 배너 글자)만 회색 막대로 둔다 — Figma 에 없음
     return (
-      <div className={styles.root} role="status" aria-label="홈 정보를 불러오는 중">
-        <div className={styles.skeletonGreeting}>
-          <span className={styles.skeletonLine} />
-          <span className={styles.skeletonLine} data-short="" />
+      <div className={styles.root}>
+        <HomeGreeting nickname={undefined} index={greetingIndex} />
+        <div className={styles.banners}>
+          <Banner disabled aria-label="오늘의 감정 정보를 불러오는 중">
+            <span className={styles.textSkeleton} aria-hidden="true" />
+          </Banner>
         </div>
-        <span className={styles.skeletonBanner} />
       </div>
     )
   }
