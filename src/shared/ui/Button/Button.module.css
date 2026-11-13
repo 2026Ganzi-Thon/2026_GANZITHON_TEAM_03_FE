@@ -74,7 +74,8 @@
 
 .md {
   min-height: 38px;
-  padding: 7px 25px;
+  /* 시안 여백(세로 7, 가로 25)에서 테두리 1px 를 뺀 값 — 그래야 높이가 38px */
+  padding: 6px 24px;
   border-radius: var(--radius-md);
   font-size: var(--font-size-normal);
 }
@@ -85,6 +86,12 @@
   border-radius: var(--radius-sm);
   font-size: var(--font-size-small);
   letter-spacing: -0.35px;
+}
+
+.md.withIcon {
+  /* 시안 "섬 꾸미기"(129×38): 왼쪽 12px, 아이콘과 글자 사이 12px, 오른쪽 21px (테두리 1px 제외) */
+  gap: var(--space-3);
+  padding: 6px 20px 6px 11px;
 }
 
 .fullWidth {
