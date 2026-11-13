@@ -124,17 +124,47 @@ git commit -m "docs: CLAUDE.md 문서 수정 - 어쩌고 저쩌고"
 
 ---
 
-## 이슈 컨벤션
+## 브랜치 (Git Flow 방식)
 
-기능 하나, 버그 하나당 이슈 하나를 만든다. GitHub에서 **New issue**를 누르고 템플릿을 고른다.
-(템플릿 파일: `.github/ISSUE_TEMPLATE/`)
+이슈 없이 브랜치 구조만 Git Flow를 따른다. PR은 선택이다.
 
-| 템플릿 | 제목 | 라벨 | 작성 항목 |
-| --- | --- | --- | --- |
-| 기능 개발 | `feat: 제목` | `feat` | 무엇을 만드나요? / 할 일 / 참고 (선택) |
-| 버그 수정 | `fix: 제목` | `fix` | 어떤 문제인가요? / 어떻게 하면 생기나요? / 원래는 어떻게 돼야 하나요? (선택) |
+| 브랜치 | 역할 | 출발 → 합치는 곳 |
+| --- | --- | --- |
+| `main` | 제출·배포용. 직접 커밋하지 않는다 | `develop`에서만 머지 |
+| `develop` | 개발 통합. 직접 커밋하지 않는다 | `feature/*`를 머지 |
+| `feature/이름` | 기능·화면 하나 (예: `feature/cheese-card`) | `develop` → `develop` |
+| `hotfix/이름` | `main`의 긴급 수정 | `main` → `main`, `develop` 둘 다 |
 
-- 이슈 제목은 커밋 메시지와 같은 `타입: 제목` 형식으로 적는다.
-  - 예: 이슈 `feat: 치즈 카드 목록 화면` → 커밋 `feat: 치즈 카드 목록 화면 구현`
-- 할 일은 `- [ ] 할 일` 체크리스트로 적고, 끝나면 체크한다.
-- 템플릿 이름(`name`)은 3글자 이상이어야 GitHub이 인식한다. 템플릿을 수정할 때 주의한다.
+```
+git checkout develop && git pull origin develop
+git checkout -b feature/cheese-card
+# 작업, 커밋
+git pull --rebase origin develop
+git checkout develop && git merge --no-ff feature/cheese-card
+git push origin develop
+git branch -d feature/cheese-card
+```
+
+- 브랜치는 작게 만들고 빨리 `develop`에 합친다.
+- PR은 자신 없을 때만 올린다(리뷰받고 싶을 때). 간단한 작업은 PR 없이 위처럼 바로 `develop`에 합친다.
+- 합치기 전에 `develop`을 pull해서 충돌을 먼저 푼다.
+- 커밋 메시지는 위의 `타입: 제목` 형식을 따른다.
+
+---
+
+## 의사결정 기록
+
+- 설계·범위·디자인 판단의 이유는 `docs/decisions.md`에 남긴다. PR 댓글 자동 답변(Claude)의 근거 문서다.
+- **Claude는 ChorockKim과 작업할 때만 기록한다** (`git config user.name`이 `ChorockKim`일 때). 다른 팀원 작업의 결정은 남기지 않는다.
+- 기록할 것: 만들거나 안 만들기로 한 범위, 여러 방법 중 고른 것, Figma와 다르게·임의로 정한 것, 미결 사항.
+- **핵심만 짧게.** 항목당 한 줄(`- 결정 — 이유`), 날짜는 섹션 제목에 쓴다. 구현 디테일이나 코드를 보면 알 수 있는 내용은 적지 않는다.
+- 결정이 생긴 작업의 커밋에 함께 넣는다.
+- PR에 `claude-reply` 라벨이 붙으면 Claude가 이 문서와 코드를 근거로 댓글에 답한다(`.github/workflows/claude-pr-reply.yml`).
+
+---
+
+## 참고 자료
+
+- 디자인(Figma): https://www.figma.com/design/NuEcJA8MTLcgK09PLzsk8x/Arithon-3%ED%8C%80?node-id=0-1&p=f&m=dev
+  - 페이지 `Main Product`, 모바일 393×852 기준. 화면 번호(0-0 스플래시 ~ 5 동굴 문 닫기, 섬꾸미기)는 프레임 이름을 따른다.
+- API 명세: [docs/api.md](docs/api.md) — 노션 API 명세서를 도메인별로 정리한 문서 (요청·응답 필드, 오류 코드, 공통 규칙은 `docs/api/common.md`)

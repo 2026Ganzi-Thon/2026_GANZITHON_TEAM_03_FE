@@ -1,0 +1,62 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  width: 100%;
+  min-height: 115px;
+  padding: var(--space-4) var(--space-3);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  background-color: var(--card-bg);
+  color: var(--card-fg);
+  line-height: var(--line-height-normal);
+  text-align: center;
+  transition: background-color 0.15s;
+}
+
+.card:hover:not(:disabled) {
+  background-color: var(--card-bg-hover);
+}
+
+.card:active:not(:disabled) {
+  background-color: var(--card-bg-active);
+}
+
+.card:disabled {
+  --card-bg: var(--color-disabled-bg);
+  --card-fg: var(--color-disabled-text);
+  --card-description: var(--color-disabled-text);
+  --card-border: transparent;
+  cursor: not-allowed;
+}
+
+.filled {
+  --card-bg: var(--color-primary);
+  --card-bg-hover: color-mix(in srgb, var(--color-primary) 88%, black);
+  --card-bg-active: color-mix(in srgb, var(--color-primary) 76%, black);
+  --card-fg: var(--color-white);
+  --card-description: var(--color-gray-5);
+  --card-border: var(--color-primary);
+}
+
+.outline {
+  --card-bg: transparent;
+  --card-bg-hover: var(--color-surface);
+  --card-bg-active: var(--color-border-subtle);
+  --card-fg: var(--color-primary);
+  --card-description: var(--color-text-muted);
+  --card-border: var(--color-primary);
+}
+
+.title {
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-medium);
+}
+
+.description {
+  color: var(--card-description);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+}
