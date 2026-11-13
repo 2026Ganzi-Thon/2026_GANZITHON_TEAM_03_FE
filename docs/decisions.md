@@ -26,6 +26,7 @@ PR 댓글 자동 답변(Claude)의 근거. 작성 규칙은 `CLAUDE.md`의 "의�
 - 설정 아이콘은 `onOpenSettings` 콜백만 연결 — 이동할 화면이 없음
 - 섬은 고정 일러스트 — 섬 꾸미기 반영은 API 미결정
 - 컴포넌트 점검에서 Figma 수치에 맞춰 고침: Button(md 38px·아이콘 여백), ActionCard 115px, Chip 27px, Banner 여백, Modal 간격, TabBar 아이콘 — 시안 대비 수치 어긋남
+- 홈 섬 이미지는 온보딩이 떠 있는 동안 뒤에서 preload — 홈 첫 진입 때 큰 그림이 늦게 뜨는 것을 막음, 호출은 온보딩 담당이 하고 방법은 `docs/preload-home-images.md`
 - 홈 전용으로 `Icon`에 `cave-filled` 추가 — 카드 아이콘이 탭바의 윤곽선 동굴과 다름
 
 ## 임의 결정 — 확인 필요 (홈)
