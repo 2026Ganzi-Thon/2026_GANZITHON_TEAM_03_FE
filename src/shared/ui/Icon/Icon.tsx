@@ -4,6 +4,7 @@ import alertCircle from '@/assets/icons/alert-circle.svg'
 import arrowLeft from '@/assets/icons/arrow-left.svg'
 import arrowRightCircle from '@/assets/icons/arrow-right-circle.svg'
 import cave from '@/assets/icons/tab-cave.svg'
+import caveFilled from '@/assets/icons/cave-filled.svg'
 import check from '@/assets/icons/check.svg'
 import cheese from '@/assets/icons/tab-cheese.svg'
 import chevronDown from '@/assets/icons/chevron-down.svg'
@@ -25,6 +26,7 @@ const ICONS = {
   'arrow-left': arrowLeft,
   'arrow-right-circle': arrowRightCircle,
   cave,
+  'cave-filled': caveFilled,
   check,
   cheese,
   'chevron-down': chevronDown,

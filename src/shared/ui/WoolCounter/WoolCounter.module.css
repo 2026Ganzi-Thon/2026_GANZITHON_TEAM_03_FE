@@ -24,3 +24,24 @@
   color: var(--color-primary);
   font-weight: var(--font-weight-semibold);
 }
+
+/* 개수를 기다리는 동안 숫자 자리 */
+.skeleton {
+  width: 24px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-border-subtle);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}

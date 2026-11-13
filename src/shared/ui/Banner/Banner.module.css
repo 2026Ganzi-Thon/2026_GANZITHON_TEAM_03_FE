@@ -5,7 +5,8 @@
   gap: var(--space-3);
   width: 100%;
   min-height: 44px;
-  padding: 0 var(--space-5) 0 var(--space-4);
+  /* 시안: 글자는 왼쪽에서 13px, `>` 는 오른쪽에서 약 15px 안쪽 */
+  padding: 0 15px 0 13px;
   border-radius: var(--radius-md);
   background-color: var(--color-surface);
   color: var(--color-text);

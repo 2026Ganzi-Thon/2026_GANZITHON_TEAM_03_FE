@@ -1,0 +1,62 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.banners {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* 숙성 치즈 알림: 감정 배너와 구분되도록 금색 테두리 */
+.matured {
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
+/* 배너 글자를 기다리는 동안 */
+.textSkeleton {
+  display: block;
+  width: 9em;
+  height: 12px;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-border-subtle);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+}
+
+.error > button {
+  margin-top: var(--space-2);
+}
+
+.errorTitle {
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-medium);
+}
+
+.errorDesc {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .textSkeleton {
+    animation: none;
+  }
+}

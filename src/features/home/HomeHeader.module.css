@@ -1,0 +1,17 @@
+.root {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+
+/* 아이콘이 시안 위치(오른쪽 끝에서 26px)에 오도록 터치 영역만큼 바깥으로 뺀다 */
+.settings {
+  margin-right: calc(-1 * var(--space-2));
+}
