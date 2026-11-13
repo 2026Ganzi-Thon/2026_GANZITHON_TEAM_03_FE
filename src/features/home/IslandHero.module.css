@@ -1,0 +1,17 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.decorate {
+  align-self: flex-end;
+}
+
+.island {
+  width: 313px;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
