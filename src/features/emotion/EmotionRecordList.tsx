@@ -20,6 +20,9 @@ export interface EmotionRecordListProps {
   onRetry?: () => void
 }
 
+/** 로딩 막대 길이(행마다 조금 다르게) */
+const SKELETON_WIDTHS = ['62%', '48%', '56%']
+
 /** "지난 먹이주기 기록"·"내 지푸라기들"처럼 왼쪽에 글, 오른쪽에 상대 날짜가 있는 목록. */
 export function EmotionRecordList({ title, status, rows, today, emptyText, onRetry }: EmotionRecordListProps) {
   const headingId = `${title}-heading`
@@ -30,7 +33,17 @@ export function EmotionRecordList({ title, status, rows, today, emptyText, onRet
         {title}
       </h2>
 
-      {status === 'loading' && <p className={styles.message}>불러오는 중이에요…</p>}
+      {status === 'loading' && (
+        <div className={styles.list}>
+          <span className={styles.srOnly}>불러오는 중이에요</span>
+          {SKELETON_WIDTHS.map((width) => (
+            <div key={width} className={styles.row} aria-hidden="true">
+              <span className={styles.skeleton} style={{ width }} />
+              <span className={`${styles.skeleton} ${styles.skeletonDate}`} />
+            </div>
+          ))}
+        </div>
+      )}
 
       {status === 'error' && (
         <div className={styles.error} role="alert">
