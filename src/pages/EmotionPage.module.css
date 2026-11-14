@@ -3,8 +3,8 @@
   flex-direction: column;
   min-height: 100%;
   padding: env(safe-area-inset-top) 0 calc(var(--tabbar-height) + var(--space-6));
-  /* 임의 결정(확인 필요): 393px보다 넓은 화면에서는 폭 393px 가운데 정렬 — 홈과 같음 */
-  max-width: 393px;
+  /* 임의 결정(확인 필요): --app-max-width(440px)를 넘는 화면에서만 가운데 정렬, 아이폰은 꽉 채움 — 홈과 같음 */
+  max-width: var(--app-max-width);
   margin: 0 auto;
   overflow-x: hidden;
 }

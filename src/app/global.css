@@ -163,6 +163,8 @@ body {
   --z-modal: 100;
 
   /* Layout - 모바일 기준 화면 (393 x 852) */
+  /* 앱 최대 폭: 가장 큰 아이폰 17 Pro Max 폭. 아이폰에서는 화면을 꽉 채우고, 더 넓은 화면(데스크톱)에서만 이 폭으로 가운데 정렬 */
+  --app-max-width: 440px;
   --page-padding-x: 24px;
   /* 탭바 실제 높이: 항목 60 + 위 여백 5 + 기기 아래 안전 영역(Safari 주소창이면 0, PWA 홈 인디케이터면 ~34) */
   --tabbar-height: calc(65px + env(safe-area-inset-bottom));

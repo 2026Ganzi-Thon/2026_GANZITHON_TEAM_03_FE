@@ -6,5 +6,5 @@
   z-index: var(--z-tabbar);
   width: 100%;
   /* 페이지 폭 규칙(HomePage.module.css)과 같음 */
-  max-width: 393px;
+  max-width: var(--app-max-width);
 }
