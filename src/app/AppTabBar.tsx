@@ -16,7 +16,7 @@ interface AppTabBarProps {
   onChange: (value: string) => void
 }
 
-/** 앱 하단 고정 탭바. 폭은 페이지와 같이 최대 393px 가운데 정렬. */
+/** 앱 하단 고정 탭바. 폭은 페이지와 같이 최대 --app-max-width(440px) 가운데 정렬. */
 export default function AppTabBar({ value, onChange }: AppTabBarProps) {
   return (
     <div className={styles.wrap}>
