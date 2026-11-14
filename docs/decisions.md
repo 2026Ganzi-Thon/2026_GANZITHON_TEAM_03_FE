@@ -29,6 +29,14 @@ PR 댓글 자동 답변(Claude)의 근거. 작성 규칙은 `CLAUDE.md`의 "의�
 - 홈 섬 이미지는 온보딩이 떠 있는 동안 뒤에서 preload — 홈 첫 진입 때 큰 그림이 늦게 뜨는 것을 막음, 호출은 온보딩 담당이 하고 방법은 `docs/preload-home-images.md`
 - 홈 전용으로 `Icon`에 `cave-filled` 추가 — 카드 아이콘이 탭바의 윤곽선 동굴과 다름
 
+## 2026-11-14 API 데이터 타입 (`src/shared/types/`)
+
+- API 요청·응답 타입은 `shared/types`에 둠 — 여러 기능이 같은 타입(`Id`, `Paged`, 감정 등)을 쓰고 기능끼리 import할 수 없어서
+- 도메인별 파일(auth·account·home·emotion·cheese·care·rest)과 공통(`common`)으로 나눔 — `docs/api/`의 문서 구성과 1:1
+- 데이터 타입만 만들고 오류 코드 유니온·`Idempotency-Key` 같은 헤더는 안 만듦 — 데이터 형태가 아니고 명세가 초안이라 바뀔 수 있음
+- 명세가 불확실한 필드는 명세대로 둠(예: `introduction`의 null 여부, 나이대·지역 코드) — 확정되면 같이 고침
+- `features/home`의 `HomeSummary`는 그대로 둠 — 홈 담당 작업과 충돌을 피함, API 연결 때 `HomeSummaryResponse`로 교체
+
 ## 임의 결정 — 확인 필요 (홈)
 
 코드에서는 `grep -rn "임의 결정(확인 필요)" src` 로 찾는다. 구현 화면 스크린샷은 Figma `Main Product`(0:1)의 "임의 생성 — 확인 필요 (홈)" 프레임(176:488, 컴포넌트 나열 영역 왼쪽)에 있다.
