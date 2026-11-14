@@ -59,6 +59,12 @@ PR 댓글 자동 답변(Claude)의 근거. 작성 규칙은 `CLAUDE.md`의 "의�
 - 홈·양 먹이주기 화면에만 보임, 활성은 각각 `home`·`sheep` — 시안에 탭바가 있는 화면이 이 둘뿐
 - 공통 `TabBar`·`features`는 고치지 않음
 
+## 2026-11-14 safe-area
+
+- viewport에 `viewport-fit=cover` 추가 — 없으면 `env(safe-area-inset-*)`가 항상 0이라 기기별 여백을 못 맞춤
+- 탭바 아래 여백을 고정 27px 대신 `env(safe-area-inset-bottom)`만 사용 — 27px은 시안의 홈 인디케이터 자리인데 Safari에서는 주소창이 그 자리라 탭바가 주소창 위로 떠 보였음(Safari 0 → 주소창에 붙음, PWA ~34px, 데스크톱 0). 이번만 공통 `TabBar` 수정
+- `--tabbar-height`를 `calc(65px + env(safe-area-inset-bottom))`로 변경 — 탭바 실제 높이(항목 60 + 위 5 + 안전 영역)와 맞춰 마지막 내용이 가려지지 않게 함
+
 ## 임의 결정 — 확인 필요 (하단 탭바)
 
 - 고민치즈·양털모으기·동굴 닫기 탭은 눌러도 동작 없음 — 이동할 화면이 아직 없음
