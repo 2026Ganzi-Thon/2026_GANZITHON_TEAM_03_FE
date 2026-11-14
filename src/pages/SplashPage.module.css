@@ -1,0 +1,46 @@
+.page {
+  display: grid;
+  width: min(100vw, calc(100dvh * 393 / 852));
+  height: min(100dvh, calc(100vw * 852 / 393));
+  margin-inline: auto;
+  overflow: hidden;
+  background: var(--color-primary);
+}
+
+.artwork {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.islandReveal,
+.islandRevealLater {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: islandRise 950ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+.islandRevealLater {
+  animation-delay: 110ms;
+}
+
+@keyframes islandRise {
+  from {
+    opacity: 0;
+    filter: blur(3px);
+    transform: translateY(42px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .islandReveal,
+  .islandRevealLater {
+    animation: none;
+  }
+}

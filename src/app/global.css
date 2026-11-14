@@ -96,6 +96,7 @@ body {
     sans-serif;
   --font-weight-regular: 400;
   --font-weight-bold: 700;
+  --letter-spacing-tight: -0.02em;
 
   /* Typography - 크기 / 행간 */
   --font-size-h1: 56px;
@@ -127,6 +128,8 @@ body {
 
   /* Semantic Colors (역할별 별칭. 값은 위 팔레트를 참조) */
   --color-bg: var(--color-brand-60);
+  --color-onboarding-bg: #fffdfb;
+  --color-onboarding-primary: #596543;
   --color-surface: var(--color-brand-20);
   --color-primary: var(--color-brand-7);
   --color-accent: var(--color-brand-10);
