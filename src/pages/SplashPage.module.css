@@ -1,7 +1,7 @@
 .page {
   display: grid;
-  width: min(100vw, calc(100dvh * 393 / 852));
-  height: min(100dvh, calc(100vw * 852 / 393));
+  width: min(100vw, calc(100dvh * 393 / 852), 393px);
+  height: min(100dvh, calc(100vw * 852 / 393), 852px);
   margin-inline: auto;
   overflow: hidden;
   background: var(--color-primary);

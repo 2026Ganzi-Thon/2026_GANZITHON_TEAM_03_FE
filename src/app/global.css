@@ -97,6 +97,8 @@ body {
   --font-weight-regular: 400;
   --font-weight-bold: 700;
   --letter-spacing-tight: -0.02em;
+  --font-size-caption: 12px;
+  --font-size-hint: 13px;
 
   /* Typography - 크기 / 행간 */
   --font-size-h1: 56px;
@@ -130,6 +132,7 @@ body {
   --color-bg: var(--color-brand-60);
   --color-onboarding-bg: #fffdfb;
   --color-onboarding-primary: #596543;
+  --color-consent-surface: #fdf7f1;
   --color-surface: var(--color-brand-20);
   --color-primary: var(--color-brand-7);
   --color-accent: var(--color-brand-10);
