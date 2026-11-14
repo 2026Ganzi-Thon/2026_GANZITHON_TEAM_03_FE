@@ -1,38 +1,21 @@
 import { ApiError } from '@/shared/api'
 import { getTodaySeoul } from '@/shared/lib/formatRelativeDate'
+import { EMOTIONS } from './emotions'
 import type {
   CreateEmotionRecordRequest,
   Emotion,
   EmotionRecord,
   EmotionRecordListResponse,
-  EmotionsResponse,
 } from './types'
 
-// TODO(API 연결): API 클라이언트(`@/shared/api`)가 준비됐으니 아래 세 함수의 본문만 호출로 바꾼다. mock 상수·지연·메모리 배열은 함께 지운다.
-//   fetchEmotions:        return (await api.get<EmotionsResponse>('/emotions')).items
+// TODO(API 연결): API 클라이언트(`@/shared/api`)가 준비됐으니 아래 두 함수의 본문만 호출로 바꾼다. mock 상수·지연·메모리 배열은 함께 지운다.
 //   fetchEmotionRecords:  return api.get<EmotionRecordListResponse>('/emotion-records?from=...&to=...&page=0&size=20')
 //   createEmotionRecord:  return api.post<EmotionRecord>('/emotion-records', body)
+// 감정 목록은 로컬 상수(emotions.ts)를 쓴다 — 서버 감정 ID·code와 맞춰야 함, 백엔드 목록이 확정되면 상수를 고친다.
 // (api 는 `@/shared/api`, 타입은 `@/shared/types`. 409 는 ApiError code `EMOTION_RECORD_ALREADY_EXISTS` 로 온다.)
 
 /** 오늘 이미 기록했을 때(409) `ApiError.code`. mock 도 같은 ApiError 를 던져서 API 연결 후에도 호출부가 그대로다. */
 export const EMOTION_RECORD_ALREADY_EXISTS = 'EMOTION_RECORD_ALREADY_EXISTS'
-
-// 임의 결정(확인 필요): 감정 7개와 code(JOY…CALM)를 임의로 만들었다 — Figma 칩 이름 그대로, 실제 목록은 기획 합의 필요
-const MOCK_EMOTIONS: Emotion[] = [
-  ['JOY', '기쁨'],
-  ['SADNESS', '슬픔'],
-  ['REGRET', '아쉬움'],
-  ['FEAR', '두려움'],
-  ['TIRED', '지침'],
-  ['ANXIETY', '불안'],
-  ['CALM', '평온'],
-].map(([code, name], index) => ({
-  emotionId: String(index + 1),
-  code,
-  name,
-  displayOrder: index + 1,
-  active: true,
-}))
 
 function daysAgo(days: number): string {
   const [year, month, day] = getTodaySeoul().split('-').map(Number)
@@ -40,7 +23,7 @@ function daysAgo(days: number): string {
 }
 
 function emotionsOf(...ids: string[]): Emotion[] {
-  return MOCK_EMOTIONS.filter((emotion) => ids.includes(emotion.emotionId))
+  return EMOTIONS.filter((emotion) => ids.includes(emotion.emotionId))
 }
 
 function mockRecord(recordId: string, recordDate: string, memo: string | null, emotions: Emotion[]): EmotionRecord {
@@ -59,12 +42,6 @@ let nextRecordId = 105
 
 // 임의 결정(확인 필요): mock 응답에 0.3초 지연을 줘서 로딩 상태를 볼 수 있게 함 — API 연결 시 함께 지운다
 const delay = () => new Promise((resolve) => setTimeout(resolve, 300))
-
-/** 선택할 수 있는 활성 감정 목록(표시 순서). `GET /api/v1/emotions` 의 `data.items`. */
-export async function fetchEmotions(): Promise<EmotionsResponse['items']> {
-  await delay()
-  return MOCK_EMOTIONS.filter((emotion) => emotion.active).sort((a, b) => a.displayOrder - b.displayOrder)
-}
 
 /** 최근 감정 기록(최신순). `GET /api/v1/emotion-records` 의 `data`. */
 export async function fetchEmotionRecords(): Promise<EmotionRecordListResponse> {
