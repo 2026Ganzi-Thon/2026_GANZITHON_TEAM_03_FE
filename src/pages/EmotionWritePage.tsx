@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import {
+  EMOTIONS,
   EmotionHeader,
   EmotionPicker,
   FeedingAnimation,
   MemoField,
   useCreateEmotionRecord,
-  useEmotions,
 } from '@/features/emotion'
 import { BackButton, Button } from '@/shared/ui'
 import styles from './EmotionWritePage.module.css'
@@ -20,13 +20,11 @@ export interface EmotionWritePageProps {
 
 /** "오늘의 먹이주기": 감정(복수 선택)과 메모를 입력하고 먹이를 준다. */
 export default function EmotionWritePage({ woolCount, onBack, onFed, onOpenGuide }: EmotionWritePageProps) {
-  const { state: emotionsState, retry } = useEmotions()
   const { state: createState, submit } = useCreateEmotionRecord()
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [memo, setMemo] = useState('')
 
-  const emotions = emotionsState.status === 'success' ? emotionsState.emotions : []
-  // 감정이 하나도 없으면(불러오는 중·실패·빈 목록·미선택) 먹이를 줄 수 없다
+  // 감정을 하나도 고르지 않으면 먹이를 줄 수 없다
   const canSubmit =
     selectedIds.length > 0 && createState.status !== 'submitting' && createState.status !== 'already-exists'
 
@@ -47,22 +45,7 @@ export default function EmotionWritePage({ woolCount, onBack, onFed, onOpenGuide
             if (canSubmit) void submit({ emotionIds: selectedIds, memo })
           }}
         >
-          {emotionsState.status === 'error' && (
-            <div className={styles.error} role="alert">
-              <p className={styles.message}>감정을 불러오지 못했어요.</p>
-              <Button variant="outline" size="sm" onClick={retry}>
-                다시 시도
-              </Button>
-            </div>
-          )}
-          {(emotionsState.status === 'loading' || emotionsState.status === 'success') && (
-            <EmotionPicker
-              emotions={emotions}
-              selectedIds={selectedIds}
-              onChange={setSelectedIds}
-              loading={emotionsState.status === 'loading'}
-            />
-          )}
+          <EmotionPicker emotions={EMOTIONS} selectedIds={selectedIds} onChange={setSelectedIds} />
 
           <MemoField value={memo} onChange={setMemo} />
 
