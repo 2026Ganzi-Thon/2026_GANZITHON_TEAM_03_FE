@@ -112,6 +112,11 @@ PR 댓글 자동 답변(Claude)의 근거. 작성 규칙은 `CLAUDE.md`의 "의�
 - [ ] mock 응답에 0.3초 지연 — API 연결 시 제거
 - [ ] 색은 프레임색(#596543·#fffdfb) 대신 토큰(`--color-primary`·`--color-bg`) — 아래 미결 사항과 같음
 
+## 2026-11-15 화면 확대 막기
+
+- 핀치·더블탭 확대를 막음 — 사용자 요청, 앱처럼 고정 화면으로 보이게. `viewport`에 `maximum-scale=1, user-scalable=no`, `touch-action: manipulation`, iOS는 viewport 설정을 무시해서 `gesturestart` 이벤트도 막음(`main.tsx`)
+- 접근성 단점은 알고 감 — 확대를 막으면 시력이 약한 사용자가 화면을 키울 수 없음, 필요하면 되돌린다
+
 ## 임의 결정 — 확인 필요 (홈)
 
 코드에서는 `grep -rn "임의 결정(확인 필요)" src` 로 찾는다. 구현 화면 스크린샷은 Figma `Main Product`(0:1)의 "임의 생성 — 확인 필요 (홈)" 프레임(176:488, 컴포넌트 나열 영역 왼쪽)에 있다.

@@ -10,6 +10,11 @@ body,
   height: 100%;
 }
 
+/* 화면 확대 막기: 더블탭 확대를 끈다(핀치 확대는 main.tsx 에서 막는다). 스크롤·탭은 그대로 된다 */
+html {
+  touch-action: manipulation;
+}
+
 body,
 h1,
 h2,
