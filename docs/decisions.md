@@ -44,9 +44,9 @@ PR 댓글 자동 답변(Claude)의 근거. 작성 규칙은 `CLAUDE.md`의 "의�
 
 ## 2026-11-14 API 인스턴스 (`src/shared/api/`)
 
-- axios 대신 내장 `fetch` — 의존성을 늘리지 않고, 필요한 기능(인터셉터 정도)이 작아서 직접 구현
+- axios 인스턴스(`http`)를 씀 — 팀이 axios가 편하고 타임아웃(10초)·업로드 진행률 같은 기능이 필요해질 수 있음. 처음엔 `fetch`로 만들었다가 교체, 호출부 `api.get<T>()`는 그대로
 - 성공하면 응답의 `data`를 꺼내 돌려주고 실패는 `ApiError`(status·code·fieldErrors)로 던짐 — 공통 규칙의 응답 형식, 분기는 문구가 아니라 code
-- Access Token은 모듈 메모리에만 — 확정 정책(localStorage 금지), Refresh Token은 쿠키라 `credentials: 'include'`
+- Access Token은 모듈 메모리에만 — 확정 정책(localStorage 금지), Refresh Token은 쿠키라 `withCredentials: true`
 - 재발급은 `AUTH_ACCESS_TOKEN_EXPIRED`일 때만, 동시 요청이 몰려도 한 번만 실행하고 원 요청은 한 번만 재시도 — 같은 Refresh Token을 두 번 쓰면 REUSED로 세션이 끊김
 - 재발급까지 실패하면 `setAuthLostHandler`로 앱에 알림 — 로그인 화면 이동은 `app/`이 연결(여기서는 모름)
 - `restoreSession()`은 앱 시작 때 한 번 호출 — 새로고침하면 메모리 토큰이 사라지는데 서버는 "토큰 없음"을 EXPIRED가 아닌 INVALID로 줌

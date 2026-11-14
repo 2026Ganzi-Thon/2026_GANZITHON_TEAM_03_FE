@@ -3,6 +3,9 @@ import type { ApiErrorBody, FieldError } from '@/shared/types'
 /** 네트워크 오류(서버에 닿지 못함)일 때 `status`는 0, `code`는 이 값이다. */
 export const NETWORK_ERROR_CODE = 'NETWORK_ERROR'
 
+/** 서버가 시간 안에 응답하지 않을 때 `status`는 0, `code`는 이 값이다. */
+export const TIMEOUT_ERROR_CODE = 'TIMEOUT'
+
 /** 오류 본문을 읽지 못했을 때의 `code` */
 export const UNKNOWN_ERROR_CODE = 'UNKNOWN_ERROR'
 
