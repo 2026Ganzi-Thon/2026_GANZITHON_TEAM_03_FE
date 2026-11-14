@@ -47,7 +47,6 @@ export default function EmotionWritePage({ woolCount, onBack, onFed, onOpenGuide
             if (canSubmit) void submit({ emotionIds: selectedIds, memo })
           }}
         >
-          {emotionsState.status === 'loading' && <p className={styles.message}>감정을 불러오는 중이에요…</p>}
           {emotionsState.status === 'error' && (
             <div className={styles.error} role="alert">
               <p className={styles.message}>감정을 불러오지 못했어요.</p>
@@ -56,8 +55,13 @@ export default function EmotionWritePage({ woolCount, onBack, onFed, onOpenGuide
               </Button>
             </div>
           )}
-          {emotionsState.status === 'success' && (
-            <EmotionPicker emotions={emotions} selectedIds={selectedIds} onChange={setSelectedIds} />
+          {(emotionsState.status === 'loading' || emotionsState.status === 'success') && (
+            <EmotionPicker
+              emotions={emotions}
+              selectedIds={selectedIds}
+              onChange={setSelectedIds}
+              loading={emotionsState.status === 'loading'}
+            />
           )}
 
           <MemoField value={memo} onChange={setMemo} />

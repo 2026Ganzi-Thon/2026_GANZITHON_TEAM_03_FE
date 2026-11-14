@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { preloadEmotionAssets } from '@/features/emotion'
 import EmotionPage from '@/pages/EmotionPage'
 import EmotionWritePage from '@/pages/EmotionWritePage'
 import HomePage from '@/pages/HomePage'
@@ -13,6 +14,11 @@ const TEMP_WOOL_COUNT = 12
 // 탭바도 임시로 여기서 붙인다: 홈·양 먹이주기에만 보이고(작성 화면은 시안에 없음), 이동은 home·sheep 만. 나머지 탭은 화면이 생기면 연결.
 export default function App() {
   const [screen, setScreen] = useState<Screen>('home')
+
+  // 홈에서 양 돌보기로 넘어오는 흐름이라, 앱이 뜨면 뒤에서 양 이미지를 미리 받아 둔다
+  useEffect(() => {
+    preloadEmotionAssets()
+  }, [])
 
   const handleTab = (tab: string) => {
     if (tab === 'home') setScreen('home')

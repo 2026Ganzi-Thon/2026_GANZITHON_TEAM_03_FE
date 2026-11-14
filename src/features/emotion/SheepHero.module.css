@@ -1,7 +1,48 @@
-.sheep {
+.frame {
+  position: relative;
   width: 234px;
   height: 234px;
   margin: 0 auto;
+}
+
+.sheep {
+  display: block;
+  width: 234px;
+  height: 234px;
   /* Figma: scaleY(-1) + rotate(180deg) = 좌우 반전 */
   transform: scaleX(-1);
+  opacity: 0;
+}
+
+.loaded {
+  opacity: 1;
+  animation: fade-in 0.25s ease-out;
+}
+
+/* 이미지를 기다리는 동안 양 자리(홈 스켈레톤과 같은 색·깜빡임) */
+.skeleton {
+  position: absolute;
+  inset: 24px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-border-subtle);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loaded,
+  .skeleton {
+    animation: none;
+  }
 }
