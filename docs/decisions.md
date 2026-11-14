@@ -36,6 +36,11 @@ PR 댓글 자동 답변(Claude)의 근거. 작성 규칙은 `CLAUDE.md`의 "의�
 - 데이터 타입만 만들고 오류 코드 유니온·`Idempotency-Key` 같은 헤더는 안 만듦 — 데이터 형태가 아니고 명세가 초안이라 바뀔 수 있음
 - 명세가 불확실한 필드는 명세대로 둠(예: `introduction`의 null 여부, 나이대·지역 코드) — 확정되면 같이 고침
 - `features/home`의 `HomeSummary`는 그대로 둠 — 홈 담당 작업과 충돌을 피함, API 연결 때 `HomeSummaryResponse`로 교체
+- 기능별 타입은 `features/<기능>/types.ts`에 둠(auth·account·emotion·cheese·care·rest) — 폼 값·화면 상태처럼 그 기능에서만 쓰는 것, API 타입은 `shared/types`에서 다시 내보내기만 함
+- 기능 타입은 `index.ts`의 `export type *`로만 공개 — 규칙 3, 컴포넌트가 생기면 같은 `index.ts`에 추가
+- 화면 상태는 홈과 같은 `{ status: 'loading' | 'error' | 'success' }` 모양 — 기존 `HomeSummaryState` 관례를 따름
+- zod 같은 검증 스키마는 안 만듦 — 의존성을 늘리지 않고 타입만 먼저 정의
+- 돌봄은 `care`로 이름 붙임(양털 잔액·내역 포함) — 명세의 CARE·WOOL이 한 화면 흐름이라 폴더를 나누지 않음
 
 ## 임의 결정 — 확인 필요 (홈)
 
