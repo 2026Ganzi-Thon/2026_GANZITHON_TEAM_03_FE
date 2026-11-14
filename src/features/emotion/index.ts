@@ -1,5 +1,6 @@
 export { EmotionHeader } from './EmotionHeader'
 export { SheepHero } from './SheepHero'
+export { preloadEmotionAssets } from './preloadEmotionAssets'
 export { EmotionRecordList } from './EmotionRecordList'
 export type { EmotionRecordRow } from './EmotionRecordList'
 export { EmotionPicker } from './EmotionPicker'

@@ -52,3 +52,37 @@
   align-items: flex-start;
   gap: var(--space-2);
 }
+
+/* 로딩 막대: 실제 행(글자 한 줄)과 같은 높이로 맞춰 데이터가 들어와도 레이아웃이 튀지 않게 한다 */
+.skeleton {
+  height: calc(var(--font-size-small) * var(--line-height-small));
+  border-radius: var(--radius-full);
+  background-color: var(--color-border-subtle);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.skeletonDate {
+  width: 48px;
+  flex: none;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}

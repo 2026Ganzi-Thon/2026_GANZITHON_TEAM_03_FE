@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import sheepImage from '@/assets/images/sheep.png'
+import sheepImage from '@/assets/images/sheep.webp'
 import styles from './FeedingAnimation.module.css'
 
 /** 연출 길이(ms). CSS 의 animation 시간과 맞춘다. */
