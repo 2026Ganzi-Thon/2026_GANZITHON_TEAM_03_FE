@@ -164,7 +164,8 @@ body {
 
   /* Layout - 모바일 기준 화면 (393 x 852) */
   --page-padding-x: 24px;
-  --tabbar-height: 92px;
+  /* 탭바 실제 높이: 항목 60 + 위 여백 5 + 기기 아래 안전 영역(Safari 주소창이면 0, PWA 홈 인디케이터면 ~34) */
+  --tabbar-height: calc(65px + env(safe-area-inset-bottom));
 }
 
 /* 키보드 포커스 링 - 공용 컴포넌트가 같이 쓴다 */
