@@ -1,0 +1,7 @@
+.sheep {
+  width: 234px;
+  height: 234px;
+  margin: 0 auto;
+  /* Figma: scaleY(-1) + rotate(180deg) = 좌우 반전 */
+  transform: scaleX(-1);
+}
