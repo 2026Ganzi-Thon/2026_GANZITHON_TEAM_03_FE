@@ -6,12 +6,14 @@ import type {
   Emotion,
   EmotionRecord,
   EmotionRecordListResponse,
+  EmotionsResponse,
 } from './types'
 
-// TODO(API 연결): API 클라이언트(`@/shared/api`)가 준비됐으니 아래 두 함수의 본문만 호출로 바꾼다. mock 상수·지연·메모리 배열은 함께 지운다.
+// TODO(API 연결): API 클라이언트(`@/shared/api`)가 준비됐으니 아래 세 함수의 본문만 호출로 바꾼다. mock 상수·지연·메모리 배열은 함께 지운다.
+//   fetchEmotions:        return (await api.get<EmotionsResponse>('/emotions')).items
 //   fetchEmotionRecords:  return api.get<EmotionRecordListResponse>('/emotion-records?from=...&to=...&page=0&size=20')
 //   createEmotionRecord:  return api.post<EmotionRecord>('/emotion-records', body)
-// 감정 목록은 로컬 상수(emotions.ts)를 쓴다 — 서버 감정 ID·code와 맞춰야 함, 백엔드 목록이 확정되면 상수를 고친다.
+// mock 감정 목록의 출처는 emotions.ts 상수 — 서버 감정 ID·code와 맞춰야 한다.
 // (api 는 `@/shared/api`, 타입은 `@/shared/types`. 409 는 ApiError code `EMOTION_RECORD_ALREADY_EXISTS` 로 온다.)
 
 /** 오늘 이미 기록했을 때(409) `ApiError.code`. mock 도 같은 ApiError 를 던져서 API 연결 후에도 호출부가 그대로다. */
@@ -42,6 +44,12 @@ let nextRecordId = 105
 
 // 임의 결정(확인 필요): mock 응답에 0.3초 지연을 줘서 로딩 상태를 볼 수 있게 함 — API 연결 시 함께 지운다
 const delay = () => new Promise((resolve) => setTimeout(resolve, 300))
+
+/** 선택할 수 있는 활성 감정 목록(표시 순서). `GET /api/v1/emotions` 의 `data.items`. */
+export async function fetchEmotions(): Promise<EmotionsResponse['items']> {
+  await delay()
+  return EMOTIONS.filter((emotion) => emotion.active).sort((a, b) => a.displayOrder - b.displayOrder)
+}
 
 /** 최근 감정 기록(최신순). `GET /api/v1/emotion-records` 의 `data`. */
 export async function fetchEmotionRecords(): Promise<EmotionRecordListResponse> {

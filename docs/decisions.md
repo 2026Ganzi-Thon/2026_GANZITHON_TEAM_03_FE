@@ -81,10 +81,21 @@ PR 댓글 자동 답변(Claude)의 근거. 작성 규칙은 `CLAUDE.md`의 "의�
 - 메모 최대 1,000자(명세 제안값), 900자부터 남은 글자 수 표시
 - 양 일러스트는 468px(2배수) WebP로 줄여 둠 — 1.2MB(1254px PNG) → 0.4MB(702px PNG) → 약 20KB, 234px 표시에 충분하고 iOS Safari도 WebP 지원. 홈이 떠 있을 때 `App.tsx`에서 `preloadEmotionAssets()`로 미리 받음(홈→양 돌보기 흐름)
 - 양 이미지 자리는 원형 스켈레톤→페이드인, 기록 목록 로딩은 글자 대신 스켈레톤 — 홈과 같은 색·깜빡임, 실제 행과 같은 높이라 데이터가 들어와도 레이아웃이 안 튐
-- 감정 칩은 로컬 고정 목록(`emotions.ts`) — 사용자 요청, 자주 안 바뀌고 로딩 없이 바로 보이게. `GET /emotions`는 쓰지 않음, 서버 ID·code와 맞출 것
+- 감정 칩은 서버(mock `fetchEmotions`)에서 조회하되 양 먹이주기 화면에서 미리 받아 캐시 — 사용자 요청, 작성 화면에 들어가면 로딩 없이 바로 보이게. `emotions.ts` 상수는 mock 데이터 출처로만 남김("2026-11-15 TanStack Query" 참고)
 - 상대 날짜는 `shared/lib/formatRelativeDate` — 여러 기능이 쓸 수 있고, 기준일을 인자로 받아 테스트할 수 있음
 - 수정·삭제는 2차 — 이번에는 작성과 목록만
 - 공통 컴포넌트는 안 고침 — Field 라벨이 SemiBold라 Figma(Medium)와 다르지만 미결 사항의 시안 불일치와 같은 문제
+
+## 2026-11-15 TanStack Query
+
+- `@tanstack/react-query` 도입 — 감정 목록을 양 먹이주기 화면에서 미리 받아 캐시하고(작성 화면 칩이 바로 보임), 저장 후 기록 목록을 바로 갱신하려고. devtools 등 다른 패키지는 안 넣음
+- `QueryClient`는 `app/queryClient.ts`, Provider는 `main.tsx` — 앱에 한 번만 설정하는 것(CLAUDE.md `app/` 역할). 기본값은 `retry: 1`·창 포커스 재조회 끔만 바꿈
+- 쿼리 키·옵션은 `features/emotion/emotionQueries.ts`에 한곳, `index.ts`로 공개 — 기능 안에 두고 규칙 3을 지킴
+- 감정 목록은 `staleTime` 1일·`gcTime` 7일 — 거의 안 바뀜. 기록 목록은 기본값(저장 때 invalidate)
+- 미리 받기는 `usePrefetchEmotions()`를 EmotionPage가 호출 — 칩 캐시가 없을 때(작성 화면 직행)만 칩 스켈레톤·"다시 시도" 표시
+- 저장 성공 시 기록 목록 캐시에 새 기록을 먼저 끼워 넣고 invalidate — 목록 화면이 닫혀 있어서 invalidate만으로는 옛 목록이 잠깐 보임
+- `useEmotionRecords`·`useCreateEmotionRecord`도 TanStack Query로 통일, 반환하는 상태 모양(loading/error/success, already-exists)은 그대로 — 페이지 변경 최소화
+- `features/home`은 아직 자체 훅 유지 — 홈 담당 코드
 
 ## 임의 결정 — 확인 필요 (감정 기록)
 

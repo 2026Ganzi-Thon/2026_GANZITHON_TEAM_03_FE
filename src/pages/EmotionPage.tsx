@@ -3,6 +3,7 @@ import {
   EmotionRecordList,
   SheepHero,
   useEmotionRecords,
+  usePrefetchEmotions,
 } from '@/features/emotion'
 import type { EmotionRecordRow } from '@/features/emotion'
 import { getTodaySeoul } from '@/shared/lib/formatRelativeDate'
@@ -20,6 +21,8 @@ export interface EmotionPageProps {
 /** "양 먹이주기": 양 일러스트, 먹이주기 버튼, 지난 기록과 지푸라기(메모) 목록. 이동은 props 콜백으로 받는다. */
 export default function EmotionPage({ woolCount, onOpenWrite, onOpenGuide }: EmotionPageProps) {
   const { state, retry } = useEmotionRecords()
+  // 먹이주기 버튼을 누르기 전에 감정 목록을 받아 둬서 작성 화면에서 칩이 바로 보이게 한다
+  usePrefetchEmotions()
   const today = getTodaySeoul()
 
   const records = state.status === 'success' ? state.records : []
