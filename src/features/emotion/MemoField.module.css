@@ -1,0 +1,12 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.counter {
+  align-self: flex-end;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
