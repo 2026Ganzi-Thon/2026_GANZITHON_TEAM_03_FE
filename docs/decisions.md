@@ -20,7 +20,7 @@ PR 댓글 자동 답변(Claude)의 근거. 작성 규칙은 `CLAUDE.md`의 "의�
 
 ## 2026-11-13 홈 화면 (`pages/HomePage`, `features/home/`)
 
-- 탭바·상태바·홈 인디케이터는 만들지 않음 — 탭바 레이아웃은 담당자가 따로 만들며, 페이지 아래에 `--tabbar-height` 여백만 둠
+- 상태바·홈 인디케이터는 만들지 않음. 탭바는 `app/`에서 임시로 붙임(아래 "하단 탭바") — 이동은 홈·양 돌보기만, 나머지 3개는 화면이 생기면 연결
 - 라우터·API 클라이언트·레이아웃은 만들지 않음 — 이동은 `HomePage` props 콜백, 데이터는 `fetchHomeSummary()` 한 곳(지금은 mock)
 - 홈의 "내 양털"은 API `woolBalance`와 같은 값 — 소모 재화가 양털뿐이라서
 - 설정 아이콘은 `onOpenSettings` 콜백만 연결 — 이동할 화면이 없음
@@ -52,6 +52,17 @@ PR 댓글 자동 답변(Claude)의 근거. 작성 규칙은 `CLAUDE.md`의 "의�
 - `restoreSession()`은 앱 시작 때 한 번 호출 — 새로고침하면 메모리 토큰이 사라지는데 서버는 "토큰 없음"을 EXPIRED가 아닌 INVALID로 줌
 - `Idempotency-Key`는 옵션으로만 지원 — 명세가 제안 단계라 적용할 API(고민 작성·돌봄 완료/취소·휴식 시작)가 호출할 때 켬
 - 기능별 요청 함수(`xxxApi.ts`)와 mock 제거는 안 함 — 이번에는 인스턴스만, `features/home`의 mock도 그대로
+
+## 2026-11-14 하단 탭바 (`app/AppTabBar`)
+
+- 공통 `TabBar`를 `app/AppTabBar`에서 하단 고정(fixed, 최대 393px 가운데, `--z-tabbar`)으로 붙임 — 라우터 전이라 `App.tsx`의 임시 화면 전환에 연결
+- 홈·양 먹이주기 화면에만 보임, 활성은 각각 `home`·`sheep` — 시안에 탭바가 있는 화면이 이 둘뿐
+- 공통 `TabBar`·`features`는 고치지 않음
+
+## 임의 결정 — 확인 필요 (하단 탭바)
+
+- 고민치즈·양털모으기·동굴 닫기 탭은 눌러도 동작 없음 — 이동할 화면이 아직 없음
+- 작성 화면(EmotionWritePage)에서는 탭바를 숨김 — 시안 2-1에 탭바가 없음
 
 ## 2026-11-14 감정 기록 (`pages/Emotion*`, `features/emotion/`)
 
