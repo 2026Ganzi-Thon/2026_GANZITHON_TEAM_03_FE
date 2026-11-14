@@ -42,6 +42,17 @@ PR 댓글 자동 답변(Claude)의 근거. 작성 규칙은 `CLAUDE.md`의 "의�
 - zod 같은 검증 스키마는 안 만듦 — 의존성을 늘리지 않고 타입만 먼저 정의
 - 돌봄은 `care`로 이름 붙임(양털 잔액·내역 포함) — 명세의 CARE·WOOL이 한 화면 흐름이라 폴더를 나누지 않음
 
+## 2026-11-14 API 인스턴스 (`src/shared/api/`)
+
+- axios 대신 내장 `fetch` — 의존성을 늘리지 않고, 필요한 기능(인터셉터 정도)이 작아서 직접 구현
+- 성공하면 응답의 `data`를 꺼내 돌려주고 실패는 `ApiError`(status·code·fieldErrors)로 던짐 — 공통 규칙의 응답 형식, 분기는 문구가 아니라 code
+- Access Token은 모듈 메모리에만 — 확정 정책(localStorage 금지), Refresh Token은 쿠키라 `credentials: 'include'`
+- 재발급은 `AUTH_ACCESS_TOKEN_EXPIRED`일 때만, 동시 요청이 몰려도 한 번만 실행하고 원 요청은 한 번만 재시도 — 같은 Refresh Token을 두 번 쓰면 REUSED로 세션이 끊김
+- 재발급까지 실패하면 `setAuthLostHandler`로 앱에 알림 — 로그인 화면 이동은 `app/`이 연결(여기서는 모름)
+- `restoreSession()`은 앱 시작 때 한 번 호출 — 새로고침하면 메모리 토큰이 사라지는데 서버는 "토큰 없음"을 EXPIRED가 아닌 INVALID로 줌
+- `Idempotency-Key`는 옵션으로만 지원 — 명세가 제안 단계라 적용할 API(고민 작성·돌봄 완료/취소·휴식 시작)가 호출할 때 켬
+- 기능별 요청 함수(`xxxApi.ts`)와 mock 제거는 안 함 — 이번에는 인스턴스만, `features/home`의 mock도 그대로
+
 ## 임의 결정 — 확인 필요 (홈)
 
 코드에서는 `grep -rn "임의 결정(확인 필요)" src` 로 찾는다. 구현 화면 스크린샷은 Figma `Main Product`(0:1)의 "임의 생성 — 확인 필요 (홈)" 프레임(176:488, 컴포넌트 나열 영역 왼쪽)에 있다.
