@@ -1,3 +1,5 @@
+import { getMockWoolBalance } from '@/shared/lib/mockWool'
+
 /** `docs/api/home.md` 의 `GET /api/v1/home` 응답 `data` 와 같은 모양. */
 export interface HomeEmotion {
   emotionId: string
@@ -29,7 +31,8 @@ export async function fetchHomeSummary(): Promise<HomeSummary> {
 
   return {
     nickname: '온기',
-    woolBalance: 12,
+    // 섬 꾸미기에서 가구를 사면 줄어든다 — mock 끼리 같은 잔액을 본다(shared/lib/mockWool)
+    woolBalance: getMockWoolBalance(),
     today: '2026-11-08',
     todayEmotion: {
       recorded: false,
