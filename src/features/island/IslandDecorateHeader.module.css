@@ -1,0 +1,15 @@
+/* 시안: 제목 오른쪽 4px 에 섬 아이콘(초록) */
+.title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.icon {
+  color: var(--color-primary);
+}
+
+/* 터치 영역(44px)만큼 바깥으로 빼서 아이콘이 시안 위치(오른쪽 끝에서 26px)에 오게 한다 */
+.settings {
+  margin-right: -10px;
+}

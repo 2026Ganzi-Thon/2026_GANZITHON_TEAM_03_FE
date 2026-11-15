@@ -14,4 +14,6 @@
   height: auto;
   aspect-ratio: 1;
   object-fit: cover;
+  /* 섬 꾸미기 화면의 섬 그림(features/island/IslandScene)과 같은 이름 — 화면을 오갈 때 그림이 제자리로 옮겨 간다 */
+  view-transition-name: island;
 }
