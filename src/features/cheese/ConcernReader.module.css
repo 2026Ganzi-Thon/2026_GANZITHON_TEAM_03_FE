@@ -1,0 +1,96 @@
+.root {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 시안: 제목 24px SemiBold, 아래 "익명의 폴리 · 날짜"(16px Light), 본문 16px Light */
+.title {
+  font-size: var(--font-size-h5);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-h5);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: var(--space-2);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-light);
+  line-height: var(--line-height-normal);
+}
+
+.dot {
+  width: 3px;
+  height: 3px;
+  margin: 0 10px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-black-1);
+}
+
+.badge {
+  margin-left: var(--space-3);
+}
+
+.body {
+  margin-top: var(--space-6);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-light);
+  line-height: var(--line-height-normal);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.skeletonTitle,
+.skeletonMeta,
+.bar,
+.barShort {
+  display: block;
+  border-radius: var(--radius-full);
+  background-color: var(--color-border-subtle);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.skeletonTitle {
+  width: 70%;
+  height: calc(var(--font-size-h5) * var(--line-height-h5));
+}
+
+.skeletonMeta {
+  width: 40%;
+  height: calc(var(--font-size-normal) * var(--line-height-normal));
+  margin-top: var(--space-2);
+}
+
+.skeletonBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: var(--space-6);
+}
+
+.bar,
+.barShort {
+  height: calc(var(--font-size-normal) * var(--line-height-normal) - 8px);
+  margin: 4px 0;
+}
+
+.barShort {
+  width: 45%;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonTitle,
+  .skeletonMeta,
+  .bar,
+  .barShort {
+    animation: none;
+  }
+}

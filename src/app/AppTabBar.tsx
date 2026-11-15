@@ -11,7 +11,7 @@ const ITEMS: TabBarItem[] = [
 ]
 
 interface AppTabBarProps {
-  /** 현재 화면에 해당하는 탭('home' | 'sheep') */
+  /** 현재 화면에 해당하는 탭('home' | 'sheep' | 'cheese') */
   value: string
   onChange: (value: string) => void
 }
