@@ -56,8 +56,11 @@
   transition: background-color 0.15s;
 }
 
-.rowButton:hover {
-  background-color: var(--color-surface);
+/* 터치 기기는 누른 뒤에도 hover 가 남아 배경이 붙어 있으므로 마우스가 있을 때만 */
+@media (hover: hover) {
+  .rowButton:hover {
+    background-color: var(--color-surface);
+  }
 }
 
 .rowButton:active {

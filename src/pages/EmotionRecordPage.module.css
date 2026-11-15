@@ -62,22 +62,22 @@
   margin-top: 49px;
 }
 
-/* 작성 화면 "내 감정을 선택해주세요." 라벨(EmotionPicker)과 같음 */
+/* 작성 화면 "내 감정을 선택해주세요." 라벨(EmotionPicker)과 같은 굵기, 읽는 화면이라 한 단계 크게(14 → 16px, 사용자 요청) */
 .emotionLabel {
   margin-bottom: var(--space-2);
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-normal);
   font-weight: var(--font-weight-medium);
-  line-height: var(--line-height-small);
+  line-height: var(--line-height-normal);
 }
 
-/* 작성 화면 "지푸라기 쓰기" 라벨(공통 Field)과 같음 */
+/* 작성 화면 "지푸라기 쓰기" 라벨(공통 Field)과 같은 굵기, 읽는 화면이라 한 단계 크게(14 → 16px, 사용자 요청) */
 .memoLabel {
   margin-bottom: var(--space-1);
   padding: 1px 6px 1px 0;
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-normal);
   font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-small);
-  letter-spacing: -0.35px;
+  line-height: var(--line-height-normal);
+  letter-spacing: -0.4px;
 }
 
 /* 작성 화면 감정 칩 간격과 같음 */

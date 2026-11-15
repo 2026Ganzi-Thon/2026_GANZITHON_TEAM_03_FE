@@ -16,6 +16,7 @@ const TEMP_WOOL_COUNT = 12
 
 // TODO(임시): 라우터가 생기기 전까지 useState 로 화면을 바꿔 가며 확인한다(home → emotion → emotionWrite·emotionRecord → emotion, cheese → concernDetail → cheese). 라우터 도입 시 교체한다.
 // 탭바도 임시로 여기서 붙인다: 홈·양 먹이주기·우유와 치즈 목록에만 보이고(작성·기록 상세·고민 상세 화면은 시안에 없음), 이동은 home·sheep·cheese 만. 나머지 탭은 화면이 생기면 연결.
+// 홈의 "내 기록, 보관함" 카드는 보관함 화면이 생기기 전까지 양 먹이주기(지난 기록·지푸라기 목록)로 보낸다.
 // 기록 상세에서 고른 recordId 도 라우터 전까지 여기서 들고 있는다(라우터가 생기면 경로 파라미터로).
 // 우유와 치즈 목록의 현재 페이지·선택은 상세에 다녀와도 유지돼야 해서(docs/api/common.md 고민 목록 규칙) 라우터 전까지 여기서 들고 있는다.
 export default function App() {
@@ -98,7 +99,7 @@ export default function App() {
           }}
         />
       ) : (
-        <HomePage onOpenEmotion={() => setScreen('emotion')} />
+        <HomePage onOpenEmotion={() => setScreen('emotion')} onOpenRecords={() => setScreen('emotion')} />
       )}
       <AppTabBar value={screen === 'emotion' ? 'sheep' : screen === 'cheese' ? 'cheese' : 'home'} onChange={handleTab} />
     </>
