@@ -152,7 +152,8 @@ export function HomeRoute() {
     <HomePage
       onOpenEmotion={() => navigate('/emotion')}
       onOpenRecords={() => navigate('/emotion')}
-      onOpenDecorate={() => navigate('/island')}
+      // 섬 그림이 홈 자리에서 섬 꾸미기 자리로 옮겨 가는 전환(View Transitions, global.css 의 island)
+      onOpenDecorate={() => navigate('/island', { viewTransition: true })}
     />
   )
 }
@@ -160,7 +161,7 @@ export function HomeRoute() {
 /** 섬 꾸미기 — 탭바 없음(시안 102:744). 설정 화면이 없어 설정 아이콘은 동작 없음. */
 export function IslandDecorateRoute() {
   const navigate = useNavigate()
-  return <IslandDecoratePage onBack={() => navigate('/')} />
+  return <IslandDecoratePage onBack={() => navigate('/', { viewTransition: true })} />
 }
 
 export function EmotionRoute() {

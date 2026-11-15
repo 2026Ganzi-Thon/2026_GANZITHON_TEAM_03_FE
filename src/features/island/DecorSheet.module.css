@@ -16,6 +16,8 @@
   box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
   will-change: transform;
+  /* 홈에서 들어올 때 시트는 아래에서 올라온다(global.css 의 island-sheet) */
+  view-transition-name: island-sheet;
 }
 
 .sheet[data-dragging] {
