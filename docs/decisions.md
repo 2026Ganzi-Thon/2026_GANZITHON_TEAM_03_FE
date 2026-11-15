@@ -95,7 +95,7 @@ PR 댓글 자동 답변(Claude)의 근거. 작성 규칙은 `CLAUDE.md`의 "의�
 - 미리 받기는 `usePrefetchEmotions()`를 EmotionPage가 호출 — 칩 캐시가 없을 때(작성 화면 직행)만 칩 스켈레톤·"다시 시도" 표시
 - 저장 성공 시 기록 목록 캐시에 새 기록을 먼저 끼워 넣고 invalidate — 목록 화면이 닫혀 있어서 invalidate만으로는 옛 목록이 잠깐 보임
 - `useEmotionRecords`·`useCreateEmotionRecord`도 TanStack Query로 통일, 반환하는 상태 모양(loading/error/success, already-exists)은 그대로 — 페이지 변경 최소화
-- `features/home`은 아직 자체 훅 유지 — 홈 담당 코드
+- 홈 요약도 TanStack Query로 캐시(2026-11-15 변경, `features/home/homeQueries.ts`) — 다른 탭에 다녀올 때마다 이름·양털 자리에 스켈레톤이 다시 뜨던 문제. 캐시된 값을 바로 보여주고 들어올 때마다 뒤에서 새로 받음(감정 기록·양털이 다른 화면에서 바뀌므로 staleTime 0)
 
 ## 임의 결정 — 확인 필요 (감정 기록)
 
