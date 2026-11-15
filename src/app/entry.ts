@@ -45,3 +45,19 @@ export function markOnboardingSeen() {
   memory.onboardingSeen = true
   write(() => window.localStorage, ONBOARDING_KEY)
 }
+
+/** 시연 초기화(`?reset`): 시작 흐름 기록을 지운다 */
+export function clearEntry() {
+  memory.passed = false
+  memory.onboardingSeen = false
+  try {
+    window.sessionStorage.removeItem(PASSED_KEY)
+  } catch {
+    // 못 지워도 메모리 값은 비웠다
+  }
+  try {
+    window.localStorage.removeItem(ONBOARDING_KEY)
+  } catch {
+    // 위와 같음
+  }
+}

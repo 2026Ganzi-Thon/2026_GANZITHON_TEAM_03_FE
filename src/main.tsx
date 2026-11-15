@@ -1,5 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+// `?reset` 처리는 라우터가 첫 주소를 읽기 전에 해야 해서 가장 먼저 불러온다
+import '@/app/resetDemo'
 import '@/app/global.css'
 import App from '@/app/App'
 import { QueryClientProvider } from '@tanstack/react-query'

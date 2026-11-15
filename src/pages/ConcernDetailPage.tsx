@@ -9,7 +9,8 @@ import { BackButton, Button, Modal } from '@/shared/ui'
 import styles from './ConcernDetailPage.module.css'
 
 export interface ConcernDetailPageProps {
-  woolCount: number
+  /** 아직 받지 못했으면 undefined(숫자 자리에 막대) */
+  woolCount: number | undefined
   concernId: string
   onBack?: () => void
   /** 위로를 남겼거나 마감된 고민이라는 안내를 확인했을 때 — 목록으로 돌아간다 */
