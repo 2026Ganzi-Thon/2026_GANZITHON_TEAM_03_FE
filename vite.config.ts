@@ -13,16 +13,16 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon-180x180.png'],
       manifest: {
-        // TODO: 앱 이름·색상 확정 후 교체
-        name: '2026 간지톤 팀 03',
-        short_name: '간지톤03',
-        description: '2026 GANZITHON TEAM 03',
+        name: '폴리의 섬',
+        short_name: '폴리의 섬',
+        description: '오늘의 감정을 남기고 위로를 나누는 나만의 섬',
         lang: 'ko',
         start_url: '/',
         scope: '/',
         display: 'standalone',
-        theme_color: '#863bff',
-        background_color: '#ffffff',
+        // 상태바는 화면 배경(--color-bg), 앱을 여는 동안의 바탕은 스플래시와 같은 주색(--color-primary)
+        theme_color: '#fffcf5',
+        background_color: '#59603b',
         icons: [
           { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
