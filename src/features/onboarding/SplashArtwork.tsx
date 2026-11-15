@@ -19,7 +19,7 @@ const drawings: Record<SplashArtworkProps['variant'], string[]> = {
 
 export default function SplashArtwork({ variant, className }: SplashArtworkProps) {
   return (
-    <svg className={className} viewBox="0 0 393 852" aria-hidden="true">
+    <svg className={className} viewBox="0 0 393 852" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
       <rect width="393" height="852" fill="var(--color-primary)" />
       {drawings[variant].map((path, index) => (
         <path
