@@ -9,6 +9,7 @@ import EmotionRecordPage from '@/pages/EmotionRecordPage'
 import EmotionWritePage from '@/pages/EmotionWritePage'
 import HomePage from '@/pages/HomePage'
 import InitialSetupPage from '@/pages/InitialSetupPage'
+import IslandDecoratePage from '@/pages/IslandDecoratePage'
 import OnboardingPage from '@/pages/OnboardingPage'
 import SplashPage from '@/pages/SplashPage'
 import AppTabBar from './AppTabBar'
@@ -147,7 +148,19 @@ export function TabLayout() {
 export function HomeRoute() {
   const navigate = useNavigate()
   // 홈의 "내 기록, 보관함" 카드는 보관함 화면이 생기기 전까지 양 먹이주기(지난 기록·지푸라기 목록)로 보낸다
-  return <HomePage onOpenEmotion={() => navigate('/emotion')} onOpenRecords={() => navigate('/emotion')} />
+  return (
+    <HomePage
+      onOpenEmotion={() => navigate('/emotion')}
+      onOpenRecords={() => navigate('/emotion')}
+      onOpenDecorate={() => navigate('/island')}
+    />
+  )
+}
+
+/** 섬 꾸미기 — 탭바 없음(시안 102:744). 설정 화면이 없어 설정 아이콘은 동작 없음. */
+export function IslandDecorateRoute() {
+  const navigate = useNavigate()
+  return <IslandDecoratePage onBack={() => navigate('/')} />
 }
 
 export function EmotionRoute() {
