@@ -7,8 +7,8 @@ import styles from './OnboardingScreen.module.css'
 // 시안 그림마다 크기·자리가 다르다: 1장 가운데 340, 2장 오른쪽 끝 382, 3장 꽉 찬 393(손이 화면 밖으로 이어짐)
 const artworkLayouts = [styles.artworkOne, styles.artworkTwo, styles.artworkThree]
 
-// 임의 결정(확인 필요): 단계가 바뀔 때 문구·그림이 책장처럼 살짝 넘어가며 이만큼 사라진 뒤 다음 단계가 넘어와 나타난다(CSS 의 .leaving* 과 같은 값). 시안 없음
-const STEP_FADE_OUT_MS = 220
+// 임의 결정(확인 필요): 단계가 바뀔 때 문구·그림이 옆으로 살짝 밀리며 이만큼 사라진 뒤 다음 단계가 반대쪽에서 들어와 나타난다(CSS 의 .leaving* 과 같은 값). 시안 없음
+const STEP_FADE_OUT_MS = 180
 
 // 앱을 연 뒤 첫 등장(스플래시 다음)만 페이드인한다. 로그인에서 뒤로 돌아올 때 등 다른 전환은 이번에 건드리지 않음
 let hasEntered = false
@@ -24,7 +24,7 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
   // 단계 전환: leaving 동안 지금 문구·그림이 사라지고, 끝나면 다음 단계로 바꿔 서서히 나타나게 한다
   const [leaving, setLeaving] = useState(false)
   const [stepChanged, setStepChanged] = useState(false)
-  // 앞으로 갈 때와 뒤로 갈 때 책장이 넘어가는 방향이 반대다
+  // 앞으로 갈 때와 뒤로 갈 때 밀리는 방향이 반대다
   const [direction, setDirection] = useState<'next' | 'prev'>('next')
   const fadeTimer = useRef<number | null>(null)
 
