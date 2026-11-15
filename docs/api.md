@@ -19,6 +19,7 @@
 | [api/cheese.md](./api/cheese.md) | 고민 작성·위로 답장·치즈 개봉·보관 (11개) |
 | [api/care-wool.md](./api/care-wool.md) | 돌봄 행동·양털 잔액·변동 내역 (6개) |
 | [api/rest.md](./api/rest.md) | 휴식 세션 (4개) |
+| [api/island.md](./api/island.md) | 섬 꾸미기 아이템 목록·구매 (2개, **제안** — 노션 명세에 없음, 프론트 초안) |
 
 ## 인증 흐름 메모
 
@@ -121,6 +122,13 @@
 | 휴식 중도 종료 | POST | `/rest-sessions/{sessionId}/cancel` | 로그인 | 진행 중 휴식을 서버 시각 기준으로 중도 종료 |
 | 휴식 후 상태 기록 | PATCH | `/rest-sessions/{sessionId}/after-memo` | 로그인 | 종료된 세션에 선택 메모 작성·수정·삭제 (중도 종료 세션 포함, 초안) |
 
+## 섬 꾸미기 (ISLAND) — 제안
+
+| API | METHOD | URL | 권한 | 설명 |
+| --- | --- | --- | --- | --- |
+| 아이템 목록 조회 | GET | `/island/items` | 로그인 | 아이템과 보유 여부, 양털 잔액 조회 (제안) |
+| 아이템 구매 | POST | `/island/items/{itemId}/purchases` | 로그인 | 양털로 아이템 구매, `Idempotency-Key` 필요 (제안) |
+
 ## 프론트 기능 폴더 매핑 (안)
 
 | 도메인 | `features/` 폴더 |
@@ -130,4 +138,5 @@
 | 고민·위로 | `cheese` |
 | 자기 돌봄·양털 | `wool` |
 | 휴식 | `rest` |
+| 섬 꾸미기 | `island` |
 | 메인 홈 | 별도 기능 폴더 없이 `pages/HomePage`에서 각 기능을 조합 (`GET /home`은 `shared` 또는 `pages`에서 호출) |
