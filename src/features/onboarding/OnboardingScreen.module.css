@@ -28,9 +28,30 @@
   }
 }
 
+/* 단계 전환: 지금 문구·그림이 0.18초 동안 사라지고(.leaving), 다음 단계가 0.32초 동안 나타난다(.stepIn) */
+.leaving {
+  opacity: 0;
+  transition: opacity 180ms ease-in;
+}
+
+.stepIn {
+  animation: onboardingStepIn 320ms ease-out;
+}
+
+@keyframes onboardingStepIn {
+  from {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .enter {
+  .enter,
+  .stepIn {
     animation: none;
+  }
+
+  .leaving {
+    transition: none;
   }
 }
 
