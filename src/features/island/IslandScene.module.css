@@ -28,15 +28,15 @@
   pointer-events: none;
 }
 
-/* 임의 결정(확인 필요): 놓일 때 위에서 살짝 내려앉으며 나타난다(0.35초) — 시안 없음 */
+/* 임의 결정(확인 필요): 놓일 때 서서히 나타나며 아주 조금(섬 높이의 0.8%) 내려앉는다(0.25초) — 시안 없음 */
 .item {
-  animation: place 0.35s cubic-bezier(0.2, 0, 0, 1) both;
+  animation: place 0.25s ease-out both;
 }
 
 @keyframes place {
   from {
     opacity: 0;
-    transform: translateY(-3%);
+    transform: translateY(-0.8%);
   }
 }
 
