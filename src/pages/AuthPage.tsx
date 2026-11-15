@@ -40,7 +40,8 @@ export default function AuthPage({ mode, onBack, onSwitchMode, onContinue }: Aut
       </button>
       <p className={styles.divider}>또는</p>
 
-      <form className={styles.form} onSubmit={handleSubmit}>
+      {/* TODO(임시): 로그인 API 연결 전까지 로그인은 입력 검사를 건너뛰어 빈 폼으로도 홈에 들어갈 수 있다(noValidate). 연결 시 제거 */}
+      <form className={styles.form} onSubmit={handleSubmit} noValidate={!isSignup}>
         <TextField
           className={styles.email}
           label="이메일"
