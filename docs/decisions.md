@@ -187,7 +187,8 @@ PR 댓글 자동 답변(Claude)의 근거. 작성 규칙은 `CLAUDE.md`의 "의�
 - 섬 꾸미기 API가 명세에 없어 형태를 프론트가 제안(`docs/api/island.md`, 미확정) — `GET /island/items`(잔액 포함), `POST /island/items/{itemId}/purchases`(`Idempotency-Key`), 오류 코드 404·409 두 개는 제안, 잔액 부족은 care-wool의 기존 코드
 - 데이터는 다른 기능과 같은 mock + TanStack Query — 연결 시 `islandApi.ts` 본문만 교체, 구매 성공은 캐시의 잔액·보유를 바로 바꾸고 invalidate, 이미 보유(409)는 성공으로 취급
 - 이 화면의 "내 양털"은 섬 목록 조회의 `woolBalance`(mock 47) — 임시. 홈(12)·`TEMP_WOOL_COUNT`와 숫자가 안 맞고 구매해도 다른 화면은 안 바뀜, 양털 기능을 붙일 때 한곳으로 모음
-- 섬 그림은 홈과 같은 파일, home 컴포넌트는 import하지 않고 `IslandScene`을 따로 둠 — 기능끼리 import 금지(규칙 2). 흰 바탕이 크림색 화면에서 네모로 보여 `mix-blend-mode: multiply`(홈은 그대로)
+- 섬 그림은 홈과 같은 파일, home 컴포넌트는 import하지 않고 `IslandScene`을 따로 둠 — 기능끼리 import 금지(규칙 2)
+- 섬 그림(`island@2x.webp`, 홈과 공용)을 배경 투명으로 교체 — 사용자 요청, 흰 바탕이 크림색 화면에서 네모로 보였음. Figma 원본(투명 PNG)에서 섬 전체(아래 물결까지)를 정사각형으로 잘라 690px(345의 2배) WebP, 27KB → 57KB. 시안의 물결 아래 직선 잘림이 없어지고 섬이 약 10% 작게 보임
 - 아이템 그림은 시안 원본(1254px PNG)을 242px WebP로 줄임 — 121px 표시의 2배, 12장 합계 약 116KB
 - 섬·구름 아이콘은 공용 `Icon`(`island`·`cloud`)에 이미 있어 그대로 씀
 - 홈 ↔ 섬 꾸미기 이동은 View Transitions — 사용자 요청, 섬 그림이 홈 자리에서 섬 꾸미기 자리로 옮겨 가고 시트는 아래에서 올라옴. react-router `viewTransition` 옵션 + CSS만(라이브러리 없음), 두 기능은 import 없이 `view-transition-name: island` 이름만 맞춤, 지원 안 하는 브라우저·움직임 줄이기는 바로 바뀜

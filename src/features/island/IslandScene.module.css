@@ -15,8 +15,6 @@
   max-height: 100%;
   aspect-ratio: 1;
   object-fit: contain;
-  /* 그림의 흰 바탕이 크림색 화면 바탕(--color-bg) 위에서 네모로 보이지 않게 곱하기로 섞는다 */
-  mix-blend-mode: multiply;
   /* 홈의 섬 그림(features/home/IslandHero)과 같은 이름 — 홈 ↔ 섬 꾸미기 전환 때 그림이 제자리로 옮겨 간다 */
   view-transition-name: island;
 }
