@@ -19,7 +19,7 @@ export default function SplashPage({ onComplete }: SplashPageProps) {
   }, [onComplete, variant])
 
   return (
-    <main className={styles.page} aria-label="Ganji splash">
+    <main className={styles.page} aria-label="폴리의 섬 시작 화면">
       <SplashArtwork variant={variant} className={styles.artwork} />
     </main>
   )
