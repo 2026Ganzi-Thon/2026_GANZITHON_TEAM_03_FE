@@ -1,24 +1,19 @@
 import { ApiError } from '@/shared/api'
 import oliveTree from '@/assets/images/island-items/01-olive-tree.webp'
 import flowerPot from '@/assets/images/island-items/02-flower-pot.webp'
-import steppingStones from '@/assets/images/island-items/03-stepping-stones.webp'
-import fence from '@/assets/images/island-items/04-fence.webp'
-import bench from '@/assets/images/island-items/05-bench.webp'
-import hammock from '@/assets/images/island-items/06-hammock.webp'
+// import steppingStones from '@/assets/images/island-items/03-stepping-stones.webp'
+// import fence from '@/assets/images/island-items/04-fence.webp'
+// import bench from '@/assets/images/island-items/05-bench.webp'
+// import hammock from '@/assets/images/island-items/06-hammock.webp'
 import lantern from '@/assets/images/island-items/07-lantern.webp'
-import feedingTrough from '@/assets/images/island-items/08-feeding-trough.webp'
+// import feedingTrough from '@/assets/images/island-items/08-feeding-trough.webp'
 import cheeseShelf from '@/assets/images/island-items/09-cheese-shelf.webp'
 import mailbox from '@/assets/images/island-items/10-mailbox.webp'
 import rowboat from '@/assets/images/island-items/11-rowboat.webp'
 import rug from '@/assets/images/island-items/12-rug.webp'
 import oliveTreePlaced from '@/assets/images/island-items/placed/01-olive-tree.webp'
 import flowerPotPlaced from '@/assets/images/island-items/placed/02-flower-pot.webp'
-import steppingStonesPlaced from '@/assets/images/island-items/placed/03-stepping-stones.webp'
-import fencePlaced from '@/assets/images/island-items/placed/04-fence.webp'
-import benchPlaced from '@/assets/images/island-items/placed/05-bench.webp'
-import hammockPlaced from '@/assets/images/island-items/placed/06-hammock.webp'
 import lanternPlaced from '@/assets/images/island-items/placed/07-lantern.webp'
-import feedingTroughPlaced from '@/assets/images/island-items/placed/08-feeding-trough.webp'
 import cheeseShelfPlaced from '@/assets/images/island-items/placed/09-cheese-shelf.webp'
 import mailboxPlaced from '@/assets/images/island-items/placed/10-mailbox.webp'
 import rowboatPlaced from '@/assets/images/island-items/placed/11-rowboat.webp'
@@ -50,23 +45,25 @@ function mock(
   return { itemId, name, category, price, imageUrl, placedImageUrl, placedOrder, owned: false }
 }
 
-// 모듈 메모리(새로고침하면 초기화). 순서·이름·값은 시안 카드(109:280~) 그대로 — 그림 파일 번호(01~12)와 같은 순서.
+// 모듈 메모리(새로고침하면 초기화). 이름·값은 시안 카드(109:280~) 그대로 — 그림 파일 번호(01~12)와 같은 순서.
 // 임의 결정(확인 필요): 분류 배정은 이름으로 정함 — 시안·명세에 없음
-// 임의 결정(확인 필요): 섬에 놓이는 자리(줄 끝 주석)는 가구마다 하나씩 다르게 정함 — 시안 없음. 놓인 그림(placed/*.webp)은
-// 카드 그림을 섬 그림 위 그 자리에 얹어 만든 투명 레이어다(그림자·동굴 안 색·물에 잠긴 부분 포함).
+// 섬에 놓이는 자리·크기·겹치는 순서(마지막 인자)는 담당자가 배치 도구로 직접 놓은 값이다(2026-11-15). 놓인 그림(placed/*.webp)은
+// 카드 그림을 섬 그림 위 그 자리에 얹어 만든 투명 레이어다(그림자·동굴 안 색·물에 잠긴 부분은 임의로 넣음).
+// 주석 처리한 5종(디딤돌·울타리·벤치·해먹·먹이통)은 자리를 아직 정하지 않아 목록에서 뺐다 — 사용자 요청.
+// 되살릴 때: 자리를 정해 placed/ 에 놓인 그림을 만들고, 위의 카드 그림 import 주석과 함께 푼 뒤 `…Placed` import 를 더한다.
 const mockItems: IslandItem[] = [
-  mock('1', '올리브 나무', 'PLANT', 12, oliveTree, oliveTreePlaced, 4), // 동굴 지붕의 흰 바위 꼭대기
-  mock('2', '꽃 화분', 'PLANT', 24, flowerPot, flowerPotPlaced, 7), // 동굴 입구 왼쪽 모래
-  mock('3', '디딤돌', 'PATH', 12, steppingStones, steppingStonesPlaced, 6), // 선착장에서 동굴로 가는 모래밭
-  mock('4', '울타리', 'PROP', 24, fence, fencePlaced, 2), // 동굴 지붕의 풀밭 능선
-  mock('5', '벤치', 'FURNITURE', 12, bench, benchPlaced, 9), // 동굴 앞 오른쪽 모래밭
-  mock('6', '해먹', 'FURNITURE', 24, hammock, hammockPlaced, 10), // 선착장 위
-  mock('7', '랜턴', 'LIGHT', 12, lantern, lanternPlaced, 11), // 선착장 안쪽 기둥 위
-  mock('8', '먹이통', 'PROP', 24, feedingTrough, feedingTroughPlaced, 3), // 큰 올리브 나무 아래 풀밭
-  mock('9', '치즈 선반', 'FURNITURE', 12, cheeseShelf, cheeseShelfPlaced, 5), // 동굴 안 왼쪽 벽
-  mock('10', '우편함', 'PROP', 24, mailbox, mailboxPlaced, 8), // 선착장 왼쪽 둔덕
-  mock('11', '나룻배', 'PROP', 12, rowboat, rowboatPlaced, 12), // 오른쪽 앞 물 위
-  mock('12', '러그', 'PATH', 24, rug, rugPlaced, 1), // 동굴 바닥
+  mock('1', '올리브 나무', 'PLANT', 12, oliveTree, oliveTreePlaced, 2),
+  mock('2', '꽃 화분', 'PLANT', 24, flowerPot, flowerPotPlaced, 7),
+  // mock('3', '디딤돌', 'PATH', 12, steppingStones, steppingStonesPlaced, 0),
+  // mock('4', '울타리', 'PROP', 24, fence, fencePlaced, 0),
+  // mock('5', '벤치', 'FURNITURE', 12, bench, benchPlaced, 0),
+  // mock('6', '해먹', 'FURNITURE', 24, hammock, hammockPlaced, 0),
+  mock('7', '랜턴', 'LIGHT', 12, lantern, lanternPlaced, 11),
+  // mock('8', '먹이통', 'PROP', 24, feedingTrough, feedingTroughPlaced, 0),
+  mock('9', '치즈 선반', 'FURNITURE', 12, cheeseShelf, cheeseShelfPlaced, 5),
+  mock('10', '우편함', 'PROP', 24, mailbox, mailboxPlaced, 8),
+  mock('11', '나룻배', 'PROP', 12, rowboat, rowboatPlaced, 12),
+  mock('12', '러그', 'PATH', 24, rug, rugPlaced, 1),
 ]
 
 // 임의 결정(확인 필요): 시작 잔액 47 은 시안 머리의 "내 양털 47개" — 다른 화면(홈 12)과 맞지 않는 임시 값
