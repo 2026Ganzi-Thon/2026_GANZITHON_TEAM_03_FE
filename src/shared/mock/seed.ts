@@ -36,7 +36,7 @@ export interface MockDbState {
   emotionRecords: MockEmotionRecordRow[]
   nextEmotionRecordId: number
   concerns: MockConcernRow[]
-  /** 섬 꾸미기 아이템 보유. 섬 꾸미기 브랜치가 병합되면 그쪽 mock 을 여기로 옮긴다 */
+  /** 섬 꾸미기에서 산 아이템 ID. 아이템 목록 자체는 features/island/islandApi.ts 상수 */
   island: { ownedItemIds: string[] }
 }
 
