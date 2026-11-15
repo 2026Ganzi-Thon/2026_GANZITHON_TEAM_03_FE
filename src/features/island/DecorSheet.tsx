@@ -40,6 +40,9 @@ export function DecorSheet({ expanded, onExpandedChange, head, children }: Decor
   const [offset, setOffset] = useState<number | null>(null)
 
   const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
+    // 새로 누르기 시작하면 지난 끌기의 "click 막기"는 끝난 것이다. 터치는 끌고 나면 click 이 아예 오지 않아서,
+    // 여기서 풀지 않으면 표시가 남아 다음에 누른 카드의 첫 click 을 삼킨다(카드를 두 번 눌러야 선택되던 문제)
+    suppressClick.current = false
     if (event.pointerType === 'mouse' && event.button !== 0) return
     // 펼친 상태의 카드 목록은 스크롤 영역이라 끌기로 쓰지 않는다
     if (expanded && bodyRef.current?.contains(event.target as Node)) return
@@ -55,7 +58,6 @@ export function DecorSheet({ expanded, onExpandedChange, head, children }: Decor
       ...(expanded ? { min: 0, max: sheetRect.height } : { min: -(sheetRect.height - visible), max: 0 }),
       moved: false,
     }
-    suppressClick.current = false
   }
 
   const handlePointerMove = (event: PointerEvent<HTMLElement>) => {
@@ -76,7 +78,7 @@ export function DecorSheet({ expanded, onExpandedChange, head, children }: Decor
     if (!current || current.pointerId !== event.pointerId) return
     drag.current = null
     if (!current.moved) return
-    // 끌었으면 뒤따르는 click(칩 선택·손잡이 전환)을 막는다
+    // 끌었으면 바로 뒤따르는 click(칩 선택·손잡이 전환)을 막는다. 마우스는 끈 뒤에도 click 이 온다
     suppressClick.current = true
     const delta = event.clientY - current.startY
     setOffset(null)
