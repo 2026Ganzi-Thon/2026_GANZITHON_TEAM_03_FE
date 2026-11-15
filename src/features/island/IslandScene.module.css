@@ -11,6 +11,16 @@
 
 /* 섬과 놓인 아이템을 겹치는 정사각형. 자리가 모자라면 정사각형을 유지한 채 줄어든다 */
 .canvas {
+  /*
+   * 물결(비교 시안 F, 사용자 선택): 빛 띠 진하기 75%, 두 겹이 5초·7.5초에 한 바퀴씩 반대로 흐르고,
+   * 전체가 섬 높이의 ±0.9%(345px 에서 약 3px)를 2.8초에 한 번 오르내린다. 나룻배는 같은 박자로 ±0.3%·±1.5도.
+   */
+  --wave-opacity: 0.75;
+  --wave-flow-a: 5s;
+  --wave-flow-b: 7.5s;
+  --wave-bob: 2.8s;
+  --wave-rise: 0.9%;
+
   position: relative;
   flex: none;
   width: min(345px, 100cqw, 100cqh);
@@ -28,6 +38,72 @@
   pointer-events: none;
 }
 
+/* ── 물결 ─────────────────────────────────────────────── */
+
+/* 섬 그림에서 물인 곳만 보이게 자른다(water-mask: 물 = 불투명). 바위·선착장·기둥 위로는 물결이 올라가지 않는다 */
+.water {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: var(--wave-opacity);
+  pointer-events: none;
+  -webkit-mask: url('../../assets/images/island-water/water-mask.webp') 0 0 / 100% 100% no-repeat;
+  mask: url('../../assets/images/island-water/water-mask.webp') 0 0 / 100% 100% no-repeat;
+}
+
+.bob {
+  position: absolute;
+  inset: 0;
+  animation: wave-bob var(--wave-bob) ease-in-out var(--wave-sync, 0s) infinite alternate;
+}
+
+/* 빛 띠 그림은 가로로 이어 붙는다. 두 배 폭으로 깔고 절반만큼 밀면 끊김 없이 돈다 */
+.waveA,
+.waveB {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background-repeat: repeat-x;
+  background-size: 50% 100%;
+}
+
+.waveA {
+  background-image: url('../../assets/images/island-water/waves-a.webp');
+  animation: wave-flow-left var(--wave-flow-a) linear infinite;
+}
+
+.waveB {
+  left: -100%;
+  background-image: url('../../assets/images/island-water/waves-b.webp');
+  animation: wave-flow-right var(--wave-flow-b) linear infinite;
+}
+
+@keyframes wave-flow-left {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes wave-flow-right {
+  to {
+    transform: translateX(50%);
+  }
+}
+
+@keyframes wave-bob {
+  from {
+    transform: translateY(calc(var(--wave-rise) * -1));
+  }
+
+  to {
+    transform: translateY(var(--wave-rise));
+  }
+}
+
+/* ── 놓인 아이템 ───────────────────────────────────────── */
+
 /* 임의 결정(확인 필요): 놓일 때 서서히 나타나며 아주 조금(섬 높이의 0.8%) 내려앉는다(0.25초) — 시안 없음 */
 .item {
   animation: place 0.25s ease-out both;
@@ -40,8 +116,43 @@
   }
 }
 
+/* 물에 뜬 아이템(나룻배): 물결과 같은 박자로 오르내리며 까딱인다. 중심은 아이템이 떠 있는 자리(--float-x·y) */
+.float {
+  transform-origin: var(--float-x, 50%) var(--float-y, 50%);
+  animation: float var(--wave-bob) ease-in-out var(--wave-sync, 0s) infinite alternate;
+}
+
+/* 놓일 때는 서서히 나타나기만 하고(자리 이동은 출렁임과 겹쳐서 뺀다) 바로 출렁인다 */
+.item.float {
+  animation:
+    appear 0.25s ease-out both,
+    float var(--wave-bob) ease-in-out var(--wave-sync, 0s) infinite alternate;
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes float {
+  from {
+    transform: translateY(-0.3%) rotate(-1.5deg);
+  }
+
+  to {
+    transform: translateY(0.3%) rotate(1.5deg);
+  }
+}
+
+/* 움직임 줄이기: 물결 띠는 멈춘 채로 두고, 아이템은 바로 나타난다 */
 @media (prefers-reduced-motion: reduce) {
-  .item {
+  .bob,
+  .waveA,
+  .waveB,
+  .item,
+  .float,
+  .item.float {
     animation: none;
   }
 }

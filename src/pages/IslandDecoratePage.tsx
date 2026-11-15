@@ -1,4 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { homeKeys } from '@/features/home'
+import type { HomeSummary } from '@/features/home'
 import {
   DecorSheet,
   ISLAND_CATEGORIES,
@@ -22,7 +25,7 @@ export interface IslandDecoratePageProps {
  * "섬 꾸미기"(시안 102:744): 섬 그림 아래 시트에서 아이템을 분류별로 보고 양털로 산다.
  * 카드를 한 번 누르면 그 아이템이 섬에 놓여 보이고(미리보기, 한 번에 하나), 선택된 카드를 한 번 더 누르면 구매 확인이 뜬다.
  * 산 아이템은 섬에 계속 놓여 있다. 탭바는 없다.
- * "내 양털"은 이 화면의 조회 값(woolBalance)을 쓴다 — 다른 화면과 아직 맞지 않는 임시 상태(docs/decisions.md).
+ * "내 양털"은 이 화면의 조회 값(woolBalance)을 쓴다 — mock 끼리는 같은 잔액을 봐서 홈 등 다른 화면과 숫자가 같다(임시, docs/decisions.md).
  */
 export default function IslandDecoratePage({ onBack, onOpenSettings }: IslandDecoratePageProps) {
   const { state, retry } = useIslandItems()
@@ -42,6 +45,14 @@ export default function IslandDecoratePage({ onBack, onOpenSettings }: IslandDec
   const purchaseTarget = items.find((item) => item.itemId === purchaseId) ?? null
   // 섬에 놓이는 것: 가진 아이템 전부 + 지금 놓아 보는 하나
   const placed = items.filter((item) => item.owned || item.itemId === previewId)
+
+  // 양털이 바뀌면(구매) 홈 요약 캐시의 "내 양털"도 바로 맞춘다 — 홈으로 돌아갔을 때 옛 숫자가 잠깐 보이지 않게.
+  // 홈은 들어올 때마다 다시 받으므로(staleTime 0) 여기서는 캐시 값만 고친다. 두 기능을 아는 페이지가 잇는다(규칙 2)
+  const queryClient = useQueryClient()
+  useEffect(() => {
+    if (woolBalance === undefined) return
+    queryClient.setQueryData(homeKeys.summary(), (old?: HomeSummary) => (old ? { ...old, woolBalance } : old))
+  }, [queryClient, woolBalance])
 
   const selectCategory = (value: IslandCategoryFilter) => {
     setCategory(value)
