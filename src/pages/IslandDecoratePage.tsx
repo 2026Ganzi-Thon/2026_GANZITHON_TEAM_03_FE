@@ -20,7 +20,8 @@ export interface IslandDecoratePageProps {
 
 /**
  * "섬 꾸미기"(시안 102:744): 섬 그림 아래 시트에서 아이템을 분류별로 보고 양털로 산다.
- * 산 아이템을 섬 위에 놓아 보여주는 것은 2차 — 섬은 홈과 같은 고정 그림. 탭바는 없다.
+ * 카드를 한 번 누르면 그 아이템이 섬에 놓여 보이고(미리보기, 한 번에 하나), 선택된 카드를 한 번 더 누르면 구매 확인이 뜬다.
+ * 산 아이템은 섬에 계속 놓여 있다. 탭바는 없다.
  * "내 양털"은 이 화면의 조회 값(woolBalance)을 쓴다 — 다른 화면과 아직 맞지 않는 임시 상태(docs/decisions.md).
  */
 export default function IslandDecoratePage({ onBack, onOpenSettings }: IslandDecoratePageProps) {
@@ -28,14 +29,19 @@ export default function IslandDecoratePage({ onBack, onOpenSettings }: IslandDec
   const { state: purchaseState, purchase, reset } = usePurchaseIslandItem()
   const [category, setCategory] = useState<IslandCategoryFilter>('ALL')
   const [expanded, setExpanded] = useState(false)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  /** 섬에 놓아 보는 중인 아이템(카드 선택) */
+  const [previewId, setPreviewId] = useState<string | null>(null)
+  /** 구매 확인 중인 아이템(모달) */
+  const [purchaseId, setPurchaseId] = useState<string | null>(null)
   const [announcement, setAnnouncement] = useState('')
 
   const items = state.status === 'success' ? state.items : []
   const woolBalance = state.status === 'success' ? state.woolBalance : undefined
   const visibleItems = category === 'ALL' ? items : items.filter((item) => item.category === category)
   // 목록을 다시 받아 보유·잔액이 바뀌면 모달도 최신 값을 쓴다
-  const selected = items.find((item) => item.itemId === selectedId) ?? null
+  const purchaseTarget = items.find((item) => item.itemId === purchaseId) ?? null
+  // 섬에 놓이는 것: 가진 아이템 전부 + 지금 놓아 보는 하나
+  const placed = items.filter((item) => item.owned || item.itemId === previewId)
 
   const selectCategory = (value: IslandCategoryFilter) => {
     setCategory(value)
@@ -43,17 +49,25 @@ export default function IslandDecoratePage({ onBack, onOpenSettings }: IslandDec
     setExpanded(true)
   }
 
-  const openPurchase = (item: IslandItem) => {
+  // 임의 결정(확인 필요): 첫 번째 누름은 선택(섬에 놓아 보기), 선택된 카드를 다시 누르면 구매 확인.
+  // 다른 카드를 누르면 선택이 옮겨 가고, 구매 확인을 취소해도 선택은 남는다
+  const selectItem = (item: IslandItem) => {
     if (item.owned) return
+    if (item.itemId !== previewId) {
+      setPreviewId(item.itemId)
+      setAnnouncement(`섬에 놓아 봤어요: ${item.name}. 한 번 더 누르면 구매해요.`)
+      return
+    }
     reset()
-    setSelectedId(item.itemId)
+    setPurchaseId(item.itemId)
   }
 
   const confirmPurchase = async () => {
-    if (!selected) return
-    const name = selected.name
-    if (await purchase(selected.itemId)) {
-      setSelectedId(null)
+    if (!purchaseTarget) return
+    const name = purchaseTarget.name
+    if (await purchase(purchaseTarget.itemId)) {
+      setPurchaseId(null)
+      setPreviewId(null)
       setAnnouncement(`구매했어요: ${name}`)
     }
   }
@@ -64,7 +78,7 @@ export default function IslandDecoratePage({ onBack, onOpenSettings }: IslandDec
       <BackButton className={styles.back} onClick={onBack} />
 
       <div className={styles.stage} data-expanded={expanded || undefined}>
-        <IslandScene />
+        <IslandScene placed={placed} />
       </div>
 
       <DecorSheet
@@ -80,15 +94,21 @@ export default function IslandDecoratePage({ onBack, onOpenSettings }: IslandDec
           </div>
         }
       >
-        <IslandItemGrid status={state.status} items={visibleItems} onSelect={openPurchase} onRetry={retry} />
+        <IslandItemGrid
+          status={state.status}
+          items={visibleItems}
+          selectedId={previewId}
+          onSelect={selectItem}
+          onRetry={retry}
+        />
       </DecorSheet>
 
       <IslandPurchaseModal
-        item={selected}
+        item={purchaseTarget}
         woolBalance={woolBalance ?? 0}
         state={purchaseState}
         onConfirm={() => void confirmPurchase()}
-        onClose={() => setSelectedId(null)}
+        onClose={() => setPurchaseId(null)}
       />
 
       <p className={styles.visuallyHidden} role="status">

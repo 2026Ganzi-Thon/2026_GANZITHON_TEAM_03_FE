@@ -66,6 +66,22 @@
   line-height: var(--line-height-normal);
 }
 
+/* 선택(섬에 놓아 보는 중): 한 번 더 누르면 구매 */
+.selected,
+.selected:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  background-color: var(--color-surface);
+}
+
+.selected .price {
+  background-color: var(--color-accent);
+  color: var(--color-white);
+}
+
+.buy {
+  margin-left: var(--space-1);
+}
+
 .owned {
   border-color: var(--color-primary);
   color: var(--color-primary);

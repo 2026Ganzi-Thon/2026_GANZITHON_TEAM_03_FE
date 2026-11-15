@@ -11,10 +11,22 @@ import cheeseShelf from '@/assets/images/island-items/09-cheese-shelf.webp'
 import mailbox from '@/assets/images/island-items/10-mailbox.webp'
 import rowboat from '@/assets/images/island-items/11-rowboat.webp'
 import rug from '@/assets/images/island-items/12-rug.webp'
+import oliveTreePlaced from '@/assets/images/island-items/placed/01-olive-tree.webp'
+import flowerPotPlaced from '@/assets/images/island-items/placed/02-flower-pot.webp'
+import steppingStonesPlaced from '@/assets/images/island-items/placed/03-stepping-stones.webp'
+import fencePlaced from '@/assets/images/island-items/placed/04-fence.webp'
+import benchPlaced from '@/assets/images/island-items/placed/05-bench.webp'
+import hammockPlaced from '@/assets/images/island-items/placed/06-hammock.webp'
+import lanternPlaced from '@/assets/images/island-items/placed/07-lantern.webp'
+import feedingTroughPlaced from '@/assets/images/island-items/placed/08-feeding-trough.webp'
+import cheeseShelfPlaced from '@/assets/images/island-items/placed/09-cheese-shelf.webp'
+import mailboxPlaced from '@/assets/images/island-items/placed/10-mailbox.webp'
+import rowboatPlaced from '@/assets/images/island-items/placed/11-rowboat.webp'
+import rugPlaced from '@/assets/images/island-items/placed/12-rug.webp'
 import type { IslandItem, IslandItemCategory, IslandItemsResponse, PurchaseIslandItemResponse } from './types'
 
 // TODO(API 연결): 섬 꾸미기 API 는 아직 없다. 형태는 프론트 제안(docs/api/island.md)이고, 확정되면 아래 두 함수의 본문만
-// 호출로 바꾼다. mock 상수·지연·메모리 배열·그림 import 는 함께 지운다(그림은 서버 imageUrl 로 온다).
+// 호출로 바꾼다. mock 상수·지연·메모리 배열·그림 import 는 함께 지운다(그림은 서버 imageUrl·placedImageUrl 로 온다).
 //   fetchIslandItems:   return api.get<IslandItemsResponse>('/island/items')
 //   purchaseIslandItem: return api.post<PurchaseIslandItemResponse>(`/island/items/${itemId}/purchases`, undefined, { idempotencyKey })
 // (api 는 `@/shared/api`. 구매는 양털을 쓰는 쓰기라 `Idempotency-Key` 가 필요하다 — 같은 구매를 다시 보낼 때 같은 키를 쓰도록
@@ -26,25 +38,35 @@ export const ISLAND_ITEM_ALREADY_OWNED = 'ISLAND_ITEM_ALREADY_OWNED'
 /** docs/api/care-wool.md 에 이미 있는 코드를 같이 쓴다 */
 export const WOOL_BALANCE_INSUFFICIENT = 'WOOL_BALANCE_INSUFFICIENT'
 
-function mock(itemId: string, name: string, category: IslandItemCategory, price: number, imageUrl: string): IslandItem {
-  return { itemId, name, category, price, imageUrl, owned: false }
+function mock(
+  itemId: string,
+  name: string,
+  category: IslandItemCategory,
+  price: number,
+  imageUrl: string,
+  placedImageUrl: string,
+  placedOrder: number,
+): IslandItem {
+  return { itemId, name, category, price, imageUrl, placedImageUrl, placedOrder, owned: false }
 }
 
 // 모듈 메모리(새로고침하면 초기화). 순서·이름·값은 시안 카드(109:280~) 그대로 — 그림 파일 번호(01~12)와 같은 순서.
 // 임의 결정(확인 필요): 분류 배정은 이름으로 정함 — 시안·명세에 없음
+// 임의 결정(확인 필요): 섬에 놓이는 자리(줄 끝 주석)는 가구마다 하나씩 다르게 정함 — 시안 없음. 놓인 그림(placed/*.webp)은
+// 카드 그림을 섬 그림 위 그 자리에 얹어 만든 투명 레이어다(그림자·동굴 안 색·물에 잠긴 부분 포함).
 const mockItems: IslandItem[] = [
-  mock('1', '올리브 나무', 'PLANT', 12, oliveTree),
-  mock('2', '꽃 화분', 'PLANT', 24, flowerPot),
-  mock('3', '디딤돌', 'PATH', 12, steppingStones),
-  mock('4', '울타리', 'PROP', 24, fence),
-  mock('5', '벤치', 'FURNITURE', 12, bench),
-  mock('6', '해먹', 'FURNITURE', 24, hammock),
-  mock('7', '랜턴', 'LIGHT', 12, lantern),
-  mock('8', '먹이통', 'PROP', 24, feedingTrough),
-  mock('9', '치즈 선반', 'FURNITURE', 12, cheeseShelf),
-  mock('10', '우편함', 'PROP', 24, mailbox),
-  mock('11', '나룻배', 'PROP', 12, rowboat),
-  mock('12', '러그', 'PATH', 24, rug),
+  mock('1', '올리브 나무', 'PLANT', 12, oliveTree, oliveTreePlaced, 4), // 동굴 지붕의 흰 바위 꼭대기
+  mock('2', '꽃 화분', 'PLANT', 24, flowerPot, flowerPotPlaced, 7), // 동굴 입구 왼쪽 모래
+  mock('3', '디딤돌', 'PATH', 12, steppingStones, steppingStonesPlaced, 6), // 선착장에서 동굴로 가는 모래밭
+  mock('4', '울타리', 'PROP', 24, fence, fencePlaced, 2), // 동굴 지붕의 풀밭 능선
+  mock('5', '벤치', 'FURNITURE', 12, bench, benchPlaced, 9), // 동굴 앞 오른쪽 모래밭
+  mock('6', '해먹', 'FURNITURE', 24, hammock, hammockPlaced, 10), // 선착장 위
+  mock('7', '랜턴', 'LIGHT', 12, lantern, lanternPlaced, 11), // 선착장 안쪽 기둥 위
+  mock('8', '먹이통', 'PROP', 24, feedingTrough, feedingTroughPlaced, 3), // 큰 올리브 나무 아래 풀밭
+  mock('9', '치즈 선반', 'FURNITURE', 12, cheeseShelf, cheeseShelfPlaced, 5), // 동굴 안 왼쪽 벽
+  mock('10', '우편함', 'PROP', 24, mailbox, mailboxPlaced, 8), // 선착장 왼쪽 둔덕
+  mock('11', '나룻배', 'PROP', 12, rowboat, rowboatPlaced, 12), // 오른쪽 앞 물 위
+  mock('12', '러그', 'PATH', 24, rug, rugPlaced, 1), // 동굴 바닥
 ]
 
 // 임의 결정(확인 필요): 시작 잔액 47 은 시안 머리의 "내 양털 47개" — 다른 화면(홈 12)과 맞지 않는 임시 값

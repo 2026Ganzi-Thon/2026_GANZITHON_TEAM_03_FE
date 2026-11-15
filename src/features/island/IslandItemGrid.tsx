@@ -7,6 +7,8 @@ export interface IslandItemGridProps {
   status: 'loading' | 'error' | 'success'
   /** 분류로 거른 아이템 */
   items: IslandItem[]
+  /** 섬에 놓아 보는 중인 아이템 */
+  selectedId?: string | null
   onSelect: (item: IslandItem) => void
   onRetry: () => void
 }
@@ -14,7 +16,7 @@ export interface IslandItemGridProps {
 const SKELETON_COUNT = 4
 
 /** 2열 아이템 카드 목록과 그 로딩·오류·빈 분류 상태. */
-export function IslandItemGrid({ status, items, onSelect, onRetry }: IslandItemGridProps) {
+export function IslandItemGrid({ status, items, selectedId = null, onSelect, onRetry }: IslandItemGridProps) {
   if (status === 'error') {
     return (
       <div className={styles.status} role="alert">
@@ -50,7 +52,7 @@ export function IslandItemGrid({ status, items, onSelect, onRetry }: IslandItemG
     <ul className={styles.grid}>
       {items.map((item) => (
         <li key={item.itemId} className={styles.cell}>
-          <IslandItemCard item={item} onSelect={onSelect} />
+          <IslandItemCard item={item} selected={item.itemId === selectedId} onSelect={onSelect} />
         </li>
       ))}
     </ul>
