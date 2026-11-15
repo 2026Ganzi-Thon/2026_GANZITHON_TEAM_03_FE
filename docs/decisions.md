@@ -117,6 +117,12 @@ PR 댓글 자동 답변(Claude)의 근거. 작성 규칙은 `CLAUDE.md`의 "의�
 - 핀치·더블탭 확대를 막음 — 사용자 요청, 앱처럼 고정 화면으로 보이게. `viewport`에 `maximum-scale=1, user-scalable=no`, `touch-action: manipulation`, iOS는 viewport 설정을 무시해서 `gesturestart` 이벤트도 막음(`main.tsx`)
 - 접근성 단점은 알고 감 — 확대를 막으면 시력이 약한 사용자가 화면을 키울 수 없음, 필요하면 되돌린다
 
+## 2026-11-15 지푸라기 입력 줄바꿈
+
+- 지푸라기(메모) 입력을 한 줄 입력(`input`)에서 여러 줄 `textarea`로 바꿈 — 사용자 요청, Enter로 줄바꿈되고 줄이 늘면 입력창이 같이 커지며 8줄이 넘으면 안에서 스크롤
+- 모양은 시안의 밑줄 입력 그대로 — 공통 `TextArea`는 테두리형이라 쓰지 않고 `features/emotion/MemoField`에서 공통 `Field`와 밑줄 스타일을 직접 구성
+- 목록 미리보기는 한 줄 — 줄바꿈은 공백으로 이어져 "First line Second line Third line"처럼 보이고 길면 …
+
 ## 임의 결정 — 확인 필요 (홈)
 
 코드에서는 `grep -rn "임의 결정(확인 필요)" src` 로 찾는다. 구현 화면 스크린샷은 Figma `Main Product`(0:1)의 "임의 생성 — 확인 필요 (홈)" 프레임(176:488, 컴포넌트 나열 영역 왼쪽)에 있다.
