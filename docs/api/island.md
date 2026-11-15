@@ -24,6 +24,7 @@ type IslandItem = {
   imageUrl: string | null       // 목록 카드 그림(정사각, 표시 121px → 242px 이상 권장)
   placedImageUrl: string | null // 섬에 놓인 모습: 섬 그림과 같은 크기의 투명 그림(표시 345px → 690px 권장). 없으면 놓아 보일 수 없음
   placedOrder: number           // 섬 위에서 겹치는 순서, 작은 값이 아래
+  floatAt: { x: number; y: number } | null  // 물에 뜬 아이템(나룻배)의 흔들림 중심(섬 그림에서의 %). 물결에 맞춰 까딱임. 아니면 null
   owned: boolean                // 내가 이미 샀는지
 }
 ```

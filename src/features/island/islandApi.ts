@@ -42,8 +42,9 @@ function mock(
   imageUrl: string,
   placedImageUrl: string,
   placedOrder: number,
+  floatAt: IslandItem['floatAt'] = null,
 ): IslandItem {
-  return { itemId, name, category, price, imageUrl, placedImageUrl, placedOrder, owned: false }
+  return { itemId, name, category, price, imageUrl, placedImageUrl, placedOrder, floatAt, owned: false }
 }
 
 // 모듈 메모리(새로고침하면 초기화). 이름·값은 시안 카드(109:280~) 그대로 — 그림 파일 번호(01~12)와 같은 순서.
@@ -63,7 +64,8 @@ const mockItems: IslandItem[] = [
   // mock('8', '먹이통', 'PROP', 24, feedingTrough, feedingTroughPlaced, 0),
   mock('9', '치즈 선반', 'FURNITURE', 12, cheeseShelf, cheeseShelfPlaced, 5),
   mock('10', '우편함', 'PROP', 24, mailbox, mailboxPlaced, 8),
-  mock('11', '나룻배', 'PROP', 12, rowboat, rowboatPlaced, 12),
+  // 나룻배는 물에 떠 있다 — 흔들림 중심은 놓인 그림에서 배의 한가운데쯤
+  mock('11', '나룻배', 'PROP', 12, rowboat, rowboatPlaced, 12, { x: 65.5, y: 85 }),
   mock('12', '러그', 'PATH', 24, rug, rugPlaced, 1),
 ]
 
