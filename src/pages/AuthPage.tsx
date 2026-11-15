@@ -1,9 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { BackButton } from '@/shared/ui/BackButton'
-import { Button } from '@/shared/ui/Button'
-import { Checkbox } from '@/shared/ui/Checkbox'
-import { TextField } from '@/shared/ui/TextField'
+import { BackButton, Button, Checkbox, TextField } from '@/shared/ui'
 import googleLogo from '@/assets/images/google-original.png'
 import styles from './AuthPage.module.css'
 
@@ -25,12 +22,17 @@ export default function AuthPage({ mode, onBack, onSwitchMode, onContinue }: Aut
 
   return (
     <main className={styles.page} aria-label={isSignup ? '회원가입' : '로그인'}>
-      <BackButton className={styles.back} aria-label="뒤로 가기" onClick={onBack} />
+      <div className={styles.topBar}>
+        <BackButton className={styles.back} aria-label="뒤로 가기" onClick={onBack} />
+      </div>
 
       <header className={styles.heading}>
         <h1>{isSignup ? '회원가입' : '로그인'}</h1>
         <p>{isSignup ? '계정을 만들어주세요' : '계속하려면 로그인하세요'}</p>
       </header>
+
+      {/* 위·아래 두 빈칸이 화면 높이에 따라 늘고 준다(시안 852 기준 95 : 147) */}
+      <div className={styles.spacerTop} aria-hidden="true" />
 
       <button type="button" className={styles.google}>
         <img className={styles.googleMark} src={googleLogo} alt="" aria-hidden="true" />
@@ -67,6 +69,8 @@ export default function AuthPage({ mode, onBack, onSwitchMode, onContinue }: Aut
         >
           로그인 유지하기
         </Checkbox>
+
+        <div className={styles.spacerBottom} aria-hidden="true" />
 
         <Button className={styles.submit} variant="primary" size="lg" fullWidth type="submit">
           {isSignup ? '회원가입' : '로그인'}

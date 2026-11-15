@@ -1,12 +1,37 @@
+/* 로고: 시안 위치(가로 가운데, 위에서 197/852) — 화면 높이 비율로 둔다 */
+.logo {
+  position: absolute;
+  top: calc(197 / 852 * 100%);
+  left: 50%;
+  width: 130px;
+  height: 72px;
+  translate: -50% 0;
+  overflow: visible;
+}
+
+/* 섬: 시안처럼 좌우 끝까지, 아래에서 63/852 높이 비율 위에 붙는다(로고와 같은 방식). 크기는 폭에 맞춰 커진다 */
+.islands {
+  position: absolute;
+  right: 0;
+  bottom: calc(63 / 852 * 100%);
+  left: 0;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 393 / 198;
+  /* 섬은 시안에서도 프레임 밖까지 그려져 있다. 잘라내는 건 페이지(overflow: hidden)가 맡고, 떠오르는 동안 아래가 잘리지 않게 한다 */
+  overflow: visible;
+}
+
 .islandReveal,
 .islandRevealLater {
   transform-box: fill-box;
   transform-origin: center;
-  animation: islandRise 950ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+  /* 천천히 올라와 끝에서 부드럽게 멈춘다(뒤 섬이 0.1초 늦게 시작해 SplashPage 의 ISLANDS_MS 1.4초에 끝남) */
+  animation: islandRise 1300ms cubic-bezier(0.33, 1, 0.68, 1) both;
 }
 
 .islandRevealLater {
-  animation-delay: 110ms;
+  animation-delay: 100ms;
 }
 
 @keyframes islandRise {

@@ -1,11 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { BackButton } from '@/shared/ui/BackButton'
-import { Button } from '@/shared/ui/Button'
-import { Checkbox } from '@/shared/ui/Checkbox'
-import { Icon } from '@/shared/ui/Icon'
-import { Select } from '@/shared/ui/Select'
-import { TextField } from '@/shared/ui/TextField'
+import { BackButton, Button, Checkbox, Icon, Select, TextField } from '@/shared/ui'
 import styles from './InitialSetupPage.module.css'
 
 type ConsentKey = 'terms' | 'privacy' | 'marketing'
@@ -56,7 +51,9 @@ export default function InitialSetupPage({ onBack, onLogin, onComplete }: Initia
 
   return (
     <main className={styles.page} aria-label="초기 설정">
-      <BackButton className={styles.back} aria-label="뒤로 가기" onClick={onBack} />
+      <div className={styles.topBar}>
+        <BackButton className={styles.back} aria-label="뒤로 가기" onClick={onBack} />
+      </div>
 
       <header className={styles.heading}>
         <h1>회원가입</h1>
@@ -134,7 +131,8 @@ export default function InitialSetupPage({ onBack, onLogin, onComplete }: Initia
                   {' '}{consentLabels[key].label}
                 </Checkbox>
                 <button className={styles.detail} type="button" aria-label={`${consentLabels[key].label} 보기`}>
-                  <Icon name="chevron-right" size={16} />
+                  {/* 임의 결정(확인 필요): 시안 화살표(높이 8, 2px 선)와 같은 아이콘이 없어 공용 chevron-right 를 10px 로 줄여 씀 */}
+                  <Icon name="chevron-right" size={10} />
                 </button>
               </div>
             ))}
