@@ -10,6 +10,11 @@ body,
   height: 100%;
 }
 
+/* 화면 확대 막기: 더블탭 확대를 끈다(핀치 확대는 main.tsx 에서 막는다). 스크롤·탭은 그대로 된다 */
+html {
+  touch-action: manipulation;
+}
+
 body,
 h1,
 h2,
@@ -167,9 +172,11 @@ body {
   --z-modal: 100;
 
   /* Layout - 모바일 기준 화면 (393 x 852) */
-  --app-max-width: 393px;
+  /* 앱 최대 폭: 가장 큰 아이폰 17 Pro Max 폭. 아이폰에서는 화면을 꽉 채우고, 더 넓은 화면(데스크톱)에서만 이 폭으로 가운데 정렬 */
+  --app-max-width: 440px;
   --page-padding-x: 24px;
-  --tabbar-height: 92px;
+  /* 탭바 실제 높이: 항목 60 + 위 여백 5 + 기기 아래 안전 영역(Safari 주소창이면 0, PWA 홈 인디케이터면 ~34) */
+  --tabbar-height: calc(65px + env(safe-area-inset-bottom));
 }
 
 /* 키보드 포커스 링 - 공용 컴포넌트가 같이 쓴다 */

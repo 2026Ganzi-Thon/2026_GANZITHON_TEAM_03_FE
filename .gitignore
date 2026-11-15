@@ -10,6 +10,7 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+# vite-plugin-pwa 개발 모드가 만드는 파일
 dev-dist/
 *.local
 

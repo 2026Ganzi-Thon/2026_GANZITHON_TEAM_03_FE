@@ -1,0 +1,52 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  background-color: var(--color-bg);
+  animation: fade-in 0.2s ease-out;
+}
+
+.sheep {
+  width: 160px;
+  height: 160px;
+  transform: scaleX(-1);
+  animation: hop 0.5s ease-out 0.15s 2;
+}
+
+.text {
+  font-size: var(--font-size-medium);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-medium);
+}
+
+/* 모든 프레임이 같은 변환 목록(translateY·scale·scaleX)이어야 중간값이 어색하게 섞이지 않는다 */
+@keyframes hop {
+  0%,
+  100% {
+    transform: translateY(0) scale(1, 1) scaleX(-1);
+  }
+  40% {
+    transform: translateY(-24px) scale(1, 1) scaleX(-1);
+  }
+  70% {
+    transform: translateY(0) scale(1.04, 0.96) scaleX(-1);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .sheep {
+    animation: none;
+  }
+}
