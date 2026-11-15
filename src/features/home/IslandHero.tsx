@@ -1,5 +1,5 @@
 import { Button, Icon } from '@/shared/ui'
-import islandImage from '@/assets/images/island@2x.png'
+import islandImage from '@/assets/images/island@2x.webp'
 import styles from './IslandHero.module.css'
 
 export interface IslandHeroProps {

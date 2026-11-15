@@ -7,9 +7,14 @@ import EmotionPage from '@/pages/EmotionPage'
 import EmotionRecordPage from '@/pages/EmotionRecordPage'
 import EmotionWritePage from '@/pages/EmotionWritePage'
 import HomePage from '@/pages/HomePage'
+import AuthPage from '@/pages/AuthPage'
+import InitialSetupPage from '@/pages/InitialSetupPage'
+import OnboardingPage from '@/pages/OnboardingPage'
+import SplashPage from '@/pages/SplashPage'
 import AppTabBar from './AppTabBar'
 
 type Screen = 'home' | 'emotion' | 'emotionWrite' | 'emotionRecord' | 'cheese' | 'concernDetail'
+type EntryStage = 'splash' | 'onboarding' | 'login' | 'signup' | 'setup' | 'home'
 
 // 임시값: 양털은 care 기능 소관이라 API 연결 전까지 홈 mock(12)과 맞춘 고정값을 내려준다
 const TEMP_WOOL_COUNT = 12
@@ -20,6 +25,7 @@ const TEMP_WOOL_COUNT = 12
 // 기록 상세에서 고른 recordId 도 라우터 전까지 여기서 들고 있는다(라우터가 생기면 경로 파라미터로).
 // 우유와 치즈 목록의 현재 페이지·선택은 상세에 다녀와도 유지돼야 해서(docs/api/common.md 고민 목록 규칙) 라우터 전까지 여기서 들고 있는다.
 export default function App() {
+  const [stage, setStage] = useState<EntryStage>('splash')
   const [screen, setScreen] = useState<Screen>('home')
   const [cheeseList, setCheeseList] = useState<{ page: number; selectedId: string | null }>({
     page: 0,
@@ -38,6 +44,42 @@ export default function App() {
     if (tab === 'home') setScreen('home')
     else if (tab === 'sheep') setScreen('emotion')
     else if (tab === 'cheese') setScreen('cheese')
+  }
+
+  if (stage === 'splash') {
+    return <SplashPage onComplete={() => setStage('onboarding')} />
+  }
+  if (stage === 'onboarding') {
+    return <OnboardingPage onComplete={() => setStage('login')} />
+  }
+  if (stage === 'login') {
+    return (
+      <AuthPage
+        mode="login"
+        onBack={() => setStage('onboarding')}
+        onSwitchMode={() => setStage('signup')}
+        onContinue={() => setStage('home')}
+      />
+    )
+  }
+  if (stage === 'signup') {
+    return (
+      <AuthPage
+        mode="signup"
+        onBack={() => setStage('login')}
+        onSwitchMode={() => setStage('login')}
+        onContinue={() => setStage('setup')}
+      />
+    )
+  }
+  if (stage === 'setup') {
+    return (
+      <InitialSetupPage
+        onBack={() => setStage('signup')}
+        onLogin={() => setStage('login')}
+        onComplete={() => setStage('home')}
+      />
+    )
   }
 
   if (screen === 'concernDetail' && concernId) {

@@ -1,0 +1,132 @@
+.page {
+  display: flex;
+  width: 100%;
+  max-width: var(--app-max-width);
+  min-height: 100dvh;
+  flex-direction: column;
+  margin: 0 auto;
+  padding: max(env(safe-area-inset-top), 48px) var(--page-padding-x)
+    max(env(safe-area-inset-bottom), 52px);
+  background: var(--color-bg);
+}
+
+.back {
+  align-self: flex-start;
+  margin-left: -12px;
+  color: var(--color-black-1);
+}
+
+.heading {
+  flex: none;
+  margin-top: 18px;
+  text-align: center;
+}
+
+.heading h1 {
+  color: var(--color-black-1);
+  font-size: var(--font-size-h5);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-h5);
+}
+
+.heading p {
+  margin-top: 1px;
+  color: var(--color-black-1);
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+}
+
+.google {
+  position: relative;
+  display: flex;
+  height: 39px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  margin-top: 100px;
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  box-shadow: var(--shadow-float);
+  color: var(--color-black-1);
+  font-size: var(--font-size-small);
+}
+
+.googleMark {
+  position: absolute;
+  left: 13px;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.divider {
+  flex: none;
+  margin: 30px 0 21px;
+  color: var(--color-black-1);
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+  text-align: center;
+}
+
+.form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.email,
+.password {
+  position: static;
+  flex: none;
+}
+
+.password {
+  margin-top: 20px;
+}
+
+.remember {
+  position: static;
+  flex: none;
+  margin-top: 16px;
+  color: var(--color-gray-3);
+}
+
+.submit {
+  width: 100%;
+  flex: none;
+  margin-top: auto;
+  margin-bottom: 24px;
+  min-height: 46px;
+  border-radius: var(--radius-md);
+}
+
+.footer {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  color: var(--color-gray-3);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-small);
+}
+
+.footer button {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+@media (max-height: 700px) {
+  .google {
+    margin-top: 36px;
+  }
+
+  .divider {
+    margin-top: 20px;
+  }
+
+  .submit {
+    margin-top: 32px;
+  }
+}
