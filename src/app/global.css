@@ -101,6 +101,9 @@ body {
     sans-serif;
   --font-weight-regular: 400;
   --font-weight-bold: 700;
+  --letter-spacing-tight: -0.02em;
+  --font-size-caption: 12px;
+  --font-size-hint: 13px;
 
   /* Typography - 크기 / 행간 */
   --font-size-h1: 56px;
@@ -132,6 +135,7 @@ body {
 
   /* Semantic Colors (역할별 별칭. 값은 위 팔레트를 참조) */
   --color-bg: var(--color-brand-60);
+  --color-consent-surface: #fdf7f1;
   --color-surface: var(--color-brand-20);
   --color-primary: var(--color-brand-7);
   --color-accent: var(--color-brand-10);
@@ -184,4 +188,42 @@ body {
 body {
   color: var(--color-text);
   background-color: var(--color-bg);
+}
+
+/*
+ * 화면 전환(View Transitions). 라우트에서 navigate(…, { viewTransition: true }) 로 켠 이동에만 쓰인다.
+ * 지원하지 않는 브라우저는 전환 없이 바로 바뀐다.
+ * 홈 ↔ 섬 꾸미기: 같은 섬 그림(view-transition-name: island)이 홈 자리에서 섬 꾸미기 자리로 옮겨 가고,
+ * 섬 꾸미기의 아래 시트(island-sheet)는 아래에서 올라오며(나갈 때는 내려가며), 나머지는 서로 엇갈려 흐려진다.
+ */
+::view-transition-group(island) {
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.3s;
+}
+
+::view-transition-new(island-sheet):only-child {
+  animation: view-sheet-in 0.5s cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+::view-transition-old(island-sheet):only-child {
+  animation: view-sheet-in 0.35s cubic-bezier(0.4, 0, 1, 1) reverse both;
+}
+
+@keyframes view-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 }

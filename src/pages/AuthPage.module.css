@@ -1,0 +1,180 @@
+/*
+ * 시안 0-4(393×852) 기준. 상태바(44)·홈 인디케이터(34) 자리는 safe-area 로 대신한다.
+ * 위(뒤로·제목)와 아래(버튼·안내)는 고정, 제목↔Google 버튼, 로그인 유지↔버튼 두 빈칸만 화면 높이에 따라 늘고 준다.
+ * 화면이 아주 낮으면 빈칸이 최소값에서 멈추고 페이지가 스크롤된다.
+ */
+.page {
+  display: flex;
+  width: 100%;
+  max-width: var(--app-max-width);
+  min-height: 100dvh;
+  flex-direction: column;
+  margin: 0 auto;
+  padding: env(safe-area-inset-top) var(--page-padding-x) calc(env(safe-area-inset-bottom) + var(--space-5));
+  background: var(--color-bg);
+}
+
+/* 시안: 상태바 아래 57px 줄, 화살표는 왼쪽 21px */
+.topBar {
+  display: flex;
+  height: 57px;
+  flex: none;
+  align-items: center;
+}
+
+.back {
+  margin-left: -11px;
+  color: var(--color-black-1);
+}
+
+.heading {
+  flex: none;
+  margin-top: 21px;
+  text-align: center;
+}
+
+.heading h1 {
+  color: var(--color-text);
+  font-size: var(--font-size-h5);
+  font-weight: var(--font-weight-medium);
+  line-height: 20px;
+  letter-spacing: -0.5px;
+}
+
+.heading p {
+  margin-top: 6px;
+  color: var(--color-text);
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: -0.375px;
+}
+
+.spacerTop,
+.spacerBottom {
+  flex-basis: 0;
+  flex-shrink: 0;
+}
+
+.spacerTop {
+  min-height: var(--space-6);
+  flex-grow: 95;
+}
+
+.spacerBottom {
+  min-height: var(--space-8);
+  flex-grow: 147;
+}
+
+.google {
+  position: relative;
+  display: flex;
+  height: 37px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  /* 시안: 로고 자리만큼 글자가 오른쪽으로 치우침(글자 가운데가 208px) */
+  padding-left: 23px;
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  box-shadow: var(--shadow-float);
+  color: var(--color-text);
+  font-size: var(--font-size-small);
+  line-height: 20px;
+  letter-spacing: -0.5px;
+}
+
+.googleMark {
+  position: absolute;
+  left: 12px;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.divider {
+  flex: none;
+  margin: 29px 0 20.5px;
+  color: var(--color-text);
+  font-size: var(--font-size-hint);
+  line-height: 1.5;
+  letter-spacing: -0.325px;
+  text-align: center;
+}
+
+/* 폼 안의 항목도 페이지의 세로 배치(두 빈칸 비율)에 그대로 참여시킨다 */
+.form {
+  display: contents;
+}
+
+.email,
+.password {
+  position: static;
+  flex: none;
+}
+
+/* 시안 라벨은 Medium(공용 Field 라벨은 SemiBold) — 이 화면에서만 덮어쓴다 */
+.email label,
+.password label {
+  font-weight: var(--font-weight-medium);
+}
+
+.password {
+  margin-top: 15px;
+}
+
+/* 로그인 유지하기: 시안은 17px 회색 원 + 12px 흐린 글자(공용 둥근 체크박스는 23px 테두리 원) */
+.remember {
+  position: static;
+  flex: none;
+  align-self: flex-start;
+  gap: 9px;
+  margin-top: 20px;
+  font-size: var(--font-size-caption);
+  line-height: 20px;
+  letter-spacing: -0.5px;
+}
+
+.remember > span[aria-hidden] {
+  width: 17px;
+  height: 17px;
+  border: 0;
+  background-color: var(--color-gray-5);
+  color: var(--color-white);
+}
+
+/* 임의 결정(확인 필요): 켠 상태는 시안에 없음 — 주색 원 + 흰 체크 */
+.remember > input:checked + span[aria-hidden] {
+  background-color: var(--color-primary);
+}
+
+.remember > span[aria-hidden] > span {
+  scale: 0.7;
+}
+
+.remember > span:last-child {
+  color: var(--color-text);
+  opacity: 0.6;
+}
+
+.submit {
+  flex: none;
+}
+
+.footer {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: var(--space-5);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-hint);
+  font-weight: var(--font-weight-light);
+  line-height: 1.5;
+  letter-spacing: -0.325px;
+}
+
+.footer button {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+}
