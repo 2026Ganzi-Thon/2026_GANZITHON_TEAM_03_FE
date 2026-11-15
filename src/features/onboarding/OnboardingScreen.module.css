@@ -28,29 +28,66 @@
   }
 }
 
-/* 단계 전환: 지금 문구·그림이 0.18초 동안 사라지고(.leaving), 다음 단계가 0.32초 동안 나타난다(.stepIn) */
-.leaving {
+/*
+ * 단계 전환: 책장을 넘기듯 문구·그림이 왼쪽 가장자리(책등)를 축으로 살짝 접히며 0.22초 동안 사라지고(.leaving*),
+ * 다음 단계가 반대쪽에서 펴지며 0.42초 동안 나타난다(.stepIn*). 뒤로 갈 때는 방향이 반대.
+ * 그림의 가운데 정렬은 translate 속성이라 여기의 transform 과 겹치지 않는다.
+ */
+.leavingNext,
+.leavingPrev {
   opacity: 0;
-  transition: opacity 180ms ease-in;
+  transform-origin: left center;
+  transition:
+    opacity 220ms ease-in,
+    transform 220ms ease-in;
 }
 
-.stepIn {
-  animation: onboardingStepIn 320ms ease-out;
+.leavingNext {
+  transform: perspective(900px) rotateY(-24deg) translateX(-14px);
 }
 
-@keyframes onboardingStepIn {
+.leavingPrev {
+  transform: perspective(900px) rotateY(18deg) translateX(14px);
+}
+
+.stepInNext,
+.stepInPrev {
+  transform-origin: left center;
+}
+
+/* 이름 없는 animation 축약형은 빌드에서 none 으로 바뀌므로 규칙마다 이름까지 다 적는다 */
+.stepInNext {
+  animation: onboardingStepInNext 420ms cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.stepInPrev {
+  animation: onboardingStepInPrev 420ms cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+@keyframes onboardingStepInNext {
   from {
     opacity: 0;
+    transform: perspective(900px) rotateY(20deg) translateX(18px);
+  }
+}
+
+@keyframes onboardingStepInPrev {
+  from {
+    opacity: 0;
+    transform: perspective(900px) rotateY(-24deg) translateX(-14px);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .enter,
-  .stepIn {
+  .stepInNext,
+  .stepInPrev {
     animation: none;
   }
 
-  .leaving {
+  .leavingNext,
+  .leavingPrev {
+    transform: none;
     transition: none;
   }
 }
