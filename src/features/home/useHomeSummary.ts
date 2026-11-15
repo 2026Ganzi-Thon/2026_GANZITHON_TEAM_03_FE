@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { fetchHomeSummary } from './homeApi'
+import { useQuery } from '@tanstack/react-query'
+import { homeSummaryQueryOptions } from './homeQueries'
 import type { HomeSummary } from './homeApi'
 
 export type HomeSummaryState =
@@ -7,32 +7,18 @@ export type HomeSummaryState =
   | { status: 'error' }
   | { status: 'success'; data: HomeSummary }
 
-/** 홈 요약을 불러온다. 실패하면 `retry` 로 다시 시도한다. */
+/**
+ * 홈 요약을 불러온다. 한 번 받은 값은 캐시에 남아서 홈에 다시 들어오면 로딩 없이 바로 보이고 뒤에서 새로 받는다.
+ * 받아 둔 값이 없을 때 실패하면 `retry` 로 다시 시도한다(값이 있으면 다시 받기가 실패해도 이전 값을 그대로 보여준다).
+ */
 export function useHomeSummary() {
-  const [state, setState] = useState<HomeSummaryState>({ status: 'loading' })
-  const [attempt, setAttempt] = useState(0)
+  const { data, isError, refetch } = useQuery(homeSummaryQueryOptions())
 
-  useEffect(() => {
-    let cancelled = false
+  const state: HomeSummaryState = data
+    ? { status: 'success', data }
+    : isError
+      ? { status: 'error' }
+      : { status: 'loading' }
 
-    fetchHomeSummary().then(
-      (data) => {
-        if (!cancelled) setState({ status: 'success', data })
-      },
-      () => {
-        if (!cancelled) setState({ status: 'error' })
-      },
-    )
-
-    return () => {
-      cancelled = true
-    }
-  }, [attempt])
-
-  const retry = () => {
-    setState({ status: 'loading' })
-    setAttempt((n) => n + 1)
-  }
-
-  return { state, retry }
+  return { state, retry: () => void refetch() }
 }
