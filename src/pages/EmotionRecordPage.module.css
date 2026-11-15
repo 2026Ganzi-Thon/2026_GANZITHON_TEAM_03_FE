@@ -1,0 +1,178 @@
+/* 폭·여백·safe-area 는 작성 화면(EmotionWritePage)과 같다 */
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: env(safe-area-inset-top) 0 calc(var(--tabbar-height) + var(--space-6));
+  max-width: var(--app-max-width);
+  margin: 0 auto;
+  overflow-x: hidden;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--page-padding-x);
+}
+
+/* 터치 영역(44px)만큼 왼쪽으로 빼서 화살표가 시안 위치(왼쪽에서 24px)에 오게 한다 — 고민 상세와 같음 */
+.back {
+  align-self: flex-start;
+  margin: -12px 0 var(--space-2) -8px;
+}
+
+.record {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 제목·메타는 고민 상세(ConcernReader)와 같은 값: 24px SemiBold, 16px Light */
+.title {
+  font-size: var(--font-size-h5);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-h5);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: var(--space-2);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-light);
+  line-height: var(--line-height-normal);
+}
+
+.dot {
+  width: 3px;
+  height: 3px;
+  margin: 0 10px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-black-1);
+}
+
+/* 메타와 첫 구역 사이는 고민 상세의 본문 간격(24px), 구역 사이는 작성 화면의 감정→지푸라기 간격(49px) */
+.section {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--space-6);
+}
+
+.section + .section {
+  margin-top: 49px;
+}
+
+/* 작성 화면 "내 감정을 선택해주세요." 라벨(EmotionPicker)과 같은 굵기, 읽는 화면이라 한 단계 크게(14 → 16px, 사용자 요청) */
+.emotionLabel {
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+}
+
+/* 작성 화면 "지푸라기 쓰기" 라벨(공통 Field)과 같은 굵기, 읽는 화면이라 한 단계 크게(14 → 16px, 사용자 요청) */
+.memoLabel {
+  margin-bottom: var(--space-1);
+  padding: 1px 6px 1px 0;
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  letter-spacing: -0.4px;
+}
+
+/* 작성 화면 감정 칩 간격과 같음 */
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.memo {
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-light);
+  line-height: var(--line-height-normal);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.memoEmpty {
+  color: var(--color-text-muted);
+}
+
+/* 지푸라기와 시안 간격(작성 화면의 먹이주기 버튼과 같은 24px) */
+.delete {
+  align-self: flex-end;
+  margin-top: var(--space-6);
+}
+
+.message {
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-light);
+  line-height: var(--line-height-small);
+  color: var(--color-text-muted);
+}
+
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.deleteError {
+  margin-top: var(--space-1);
+  color: var(--color-error);
+}
+
+/* 로딩 막대: 고민 상세(ConcernReader) 스켈레톤과 같은 값 */
+.skeletonTitle,
+.skeletonMeta,
+.bar,
+.barShort {
+  display: block;
+  border-radius: var(--radius-full);
+  background-color: var(--color-border-subtle);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.skeletonTitle {
+  width: 70%;
+  height: calc(var(--font-size-h5) * var(--line-height-h5));
+}
+
+.skeletonMeta {
+  width: 40%;
+  height: calc(var(--font-size-normal) * var(--line-height-normal));
+  margin-top: var(--space-2);
+}
+
+.skeletonBody {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--space-6);
+}
+
+.bar,
+.barShort {
+  height: calc(var(--font-size-normal) * var(--line-height-normal) - 8px);
+  margin: 4px 0;
+}
+
+.barShort {
+  width: 45%;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonTitle,
+  .skeletonMeta,
+  .bar,
+  .barShort {
+    animation: none;
+  }
+}

@@ -1,6 +1,6 @@
 .nav {
   min-height: var(--tabbar-height);
-  padding: 5px var(--space-2) max(env(safe-area-inset-bottom), 27px);
+  padding: 5px var(--space-2) env(safe-area-inset-bottom);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   background-color: var(--color-white);
   box-shadow: var(--shadow-sheet);

@@ -25,3 +25,6 @@ dist-ssr
 
 # Env
 .env
+
+# vite-plugin-pwa 개발 모드가 만드는 파일
+dev-dist

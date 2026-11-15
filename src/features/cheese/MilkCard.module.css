@@ -1,0 +1,118 @@
+/* 시안: 345×126, 체크 왼쪽 8px, 우유병 왼쪽 46px(71×110), 글 왼쪽 139px(폭 190) */
+.card {
+  display: grid;
+  grid-template-columns: 23px 71px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 15px;
+  height: 126px;
+  padding: 0 16px 0 8px;
+  border-radius: var(--radius-md);
+  /* "…더보기" 뒤의 가림막이 카드 배경색을 따라가게 한다 */
+  --card-bg: var(--color-bg);
+  background-color: var(--card-bg);
+  transition: background-color 0.15s;
+}
+
+.selected {
+  --card-bg: var(--color-surface);
+}
+
+.bottle {
+  justify-self: start;
+  margin-left: 0;
+  width: 71px;
+  height: 110px;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  /* 우유병과 글 사이 시안 간격 22px (grid gap 15px + 7px) */
+  margin-left: 7px;
+}
+
+.title {
+  overflow: hidden;
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bodyWrap {
+  position: relative;
+}
+
+/* 3줄까지만 보이고 넘치는 부분은 잘라낸다 */
+.body {
+  height: calc(3 * var(--font-size-small) * var(--line-height-small));
+  overflow: hidden;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-small);
+  overflow-wrap: anywhere;
+}
+
+.more {
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+  color: var(--color-gray-4);
+}
+
+/* 미리보기가 있으면 3번째 줄 끝에 얹는다 */
+.moreInline {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding-left: 14px;
+  background: linear-gradient(to right, transparent, var(--card-bg) 12px);
+}
+
+.skeletonCard {
+  --card-bg: var(--color-bg);
+}
+
+.skeletonCheck {
+  width: 23px;
+  height: 23px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-border-subtle);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.bar {
+  display: block;
+  height: calc(var(--font-size-small) * var(--line-height-small));
+  border-radius: var(--radius-full);
+  background-color: var(--color-border-subtle);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.barTitle {
+  width: 60%;
+  height: calc(var(--font-size-normal) * var(--line-height-normal));
+}
+
+.barShort {
+  width: 50%;
+}
+
+.skeletonCard .bottle {
+  opacity: 0.5;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonCheck,
+  .bar {
+    animation: none;
+  }
+}
