@@ -81,6 +81,7 @@ export default function InitialSetupPage({ onBack, onLogin, onComplete }: Initia
             endAdornment={
               <Button
                 type="button"
+                variant="primary"
                 size="sm"
                 className={styles.nicknameCheck}
                 onClick={() => setNicknameMessage(

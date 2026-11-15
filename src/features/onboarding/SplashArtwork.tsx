@@ -1,4 +1,4 @@
-import styles from './SplashPage.module.css'
+import styles from './SplashArtwork.module.css'
 
 export interface SplashArtworkProps { variant: 1 | 2; className?: string }
 
@@ -20,7 +20,7 @@ const drawings: Record<SplashArtworkProps['variant'], string[]> = {
 export default function SplashArtwork({ variant, className }: SplashArtworkProps) {
   return (
     <svg className={className} viewBox="0 0 393 852" aria-hidden="true">
-      <rect width="393" height="852" fill="var(--color-onboarding-primary)" />
+      <rect width="393" height="852" fill="var(--color-primary)" />
       {drawings[variant].map((path, index) => (
         <path
           key={path.slice(0, 32)}

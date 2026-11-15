@@ -1,4 +1,4 @@
-import islandImage from '@/assets/images/island@2x.png'
+import islandImage from '@/assets/images/island@2x.webp'
 
 let preloaded = false
 

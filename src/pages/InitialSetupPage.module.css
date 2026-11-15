@@ -1,24 +1,24 @@
 .page {
-  position: relative;
-  width: min(100vw, calc(100dvh * 393 / 852), 393px);
-  height: min(100dvh, calc(100vw * 852 / 393), 852px);
-  margin-inline: auto;
-  overflow: hidden;
-  background: var(--color-white);
+  display: flex;
+  width: 100%;
+  max-width: var(--app-max-width);
+  min-height: 100dvh;
+  flex-direction: column;
+  margin: 0 auto;
+  padding: max(env(safe-area-inset-top), 48px) var(--page-padding-x)
+    max(env(safe-area-inset-bottom), 52px);
+  background: var(--color-bg);
 }
 
 .back {
-  position: absolute;
-  top: 50px;
-  left: 13px;
+  align-self: flex-start;
+  margin-left: -12px;
   color: var(--color-black-1);
 }
 
 .heading {
-  position: absolute;
-  top: 118px;
-  right: var(--page-padding-x);
-  left: var(--page-padding-x);
+  flex: none;
+  margin-top: 18px;
   text-align: center;
 }
 
@@ -37,12 +37,12 @@
 }
 
 .form {
-  position: absolute;
-  /* 24.7% ≈ 210px (Figma 기준 852px) — 콘텐츠 시작 지점 */
-  /* bottom: 150px — 버튼(46px) + 버튼 하단 여백(94px) + footer 영역 여유 */
-  inset: 24.7% var(--page-padding-x) 150px;
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  margin-top: 32px;
   overflow-y: auto;
-  /* 스크롤바 숨김 (모바일 앱 느낌 유지) */
   scrollbar-width: none;
 }
 
@@ -53,6 +53,7 @@
 .nicknameGroup {
   position: relative;
   width: 100%;
+  flex: none;
 }
 
 .nicknameCheck {
@@ -63,32 +64,26 @@
   border-radius: var(--radius-sm);
   font-size: 12px;
   line-height: 18px;
-  --btn-bg: var(--color-onboarding-primary);
-  --btn-bg-hover: color-mix(in srgb, var(--color-onboarding-primary) 88%, black);
-  --btn-bg-active: color-mix(in srgb, var(--color-onboarding-primary) 76%, black);
 }
 
 .nicknameMessage {
-  position: absolute;
-  top: 61px;
-  left: 0;
+  margin-top: var(--space-2);
   color: var(--color-text-muted);
   font-size: var(--font-size-caption);
   line-height: var(--line-height-small);
 }
 
 .age {
-  position: absolute;
-  top: 82px;
-  left: 0;
+  position: static;
   width: 75px;
+  flex: none;
+  margin-top: 20px;
 }
 
 .consents {
-  position: absolute;
-  top: 182px;
-  right: 0;
-  left: 0;
+  position: static;
+  flex: none;
+  margin-top: 36px;
 }
 
 .consents h2 {
@@ -99,12 +94,10 @@
 }
 
 .allConsent {
-  position: absolute;
-  top: 27px;
-  left: 0;
   display: flex;
   width: 100%;
   height: 46px;
+  margin-top: 8px;
   padding-inline: var(--space-2);
   border: 1px solid var(--color-accent);
   border-radius: var(--radius-md);
@@ -113,10 +106,7 @@
 }
 
 .consentList {
-  position: absolute;
-  top: 76px;
-  right: 0;
-  left: 0;
+  margin-top: 8px;
 }
 
 .consentRow {
@@ -127,8 +117,8 @@
 }
 
 .consentRow > label {
-  flex: 1;
   min-width: 0;
+  flex: 1;
   gap: var(--space-2);
   font-size: var(--font-size-hint);
   letter-spacing: -0.3px;
@@ -154,21 +144,18 @@
 }
 
 .channelHeading {
-  position: absolute;
-  top: 227px;
-  left: var(--space-8);
+  margin: 8px 0 0 var(--space-8);
   color: var(--color-black-1);
   font-size: var(--font-size-small);
   line-height: var(--line-height-small);
 }
 
 .channels {
-  position: absolute;
-  top: 248px;
-  left: var(--space-8);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
+  margin: 4px 0 0 var(--space-8);
 }
 
 .channels label {
@@ -179,27 +166,20 @@
 }
 
 .submit {
-  /* form 밖 — 페이지 기준 bottom 고정 (Figma: bottom 94px, height 46px) */
-  position: absolute;
-  bottom: 94px;
-  right: var(--page-padding-x);
-  left: var(--page-padding-x);
   min-height: 46px;
+  flex: none;
+  margin-top: 24px;
+  margin-bottom: 24px;
   border-radius: var(--radius-md);
-  --btn-bg: var(--color-onboarding-primary);
-  --btn-bg-hover: color-mix(in srgb, var(--color-onboarding-primary) 88%, black);
-  --btn-bg-active: color-mix(in srgb, var(--color-onboarding-primary) 76%, black);
 }
 
 .footer {
-  position: absolute;
-  right: 0;
-  bottom: 6.4%;
-  left: 0;
   display: flex;
+  flex: none;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
+  margin-top: 24px;
   color: var(--color-gray-3);
   font-size: var(--font-size-caption);
   line-height: var(--line-height-small);
@@ -210,20 +190,25 @@
   font-weight: var(--font-weight-semibold);
 }
 
-@media (max-height: 650px) {
-  .heading {
-    top: 14%;
+@media (max-height: 760px) {
+  .form {
+    margin-top: 20px;
   }
 
-  .form {
-    top: 24.7%;
-    /* 작은 화면에서도 버튼과 겹치지 않도록 bottom 유지 */
-    bottom: 150px;
-    transform: scale(0.88);
-    transform-origin: top left;
+  .consents {
+    margin-top: 24px;
+  }
+
+  .consentRow {
+    min-height: 44px;
+  }
+
+  .footer {
+    margin-top: 16px;
   }
 
   .submit {
-    bottom: 94px;
+    margin-top: 16px;
+    margin-bottom: 16px;
   }
 }

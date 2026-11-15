@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import SplashArtwork from './SplashArtwork'
+import { SplashArtwork } from '@/features/onboarding'
 import styles from './SplashPage.module.css'
 
 export interface SplashPageProps {

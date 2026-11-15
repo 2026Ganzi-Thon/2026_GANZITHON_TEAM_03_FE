@@ -130,8 +130,6 @@ body {
 
   /* Semantic Colors (역할별 별칭. 값은 위 팔레트를 참조) */
   --color-bg: var(--color-brand-60);
-  --color-onboarding-bg: #fffdfb;
-  --color-onboarding-primary: #596543;
   --color-consent-surface: #fdf7f1;
   --color-surface: var(--color-brand-20);
   --color-primary: var(--color-brand-7);
@@ -169,6 +167,7 @@ body {
   --z-modal: 100;
 
   /* Layout - 모바일 기준 화면 (393 x 852) */
+  --app-max-width: 393px;
   --page-padding-x: 24px;
   --tabbar-height: 92px;
 }
