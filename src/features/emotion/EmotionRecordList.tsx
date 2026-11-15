@@ -18,13 +18,15 @@ export interface EmotionRecordListProps {
   today: string
   emptyText: string
   onRetry?: () => void
+  /** 행을 눌렀을 때(그 기록의 상세로). 없으면 행은 누를 수 없는 글이다 */
+  onSelect?: (id: string) => void
 }
 
 /** 로딩 막대 길이(행마다 조금 다르게) */
 const SKELETON_WIDTHS = ['62%', '48%', '56%']
 
-/** "지난 먹이주기 기록"·"내 지푸라기들"처럼 왼쪽에 글, 오른쪽에 상대 날짜가 있는 목록. */
-export function EmotionRecordList({ title, status, rows, today, emptyText, onRetry }: EmotionRecordListProps) {
+/** "지난 먹이주기 기록"·"내 지푸라기들"처럼 왼쪽에 글, 오른쪽에 상대 날짜가 있는 목록. `onSelect` 가 있으면 행이 버튼이 된다. */
+export function EmotionRecordList({ title, status, rows, today, emptyText, onRetry, onSelect }: EmotionRecordListProps) {
   const headingId = `${title}-heading`
 
   return (
@@ -58,14 +60,27 @@ export function EmotionRecordList({ title, status, rows, today, emptyText, onRet
 
       {status === 'success' && rows.length > 0 && (
         <ul className={styles.list}>
-          {rows.map((row) => (
-            <li key={row.id} className={styles.row}>
-              <span className={styles.text}>{row.text}</span>
-              <time className={styles.date} dateTime={row.date}>
-                {formatRelativeDate(row.date, today)}
-              </time>
-            </li>
-          ))}
+          {rows.map((row) => {
+            const content = (
+              <>
+                <span className={styles.text}>{row.text}</span>
+                <time className={styles.date} dateTime={row.date}>
+                  {formatRelativeDate(row.date, today)}
+                </time>
+              </>
+            )
+            return (
+              <li key={row.id}>
+                {onSelect ? (
+                  <button type="button" className={`${styles.row} ${styles.rowButton}`} onClick={() => onSelect(row.id)}>
+                    {content}
+                  </button>
+                ) : (
+                  <div className={styles.row}>{content}</div>
+                )}
+              </li>
+            )
+          })}
         </ul>
       )}
     </section>
