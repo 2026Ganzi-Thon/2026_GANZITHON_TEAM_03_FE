@@ -21,8 +21,8 @@ PR 댓글 자동 답변(Claude)의 근거. 작성 규칙은 `CLAUDE.md`의 "의�
 ## 2026-11-13 홈 화면 (`pages/HomePage`, `features/home/`)
 
 - 상태바·홈 인디케이터는 만들지 않음. 탭바는 `app/`에서 붙임(아래 "하단 탭바") — 이동은 홈·양 돌보기·고민치즈, 나머지 2개는 화면이 생기면 연결
-- API 클라이언트·레이아웃은 만들지 않음 — 이동은 `HomePage` props 콜백(라우터 연결은 `app/routes.tsx`, 2026-11-15 라우터), 데이터는 `fetchHomeSummary()` 한 곳(지금은 mock)
-- 홈의 "내 양털"은 API `woolBalance`와 같은 값 — 소모 재화가 양털뿐이라서
+- API 클라이언트·레이아웃은 만들지 않음 — 이동은 `HomePage` props 콜백(라우터 연결은 `app/routes.tsx`, 2026-11-15 라우터), 데이터는 `fetchHomeSummary()` 한 곳(지금은 가짜 DB에서 계산, 아래 "mock 데이터 통합")
+- 홈의 "내 양털"은 API `woolBalance`와 같은 값 — 소모 재화가 양털뿐이라서. 다른 화면의 양털(`shared/wool` 조회)과 같은 가짜 DB 값
 - 설정 아이콘은 `onOpenSettings` 콜백만 연결 — 이동할 화면이 없음
 - 섬은 고정 일러스트 — 섬 꾸미기 반영은 API 미결정
 - 컴포넌트 점검에서 Figma 수치에 맞춰 고침: Button(md 38px·아이콘 여백), ActionCard 115px, Chip 27px, Banner 여백, Modal 간격, TabBar 아이콘 — 시안 대비 수치 어긋남
@@ -51,7 +51,7 @@ PR 댓글 자동 답변(Claude)의 근거. 작성 규칙은 `CLAUDE.md`의 "의�
 - 재발급까지 실패하면 `setAuthLostHandler`로 앱에 알림 — 로그인 화면 이동은 `app/`이 연결(여기서는 모름)
 - `restoreSession()`은 앱 시작 때 한 번 호출 — 새로고침하면 메모리 토큰이 사라지는데 서버는 "토큰 없음"을 EXPIRED가 아닌 INVALID로 줌
 - `Idempotency-Key`는 옵션으로만 지원 — 명세가 제안 단계라 적용할 API(고민 작성·돌봄 완료/취소·휴식 시작)가 호출할 때 켬
-- 기능별 요청 함수(`xxxApi.ts`)와 mock 제거는 안 함 — 이번에는 인스턴스만, `features/home`의 mock도 그대로
+- 기능별 요청 함수(`xxxApi.ts`)와 mock 제거는 안 함 — 이번에는 인스턴스만, mock은 그대로(2026-11-15 `shared/mock`으로 통합)
 
 ## 2026-11-14 하단 탭바 (`app/AppTabBar`)
 
@@ -74,14 +74,14 @@ PR 댓글 자동 답변(Claude)의 근거. 작성 규칙은 `CLAUDE.md`의 "의�
 
 - 화면은 "양 먹이주기"(`EmotionPage`)와 "오늘의 먹이주기"(`EmotionWritePage`) 두 개 — 탭바·상태바·홈 인디케이터는 홈과 같이 만들지 않음
 - 이동은 페이지 props 콜백 — 라우터는 온보딩 브랜치 머지 뒤 2026-11-15에 도입(`app/router.tsx`), 그 전의 `App.tsx` 임시 `useState` 전환은 없앰
-- 양털 개수는 care 기능 소관이라 emotion에서 가져오지 않고 페이지가 props로 받음 — 기능끼리 import 금지(규칙 2)
-- 데이터는 `emotionApi.ts` 한 곳(지금은 mock) — 메모리 배열에 작성 결과를 유지, 하루 한 기록 409(`EMOTION_RECORD_ALREADY_EXISTS`)를 같은 `ApiError`로 흉내 내서 API 연결 후에도 호출부가 그대로
+- 양털 개수는 emotion에서 가져오지 않고 페이지가 props로 받음 — 기능끼리 import 금지(규칙 2). 값은 `app/`이 공용 `shared/wool` 조회로 내려줌(2026-11-15 mock 통합)
+- 데이터는 `emotionApi.ts` 한 곳(지금은 mock) — 작성 결과는 가짜 DB(`shared/mock`, localStorage 저장)에 남음(2026-11-15 변경, 전에는 모듈 메모리라 새로고침하면 초기화), 하루 한 기록 409(`EMOTION_RECORD_ALREADY_EXISTS`)를 같은 `ApiError`로 흉내 내서 API 연결 후에도 호출부가 그대로
 - 감정은 복수 선택 — API `emotionIds: string[]`에 맞춤
 - "직접 입력하기" 칩은 1차에서 숨김 — API에 사용자 정의 감정이 없음, 백엔드 요청 대상
 - 메모 최대 1,000자(명세 제안값), 900자부터 남은 글자 수 표시
 - 양 일러스트는 468px(2배수) WebP로 줄여 둠 — 1.2MB(1254px PNG) → 0.4MB(702px PNG) → 약 20KB, 234px 표시에 충분하고 iOS Safari도 WebP 지원. 홈이 떠 있을 때 `App.tsx`에서 `preloadEmotionAssets()`로 미리 받음(홈→양 돌보기 흐름)
 - 양 이미지 자리는 원형 스켈레톤→페이드인, 기록 목록 로딩은 글자 대신 스켈레톤 — 홈과 같은 색·깜빡임, 실제 행과 같은 높이라 데이터가 들어와도 레이아웃이 안 튐
-- 감정 칩은 서버(mock `fetchEmotions`)에서 조회하되 양 먹이주기 화면에서 미리 받아 캐시 — 사용자 요청, 작성 화면에 들어가면 로딩 없이 바로 보이게. `emotions.ts` 상수는 mock 데이터 출처로만 남김("2026-11-15 TanStack Query" 참고)
+- 감정 칩은 서버(mock `fetchEmotions`)에서 조회하되 양 먹이주기 화면에서 미리 받아 캐시 — 사용자 요청, 작성 화면에 들어가면 로딩 없이 바로 보이게. mock 감정 목록은 `shared/mock` 시드에 있음(2026-11-15 `emotions.ts`에서 옮김)
 - 상대 날짜는 `shared/lib/formatRelativeDate` — 여러 기능이 쓸 수 있고, 기준일을 인자로 받아 테스트할 수 있음
 - 수정·삭제는 2차 — 이번에는 작성과 목록만 (삭제는 2026-11-15에 넣음, 아래 "기록 상세·삭제")
 - 공통 컴포넌트는 안 고침 — Field 라벨이 SemiBold라 Figma(Medium)와 다르지만 미결 사항의 시안 불일치와 같은 문제
@@ -125,7 +125,7 @@ PR 댓글 자동 답변(Claude)의 근거. 작성 규칙은 `CLAUDE.md`의 "의�
 - 삭제 성공 시 목록 캐시에서 먼저 빼고 invalidate(기다리지 않음), 상세 캐시는 제거 — 돌아간 목록에 지운 기록이 잠깐도 안 보이고 오늘 기록이면 `먹이주기`가 바로 다시 활성
 - 홈 "내 기록, 보관함" 카드는 양 먹이주기 화면으로 이동 — 사용자 요청, 보관함 화면이 생기기 전까지 기록 목록이 있는 곳으로
 - 상세의 "그날의 감정"·"지푸라기" 라벨은 16px — 사용자 요청, 작성 화면(14px)보다 한 단계 크게
-- 홈의 "오늘의 감정"은 건드리지 않음 — home 기능이라 import 금지, 홈은 들어올 때마다 다시 받음(staleTime 0)
+- 홈의 "오늘의 감정"은 건드리지 않음 — home 기능이라 import 금지, 홈은 들어올 때마다 다시 받음(staleTime 0). mock 통합 뒤 가짜 DB가 이어져 실제로 바뀌고, 옛 캐시는 `app/queryClient`가 mutation 성공 때 다시 받음
 
 ## 2026-11-15 화면 확대 막기
 
@@ -247,3 +247,25 @@ PR 댓글 자동 답변(Claude)의 근거. 작성 규칙은 `CLAUDE.md`의 "의�
 - [ ] 이미 통과한 사용자가 `/splash`·`/login` 등에 들어와도 막지 않음 — 실제 로그인 확인이 생기면 다시 정함
 - [ ] 없는 경로는 안내 없이 `/`로 — 404 화면 시안 없음
 
+## 2026-11-15 mock 데이터 통합 (`shared/mock/`)
+
+- 기능마다 모듈 메모리에 따로 있던 mock을 가짜 DB 하나로 모음 — 닉네임·양털·감정 기록이 화면마다 달랐고(홈 항상 "온기"·기록 없음·날짜 고정, 양털 12 고정) 새로고침하면 초기화됐음
+- 가짜 DB는 `shared/mock`, 기능의 `*Api.ts`(와 `shared/wool/woolApi.ts`)만 import — API를 붙일 때 `*Api.ts` 본문만 바꾸면 폴더를 통째로 지울 수 있게. 예외는 `app/resetDemo.ts`의 초기화 하나
+- 쓸 때마다 localStorage `polly.mockDb`에 `{ version, ...state }` 저장, 읽지 못하거나 버전이 다르면 시드로 — 서버 DB처럼 새로고침 뒤에도 남게. storage를 못 쓰면 메모리로만
+- 시드는 기존 mock 그대로, "N일 전" 날짜는 시드를 만들 때 한 번 계산해 절대 날짜로 저장 — 날이 바뀌면 기록도 하루씩 지난 것으로 보이게. "오늘"은 실제 서울 날짜(`getTodaySeoul`), 홈 `today`도 같음
+- 주소에 `?reset`을 붙이면 가짜 DB와 시작 흐름 기록(온보딩 봄·세션 통과)을 지우고 스플래시부터 — 시연 중 되돌리기. 처리는 `app/resetDemo.ts`, 라우터가 첫 주소를 읽기 전에 `?reset`을 떼야 해서 `main.tsx`가 가장 먼저 import
+- 양털 조회는 `shared/wool`(`woolKeys`·`woolBalanceQueryOptions`·`useWoolBalance`, `GET /wool-wallet` 자리) — 양 먹이주기·우유와 치즈·섬 꾸미기·돌봄이 같이 쓰는 숫자라 규칙 2-2. `app/routes.tsx`가 각 페이지 `woolCount`로 내려줌(`TEMP_WOOL_COUNT` 삭제)
+- 양털을 받기 전에 틀린 숫자가 안 보이게: 앱 시작 때(`App.tsx`) 미리 받고, 그래도 없으면 `woolCount`를 `undefined`로 내려 숫자 자리에 막대 — 홈 머리의 로딩 막대와 같은 모양. 이를 위해 페이지 5개·`EmotionHeader`·`CheeseHeader`의 `woolCount` 타입만 `number | undefined`로 넓힘. 다시 받는 동안은 직전 값 유지
+- 다른 기능의 저장 뒤 홈·양털 캐시 갱신은 `app/queryClient.ts`의 `MutationCache.onSuccess`에서 홈 요약·양털을 `refetchType: 'all'`로 다시 받음 — 기능끼리 import 없이 한곳에서, 기능 훅은 안 고침. 홈이 화면에 없어도 바로 다시 받아 홈에 돌아가기 전에 새 값이 도착(옛 배너가 잠깐도 안 보임), 기다리지 않아 저장 뒤 연출·이동은 그대로
+- 초기 설정은 `features/account`의 `completeInitialProfile`(`PATCH /users/me/initial-profile` mock)·`useCompleteInitialProfile`로 닉네임 저장 뒤 `onComplete` — 홈 인사말·섬 이름이 그 닉네임. 페이지는 호출 연결·저장 중 버튼 비활성·실패 한 줄만 고침
+- 양털을 주는 규칙은 안 만듦 — 명세상 양털은 돌봄 행동 완료로만 쌓이는데 그 화면이 없음. 가짜 DB에 `wool.spend`(모자라면 409 `WOOL_BALANCE_INSUFFICIENT`)·`wool.earn`만 준비
+- 섬 아이템 보유 자리(`island.ownedItemIds`)만 마련 — `ChoRockKim/island-decor`(병합 대기)의 자체 mock은 병합 뒤 이 DB로 옮김
+- API 연결 때 지울 범위: `shared/mock/` 전체, `app/resetDemo.ts`와 `main.tsx`의 그 import, `entry.ts`의 `clearEntry`, 각 `*Api.ts`의 mock import·`mockDelay`
+
+## 임의 결정 — 확인 필요 (mock 통합)
+
+- [ ] 양털 시드 47 — 섬 꾸미기 시안 값. 아이템 값이 12·24라 12로는 하나밖에 못 삼
+- [ ] 가짜 DB 사용자는 한 명 — 로그인만 하면 DB의 닉네임(시드 "온기" 또는 이전에 설정한 값), 회원가입·초기 설정을 다시 하면 409 없이 닉네임을 덮어씀(시연에서 가입을 되풀이하려고)
+- [ ] 초기 설정 저장 실패 안내 "저장하지 못했어요. 잠시 뒤 다시 시도해주세요."를 닉네임 안내 자리에 — 시안 없음
+- [ ] 초기 설정의 나이대는 화면 값("20대" 등)을 `ageGroup`으로 그대로 보냄 — 명세의 코드 목록 미정
+- [ ] 저장 형식 버전은 1부터, 형식을 바꾸면 올려서 기존 저장본을 시드로 갈아엎음 — 이전 저장본 이전(마이그레이션)은 안 함

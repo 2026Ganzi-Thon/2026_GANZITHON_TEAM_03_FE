@@ -11,7 +11,8 @@ import { BackButton, Button } from '@/shared/ui'
 import styles from './EmotionWritePage.module.css'
 
 export interface EmotionWritePageProps {
-  woolCount: number
+  /** 아직 받지 못했으면 undefined(숫자 자리에 막대) */
+  woolCount: number | undefined
   onBack?: () => void
   /** 저장하고 먹이 주기 연출까지 끝났을 때 */
   onFed?: () => void

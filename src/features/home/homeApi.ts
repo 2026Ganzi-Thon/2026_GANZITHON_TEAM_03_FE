@@ -1,3 +1,5 @@
+import { mockDb, mockDelay, mockToday } from '@/shared/mock'
+
 /** `docs/api/home.md` 의 `GET /api/v1/home` 응답 `data` 와 같은 모양. */
 export interface HomeEmotion {
   emotionId: string
@@ -21,21 +23,23 @@ export interface HomeSummary {
   maturedConcernCount: number
 }
 
-// TODO(API 클라이언트 연결): API 클라이언트(shared/api.ts)가 생기면 이 함수 한 곳만
-// `GET /api/v1/home` 호출로 바꾼다. 지금은 docs/api/home.md 예시와 같은 mock 을 돌려준다.
+// TODO(API 연결): 이 함수 본문만 `return api.get<HomeSummary>('/home')` 로 바꾸고 `@/shared/mock` import 를 지운다.
+// 지금은 가짜 DB(`@/shared/mock`)에서 계산한다 — 닉네임·양털·감정 기록이 다른 화면과 같은 값이다.
 export async function fetchHomeSummary(): Promise<HomeSummary> {
-  // 임의 결정(확인 필요): mock 에 0.3초 지연을 줘서 로딩 상태를 볼 수 있게 함 — API 연결 시 함께 지운다
-  await new Promise((resolve) => setTimeout(resolve, 300))
+  await mockDelay()
 
+  const today = mockToday()
+  const record = mockDb.emotion.findByDate(today)
   return {
-    nickname: '온기',
-    woolBalance: 12,
-    today: '2026-11-08',
+    nickname: mockDb.user.get().nickname,
+    woolBalance: mockDb.wool.balance().balance,
+    today,
     todayEmotion: {
-      recorded: false,
-      recordId: null,
-      emotions: [],
+      recorded: Boolean(record),
+      recordId: record?.recordId ?? null,
+      emotions: record?.emotions.map(({ emotionId, code, name }) => ({ emotionId, code, name })) ?? [],
     },
+    // 숙성 치즈는 아직 기능이 없다
     maturedConcernCount: 0,
   }
 }

@@ -11,14 +11,15 @@ import HomePage from '@/pages/HomePage'
 import InitialSetupPage from '@/pages/InitialSetupPage'
 import OnboardingPage from '@/pages/OnboardingPage'
 import SplashPage from '@/pages/SplashPage'
+import { useWoolBalance } from '@/shared/wool'
 import AppTabBar from './AppTabBar'
 import { hasPassedEntry, hasSeenOnboarding, markEntryPassed, markOnboardingSeen } from './entry'
 
 // 라우트 요소: 페이지의 콜백 props 를 useNavigate·useParams 로 경로에 연결한다(페이지는 react-router 를 모른다).
 // 끝난 화면(스플래시 종료·온보딩 완료·로그인 완료·저장·삭제·위로 완료)에서의 이동은 replace — 브라우저 뒤로가기가 끝난 화면으로 돌아가지 않게.
 
-// 임시값: 양털은 care 기능 소관이라 API 연결 전까지 홈 mock(12)과 맞춘 고정값을 내려준다
-const TEMP_WOOL_COUNT = 12
+// 양털 잔액은 공용 조회(`@/shared/wool`) 하나 — 홈 요약의 woolBalance 와 같은 값. 앱 시작 때 미리 받아 두고(App.tsx),
+// 아직 못 받았으면 undefined 를 내려 숫자 자리에 막대를 보여준다(틀린 숫자를 잠깐이라도 보이지 않게).
 
 /** 모든 화면의 바깥. 새 화면으로 가면 맨 위로, 뒤로·앞으로 가기는 그 화면의 스크롤 위치를 되돌린다. */
 export function RootLayout() {
@@ -152,9 +153,10 @@ export function HomeRoute() {
 
 export function EmotionRoute() {
   const navigate = useNavigate()
+  const woolCount = useWoolBalance()
   return (
     <EmotionPage
-      woolCount={TEMP_WOOL_COUNT}
+      woolCount={woolCount}
       onOpenWrite={() => navigate('/emotion/write')}
       onOpenRecord={(id) => navigate(`/emotion/records/${encodeURIComponent(id)}`)}
     />
@@ -163,9 +165,10 @@ export function EmotionRoute() {
 
 export function EmotionWriteRoute() {
   const navigate = useNavigate()
+  const woolCount = useWoolBalance()
   return (
     <EmotionWritePage
-      woolCount={TEMP_WOOL_COUNT}
+      woolCount={woolCount}
       onBack={() => navigate('/emotion')}
       onFed={() => navigate('/emotion', { replace: true })}
     />
@@ -174,12 +177,13 @@ export function EmotionWriteRoute() {
 
 export function EmotionRecordRoute() {
   const navigate = useNavigate()
+  const woolCount = useWoolBalance()
   const { recordId = '' } = useParams()
   return (
     <EmotionRecordPage
       // 다른 기록으로 바뀌면 삭제 확인 모달·상태를 새로 시작한다
       key={recordId}
-      woolCount={TEMP_WOOL_COUNT}
+      woolCount={woolCount}
       recordId={recordId}
       onBack={() => navigate('/emotion')}
       onDeleted={() => navigate('/emotion', { replace: true })}
@@ -189,10 +193,11 @@ export function EmotionRecordRoute() {
 
 export function CheeseRoute() {
   const navigate = useNavigate()
+  const woolCount = useWoolBalance()
   const { cheeseList, setCheeseList } = useOutletContext<AppShellContext>()
   return (
     <CheesePage
-      woolCount={TEMP_WOOL_COUNT}
+      woolCount={woolCount}
       page={cheeseList.page}
       onPageChange={(page) => setCheeseList((prev) => ({ ...prev, page }))}
       selectedId={cheeseList.selectedId}
@@ -204,11 +209,12 @@ export function CheeseRoute() {
 
 export function ConcernDetailRoute() {
   const navigate = useNavigate()
+  const woolCount = useWoolBalance()
   const { concernId = '' } = useParams()
   const { setCheeseList } = useOutletContext<AppShellContext>()
   return (
     <ConcernDetailPage
-      woolCount={TEMP_WOOL_COUNT}
+      woolCount={woolCount}
       concernId={concernId}
       onBack={() => navigate('/cheese')}
       onDone={() => {
