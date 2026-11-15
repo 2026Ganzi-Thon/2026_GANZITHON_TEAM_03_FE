@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Button, BackButton, PageIndicator } from '@/shared/ui'
+import { preloadOnboardingAssets } from './preloadOnboardingAssets'
 import { onboardingSlides } from './slides'
 import styles from './OnboardingScreen.module.css'
 
@@ -29,10 +30,8 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
 
   useEffect(() => {
     hasEntered = true
-    // 다음 단계 그림이 늦게 떠서 페이드 도중에 튀어나오지 않게 미리 받아 둔다
-    onboardingSlides.forEach(({ artwork }) => {
-      new Image().src = artwork
-    })
+    // 다음 단계 그림이 늦게 떠서 전환 도중에 튀어나오지 않게 미리 받아 둔다(스플래시에서 이미 받았으면 아무 일도 하지 않음)
+    preloadOnboardingAssets()
     return () => {
       if (fadeTimer.current !== null) window.clearTimeout(fadeTimer.current)
     }
