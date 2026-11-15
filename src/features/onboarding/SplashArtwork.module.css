@@ -26,11 +26,12 @@
 .islandRevealLater {
   transform-box: fill-box;
   transform-origin: center;
-  animation: islandRise 950ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+  /* 천천히 올라와 끝에서 부드럽게 멈춘다(뒤 섬이 0.1초 늦게 시작해 SplashPage 의 ISLANDS_MS 1.4초에 끝남) */
+  animation: islandRise 1300ms cubic-bezier(0.33, 1, 0.68, 1) both;
 }
 
 .islandRevealLater {
-  animation-delay: 110ms;
+  animation-delay: 100ms;
 }
 
 @keyframes islandRise {

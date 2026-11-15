@@ -17,6 +17,23 @@
   background: var(--color-bg);
 }
 
+/* 스플래시에서 넘어올 때만 0.4초 동안 서서히 나타난다(로그인에서 뒤로 올 때는 그대로) */
+.enter {
+  animation: onboardingEnter 400ms ease-out both;
+}
+
+@keyframes onboardingEnter {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enter {
+    animation: none;
+  }
+}
+
 /* 시안: 상태바 아래 40px 줄, 화살표·건너뛰기가 그 가운데 */
 .header {
   display: flex;
