@@ -6,7 +6,8 @@ import { Badge, BackButton, Button, Modal } from '@/shared/ui'
 import styles from './EmotionRecordPage.module.css'
 
 export interface EmotionRecordPageProps {
-  woolCount: number
+  /** 아직 받지 못했으면 undefined(숫자 자리에 막대) */
+  woolCount: number | undefined
   recordId: string
   onBack?: () => void
   /** 기록을 지웠을 때 — 목록으로 돌아간다 */
