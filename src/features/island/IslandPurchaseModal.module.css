@@ -1,0 +1,4 @@
+/* 막히는 이유는 오류 색으로 — 공용 토큰 --color-error */
+.warning {
+  color: var(--color-error);
+}

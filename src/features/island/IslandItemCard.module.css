@@ -1,0 +1,117 @@
+/* 시안 109:280: 170×213, 테두리 2px, 그림 121(위 10) · 이름 16 · 값 상자 36, 안쪽 좌우 9px */
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  min-width: 0;
+  height: 213px;
+  padding: 8px 9px 0;
+  border: 2px solid var(--color-surface);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  text-align: center;
+  transition: background-color 0.15s;
+}
+
+.card:hover:not(:disabled) {
+  background-color: var(--color-surface);
+}
+
+.card:active:not(:disabled) {
+  background-color: var(--color-border-subtle);
+}
+
+/* 산 아이템은 누를 수 없지만 흐리게 하지 않는다(그림·이름은 그대로) */
+.card:disabled {
+  cursor: default;
+}
+
+.image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 121px;
+  /* 시안: 그림 아래(131)와 이름(132) 사이가 1px 이라 gap 8px 중 7px 을 상쇄한다 */
+  margin-bottom: -7px;
+}
+
+.image img {
+  width: 121px;
+  height: 121px;
+}
+
+.name {
+  overflow: hidden;
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.price {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  height: 36px;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg);
+  color: var(--color-accent);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+}
+
+.owned {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* 스켈레톤: 홈·우유와 치즈와 같은 회색 막대와 깜빡임 */
+.skeleton .price {
+  border-color: var(--color-border-subtle);
+}
+
+.skeletonImage {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-border-subtle);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.skeleton .name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+}
+
+.skeletonBar {
+  width: 64px;
+  height: 12px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-border-subtle);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+
+  .skeletonImage,
+  .skeletonBar {
+    animation: none;
+  }
+}
