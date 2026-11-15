@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { useCompleteInitialProfile } from '@/features/account'
 import { BackButton, Button, Checkbox, Icon, Select, TextField } from '@/shared/ui'
 import styles from './InitialSetupPage.module.css'
 
@@ -19,6 +20,7 @@ export interface InitialSetupPageProps {
 }
 
 export default function InitialSetupPage({ onBack, onLogin, onComplete }: InitialSetupPageProps) {
+  const profile = useCompleteInitialProfile()
   const [nickname, setNickname] = useState('')
   const [age, setAge] = useState('20대')
   const [nicknameMessage, setNicknameMessage] = useState('')
@@ -39,14 +41,17 @@ export default function InitialSetupPage({ onBack, onLogin, onComplete }: Initia
     setChannels({ push: checked, email: checked, sms: checked })
   }
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (profile.state.status === 'submitting') return
     if (!consents.terms || !consents.privacy) return
     if (nickname.trim().length < 2 || nickname.trim().length > 8) {
       setNicknameMessage('닉네임을 2~8자로 입력해주세요.')
       return
     }
-    onComplete()
+    // 임의 결정(확인 필요): 저장 실패 안내는 닉네임 안내 자리에 한 줄로 — 시안에 없음
+    if (await profile.submit({ nickname: nickname.trim(), ageGroup: age })) onComplete()
+    else setNicknameMessage('저장하지 못했어요. 잠시 뒤 다시 시도해주세요.')
   }
 
   return (
@@ -148,7 +153,7 @@ export default function InitialSetupPage({ onBack, onLogin, onComplete }: Initia
 
       </form>
 
-      <Button className={styles.submit} variant="primary" size="lg" fullWidth type="submit" form="setup-form">
+      <Button className={styles.submit} variant="primary" size="lg" fullWidth type="submit" form="setup-form" disabled={profile.state.status === 'submitting'}>
         회원가입
       </Button>
 
