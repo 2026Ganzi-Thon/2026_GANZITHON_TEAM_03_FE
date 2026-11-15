@@ -57,8 +57,10 @@
   overscroll-behavior: contain;
 }
 
+/* 펼쳤을 때만 카드 목록이 안에서 세로로 스크롤된다(바깥 화면은 끌기를 막아 둠) */
 .sheet[data-expanded] .body {
   overflow-y: auto;
+  touch-action: pan-y;
 }
 
 @media (prefers-reduced-motion: reduce) {
