@@ -12,6 +12,9 @@ export interface HomeSummaryPanelProps {
   greetingIndex?: number
 }
 
+/** 오늘 감정을 아직 남기지 않았을 때(그리고 응답을 기다리는 동안)의 배너 문구 */
+const EMOTION_BANNER_DEFAULT = '오늘의 감정 남기기'
+
 /** 인사말, 오늘의 감정 배너, 숙성 치즈 알림. 불러오는 중·실패 상태도 여기서 그린다. */
 export function HomeSummaryPanel({
   state,
@@ -21,14 +24,13 @@ export function HomeSummaryPanel({
   greetingIndex,
 }: HomeSummaryPanelProps) {
   if (state.status === 'loading') {
-    // 임의 결정(확인 필요): 로딩 중에도 인사말·배너 틀은 바로 보여주고, 응답을 기다리는 값(이름, 배너 글자)만 회색 막대로 둔다 — Figma 에 없음
+    // 임의 결정(확인 필요): 로딩 중에도 인사말·배너는 바로 보여주고, 응답을 기다리는 값은 이름만 회색 막대로 둔다 — Figma 에 없음
+    // 감정 배너는 기본 문구("오늘의 감정 남기기")를 먼저 보여주고, 오늘 기록이 있다는 응답이 오면 그때 "기록 완료" 문구로 바꾼다.
     return (
       <div className={styles.root}>
         <HomeGreeting nickname={undefined} index={greetingIndex} />
         <div className={styles.banners}>
-          <Banner disabled aria-label="오늘의 감정 정보를 불러오는 중">
-            <span className={styles.textSkeleton} aria-hidden="true" />
-          </Banner>
+          <Banner onClick={onOpenEmotion}>{EMOTION_BANNER_DEFAULT}</Banner>
         </div>
       </div>
     )
@@ -60,7 +62,7 @@ export function HomeSummaryPanel({
           {todayEmotion.recorded
             ? // 임의 결정(확인 필요): 오늘 감정을 이미 남겼으면 "오늘의 감정 기록 완료: {감정} · 다시 남기기" 로 바꾼다 — Figma 에 없음
               `오늘의 감정 기록 완료${emotionNames ? `: ${emotionNames}` : ''} · 다시 남기기`
-            : '오늘의 감정 남기기'}
+            : EMOTION_BANNER_DEFAULT}
         </Banner>
         {maturedConcernCount >= 1 && (
           // 임의 결정(확인 필요): 숙성이 끝난 치즈가 있으면 감정 배너 아래에 금색 테두리 배너로 알린다 — Figma 에 없음
