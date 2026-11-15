@@ -8,6 +8,13 @@
   align-self: flex-end;
 }
 
+/* 페이지가 넣어 준 섬(가구가 놓인 섬)의 자리: 기본 섬 그림과 같은 크기 */
+.slot {
+  width: 313px;
+  max-width: 100%;
+  aspect-ratio: 1;
+}
+
 .island {
   width: 313px;
   max-width: 100%;

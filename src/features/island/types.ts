@@ -19,6 +19,10 @@ export interface IslandItem {
   placedImageUrl: string | null
   /** 섬 위에서 겹치는 순서. 작은 값이 아래(먼저 그린다) */
   placedOrder: number
+  /**
+   * 물에 떠 있는 아이템이면 떠 있는 자리(섬 그림에서의 %, 흔들림의 중심). 물결에 맞춰 까딱인다. 물에 뜨지 않으면 null
+   */
+  floatAt: { x: number; y: number } | null
   /** 이미 산 아이템인지 */
   owned: boolean
 }

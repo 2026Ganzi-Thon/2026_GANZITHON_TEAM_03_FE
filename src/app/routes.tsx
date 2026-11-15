@@ -12,14 +12,15 @@ import InitialSetupPage from '@/pages/InitialSetupPage'
 import IslandDecoratePage from '@/pages/IslandDecoratePage'
 import OnboardingPage from '@/pages/OnboardingPage'
 import SplashPage from '@/pages/SplashPage'
+import { getMockWoolBalance } from '@/shared/lib/mockWool'
 import AppTabBar from './AppTabBar'
 import { hasPassedEntry, hasSeenOnboarding, markEntryPassed, markOnboardingSeen } from './entry'
 
 // 라우트 요소: 페이지의 콜백 props 를 useNavigate·useParams 로 경로에 연결한다(페이지는 react-router 를 모른다).
 // 끝난 화면(스플래시 종료·온보딩 완료·로그인 완료·저장·삭제·위로 완료)에서의 이동은 replace — 브라우저 뒤로가기가 끝난 화면으로 돌아가지 않게.
 
-// 임시값: 양털은 care 기능 소관이라 API 연결 전까지 홈 mock(12)과 맞춘 고정값을 내려준다
-const TEMP_WOOL_COUNT = 12
+// 임시값: 양털은 care 기능 소관이라 API 연결 전까지 mock 잔액(shared/lib/mockWool)을 내려준다 — 홈·섬 꾸미기와 같은 값이고,
+// 섬 꾸미기에서 가구를 사면 줄어든다. 화면에 들어올 때 읽는다
 
 /** 모든 화면의 바깥. 새 화면으로 가면 맨 위로, 뒤로·앞으로 가기는 그 화면의 스크롤 위치를 되돌린다. */
 export function RootLayout() {
@@ -168,7 +169,7 @@ export function EmotionRoute() {
   const navigate = useNavigate()
   return (
     <EmotionPage
-      woolCount={TEMP_WOOL_COUNT}
+      woolCount={getMockWoolBalance()}
       onOpenWrite={() => navigate('/emotion/write')}
       onOpenRecord={(id) => navigate(`/emotion/records/${encodeURIComponent(id)}`)}
     />
@@ -179,7 +180,7 @@ export function EmotionWriteRoute() {
   const navigate = useNavigate()
   return (
     <EmotionWritePage
-      woolCount={TEMP_WOOL_COUNT}
+      woolCount={getMockWoolBalance()}
       onBack={() => navigate('/emotion')}
       onFed={() => navigate('/emotion', { replace: true })}
     />
@@ -193,7 +194,7 @@ export function EmotionRecordRoute() {
     <EmotionRecordPage
       // 다른 기록으로 바뀌면 삭제 확인 모달·상태를 새로 시작한다
       key={recordId}
-      woolCount={TEMP_WOOL_COUNT}
+      woolCount={getMockWoolBalance()}
       recordId={recordId}
       onBack={() => navigate('/emotion')}
       onDeleted={() => navigate('/emotion', { replace: true })}
@@ -206,7 +207,7 @@ export function CheeseRoute() {
   const { cheeseList, setCheeseList } = useOutletContext<AppShellContext>()
   return (
     <CheesePage
-      woolCount={TEMP_WOOL_COUNT}
+      woolCount={getMockWoolBalance()}
       page={cheeseList.page}
       onPageChange={(page) => setCheeseList((prev) => ({ ...prev, page }))}
       selectedId={cheeseList.selectedId}
@@ -222,7 +223,7 @@ export function ConcernDetailRoute() {
   const { setCheeseList } = useOutletContext<AppShellContext>()
   return (
     <ConcernDetailPage
-      woolCount={TEMP_WOOL_COUNT}
+      woolCount={getMockWoolBalance()}
       concernId={concernId}
       onBack={() => navigate('/cheese')}
       onDone={() => {

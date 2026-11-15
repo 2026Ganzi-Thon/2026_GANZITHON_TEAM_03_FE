@@ -1,4 +1,5 @@
 import { ApiError } from '@/shared/api'
+import { getMockWoolBalance, spendMockWool } from '@/shared/lib/mockWool'
 import oliveTree from '@/assets/images/island-items/01-olive-tree.webp'
 import flowerPot from '@/assets/images/island-items/02-flower-pot.webp'
 // import steppingStones from '@/assets/images/island-items/03-stepping-stones.webp'
@@ -41,8 +42,9 @@ function mock(
   imageUrl: string,
   placedImageUrl: string,
   placedOrder: number,
+  floatAt: IslandItem['floatAt'] = null,
 ): IslandItem {
-  return { itemId, name, category, price, imageUrl, placedImageUrl, placedOrder, owned: false }
+  return { itemId, name, category, price, imageUrl, placedImageUrl, placedOrder, floatAt, owned: false }
 }
 
 // 모듈 메모리(새로고침하면 초기화). 이름·값은 시안 카드(109:280~) 그대로 — 그림 파일 번호(01~12)와 같은 순서.
@@ -62,12 +64,10 @@ const mockItems: IslandItem[] = [
   // mock('8', '먹이통', 'PROP', 24, feedingTrough, feedingTroughPlaced, 0),
   mock('9', '치즈 선반', 'FURNITURE', 12, cheeseShelf, cheeseShelfPlaced, 5),
   mock('10', '우편함', 'PROP', 24, mailbox, mailboxPlaced, 8),
-  mock('11', '나룻배', 'PROP', 12, rowboat, rowboatPlaced, 12),
+  // 나룻배는 물에 떠 있다 — 흔들림 중심은 놓인 그림에서 배의 한가운데쯤
+  mock('11', '나룻배', 'PROP', 12, rowboat, rowboatPlaced, 12, { x: 65.5, y: 85 }),
   mock('12', '러그', 'PATH', 24, rug, rugPlaced, 1),
 ]
-
-// 임의 결정(확인 필요): 시작 잔액 47 은 시안 머리의 "내 양털 47개" — 다른 화면(홈 12)과 맞지 않는 임시 값
-let mockWoolBalance = 47
 
 // 임의 결정(확인 필요): mock 응답에 0.3초 지연을 줘서 로딩 상태를 볼 수 있게 함 — API 연결 시 함께 지운다
 const delay = () => new Promise((resolve) => setTimeout(resolve, 300))
@@ -75,7 +75,7 @@ const delay = () => new Promise((resolve) => setTimeout(resolve, 300))
 /** 아이템 목록과 양털 잔액. `GET /api/v1/island/items` 의 `data` (제안). */
 export async function fetchIslandItems(): Promise<IslandItemsResponse> {
   await delay()
-  return { woolBalance: mockWoolBalance, items: mockItems.map((item) => ({ ...item })) }
+  return { woolBalance: getMockWoolBalance(), items: mockItems.map((item) => ({ ...item })) }
 }
 
 /**
@@ -88,10 +88,10 @@ export async function purchaseIslandItem(itemId: string, idempotencyKey: string)
   const item = mockItems.find((candidate) => candidate.itemId === itemId)
   if (!item) throw new ApiError(404, { code: ISLAND_ITEM_NOT_FOUND, message: '없는 아이템이에요.' })
   if (item.owned) throw new ApiError(409, { code: ISLAND_ITEM_ALREADY_OWNED, message: '이미 가진 아이템이에요.' })
-  if (item.price > mockWoolBalance) {
+  // 잔액은 홈 등 다른 mock 과 같이 쓰는 임시 저장소(shared/lib/mockWool)에서 깎는다
+  if (!spendMockWool(item.price)) {
     throw new ApiError(409, { code: WOOL_BALANCE_INSUFFICIENT, message: '양털이 부족해요.' })
   }
   item.owned = true
-  mockWoolBalance -= item.price
-  return { item: { ...item }, woolBalance: mockWoolBalance }
+  return { item: { ...item }, woolBalance: getMockWoolBalance() }
 }
