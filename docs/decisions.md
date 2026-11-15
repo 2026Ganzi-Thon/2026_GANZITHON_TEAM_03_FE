@@ -136,6 +136,17 @@ PR 댓글 자동 답변(Claude)의 근거. 작성 규칙은 `CLAUDE.md`의 "의�
 - 오류: `REPLY_ALREADY_EXISTS`는 작성 완료, `CONCERN_REPLY_CLOSED`·`CONCERN_NOT_FOUND`는 "이미 마감됐거나 사라진 고민이에요" 후 목록에서 뺌, `REPLY_OWN_CONCERN_FORBIDDEN`은 안내만 — mock도 같은 `ApiError`
 - 공용 승격 보고: `CheeseHeader`는 `EmotionHeader`와 구성이 같음(기능끼리 import 금지라 복제) — 공용 `shared/ui` 승격 후보
 
+## 2026-11-15 비속어 검열 (`shared/lib/profanity.ts`, 위로 작성)
+
+- 프론트 1차 검열을 넣음 — 익명으로 위로를 주고받는 기능이고 서버 검열은 아직 미결정(docs/api/cheese.md)
+- 라이브러리는 korcen — 비교한 badwords-ko·cenkor·glin-profanity·profanity-guard 중 변형 표기(ㅅㅂ, 시1발, 시 발) 탐지가 가장 좋고 오탐이 적음, 의존성 0, 브라우저 동작, 타입 포함. Apache-2.0, 최근 배포 2025-05
+- `checkBadLang` 하나만 제출 시 `import()`로 불러옴 — 초기 번들 영향 없음(지연 청크 gzip 8KB)
+- korcen이 놓치는 "존나·ㅈㄴ·씨이발" 등은 보충 목록, "새끼 고양이·새끼손가락" 같은 오탐은 검사 전에 지움 — 모두 `profanity.ts` 한 곳
+- 제출할 때만 검사하고 걸리면 제출을 막고 입력창 아래 안내, 걸린 단어는 보여주지 않음 — 입력 중 실시간 경고는 쓰는 사람을 몰아세움
+- 검사 모듈을 못 불러오면(오프라인 등) 막지 않음 — 위로를 못 보내는 것보다 서버 검열에 맡기는 게 낫다
+- 감정 기록 지푸라기 메모는 제외 — 혼자 보는 비공개 기록
+- 한계: 프론트 검열은 우회 가능 → 서버 검열 필요(`useCreateReply`에 오류 코드 자리만 주석). "강아지가 새끼를 낳았어요"·"병신년(丙申年)"은 오탐, 사전에 없는 변형은 못 잡음
+
 ## 임의 결정 — 확인 필요 (우유와 치즈)
 
 - [ ] 탭을 떠났다 다시 들어오는 것을 새 진입으로 볼지 — 합의 전이라 지금은 목록·페이지·선택을 유지
