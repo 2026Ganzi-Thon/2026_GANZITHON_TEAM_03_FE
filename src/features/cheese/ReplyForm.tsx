@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { containsProfanity } from '@/shared/lib/profanity'
 import { Button, TextArea } from '@/shared/ui'
 import styles from './ReplyForm.module.css'
 
@@ -11,17 +12,39 @@ export interface ReplyFormProps {
   onSubmit: (content: string) => void
 }
 
-/** "치즈 만들기" 구분선 + 테두리형 입력 + 오른쪽 `위로 남기기` 버튼. 내용이 비면 버튼이 비활성이다. */
+const PROFANITY_MESSAGE = '다른 폴리가 상처받을 수 있는 표현이 있어요. 조금만 다듬어 주세요.'
+
+/**
+ * "치즈 만들기" 구분선 + 테두리형 입력 + 오른쪽 `위로 남기기` 버튼. 내용이 비면 버튼이 비활성이다.
+ * 제출할 때만 비속어를 검사해 걸리면 보내지 않고 안내를 띄운다(입력 중 검사·걸린 단어 표시는 하지 않음). 고치면 안내가 사라진다.
+ */
 export function ReplyForm({ disabled, submitting, notice, onSubmit }: ReplyFormProps) {
   const [content, setContent] = useState('')
-  const canSubmit = content.trim() !== '' && !disabled && !submitting
+  const [checking, setChecking] = useState(false)
+  const [profane, setProfane] = useState(false)
+  const canSubmit = content.trim() !== '' && !disabled && !submitting && !checking
+
+  const handleSubmit = async () => {
+    setChecking(true)
+    try {
+      if (await containsProfanity(content)) {
+        setProfane(true)
+        return
+      }
+    } catch {
+      // 검사 모듈을 못 불러오면(오프라인 등) 막지 않는다 — 서버 검열에 맡긴다
+    } finally {
+      setChecking(false)
+    }
+    onSubmit(content)
+  }
 
   return (
     <form
       className={styles.form}
       onSubmit={(event) => {
         event.preventDefault()
-        if (canSubmit) onSubmit(content)
+        if (canSubmit) void handleSubmit()
       }}
     >
       <div className={styles.divider}>
@@ -34,7 +57,11 @@ export function ReplyForm({ disabled, submitting, notice, onSubmit }: ReplyFormP
         placeholder="고민에 답변을 하고 치즈를 만들어주세요."
         value={content}
         disabled={disabled}
-        onChange={(event) => setContent(event.target.value)}
+        error={profane ? PROFANITY_MESSAGE : undefined}
+        onChange={(event) => {
+          setContent(event.target.value)
+          setProfane(false)
+        }}
       />
       {notice && (
         <p className={styles.notice} role="alert">

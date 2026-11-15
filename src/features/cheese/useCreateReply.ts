@@ -49,6 +49,8 @@ export function useCreateReply(concernId: string) {
               ? { status: 'closed' }
               : hasErrorCode(mutation.error, REPLY_OWN_CONCERN_FORBIDDEN)
                 ? { status: 'forbidden' }
+                // TODO(서버 검열): 서버가 비속어로 거절하는 오류 코드가 정해지면 여기서 { status: 'profane' } 같은 상태로
+                // 나눠 ReplyForm의 비속어 안내(입력창 아래)를 같이 쓴다. 코드 미정(docs/api/cheese.md "미결정: 검열")이라 비워 둠
                 : { status: 'error' }
           : { status: 'idle' }
 
