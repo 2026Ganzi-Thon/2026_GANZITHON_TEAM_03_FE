@@ -1,6 +1,8 @@
 import { createBrowserRouter, Navigate } from 'react-router'
 import {
   AppShell,
+  CaveRoute,
+  CaveSessionRoute,
   CheeseRoute,
   ConcernDetailRoute,
   EmotionRecordRoute,
@@ -38,12 +40,14 @@ export const router = createBrowserRouter([
               { index: true, element: <HomeRoute /> },
               { path: 'emotion', element: <EmotionRoute /> },
               { path: 'cheese', element: <CheeseRoute /> },
+              { path: 'cave', element: <CaveRoute /> },
             ],
           },
           { path: 'emotion/write', element: <EmotionWriteRoute /> },
           { path: 'emotion/records/:recordId', element: <EmotionRecordRoute /> },
           { path: 'cheese/:concernId', element: <ConcernDetailRoute /> },
           { path: 'island', element: <IslandDecorateRoute /> },
+          { path: 'cave/session', element: <CaveSessionRoute /> },
         ],
       },
       { path: '*', element: <Navigate to="/" replace /> },

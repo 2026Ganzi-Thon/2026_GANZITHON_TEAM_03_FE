@@ -2,6 +2,8 @@ import { useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import { Navigate, Outlet, ScrollRestoration, useLocation, useNavigate, useOutletContext, useParams } from 'react-router'
 import AuthPage from '@/pages/AuthPage'
+import CavePage from '@/pages/CavePage'
+import CaveSessionPage from '@/pages/CaveSessionPage'
 import CheesePage from '@/pages/CheesePage'
 import ConcernDetailPage from '@/pages/ConcernDetailPage'
 import EmotionPage from '@/pages/EmotionPage'
@@ -120,15 +122,16 @@ export function AppShell() {
   return <Outlet context={{ cheeseList, setCheeseList } satisfies AppShellContext} />
 }
 
-const TAB_PATHS: Record<string, string> = { home: '/', sheep: '/emotion', cheese: '/cheese' }
+const TAB_PATHS: Record<string, string> = { home: '/', sheep: '/emotion', cheese: '/cheese', cave: '/cave' }
 
 function tabOf(pathname: string) {
   if (pathname === '/emotion') return 'sheep'
   if (pathname === '/cheese') return 'cheese'
+  if (pathname === '/cave') return 'cave'
   return 'home'
 }
 
-/** 탭바가 있는 화면(홈·양 먹이주기·우유와 치즈 목록). cloud·cave 탭은 이동할 화면이 없어 동작 없음. */
+/** 탭바가 있는 화면(홈·양 먹이주기·우유와 치즈 목록·동굴 문 닫기). cloud 탭은 이동할 화면이 없어 동작 없음. */
 export function TabLayout() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -155,6 +158,7 @@ export function HomeRoute() {
       onOpenRecords={() => navigate('/emotion')}
       // 섬 그림이 홈 자리에서 섬 꾸미기 자리로 옮겨 가는 전환(View Transitions, global.css 의 island)
       onOpenDecorate={() => navigate('/island', { viewTransition: true })}
+      onCloseCave={() => navigate('/cave')}
     />
   )
 }
@@ -238,4 +242,24 @@ export function ConcernDetailRoute() {
       }}
     />
   )
+}
+
+/**
+ * 동굴 문 닫기 시작 전 — 탭바 있음(시안 37:26). 쉬는 중이면 진행 중 화면으로.
+ * 임의 결정(확인 필요): 시작하면 진행 중 화면으로 replace — 진행 중 화면에서 브라우저 뒤로가기를 누르면 시작 전 화면이 아니라
+ * 그 전 화면(홈 등)으로 나간다. 휴식은 서버에서 계속되고, 다시 /cave 로 오면 진행 중 화면으로 돌아온다.
+ * (push 로 두면 뒤로가기 → /cave → 쉬는 중이라 다시 진행 중 화면으로 보내져 뒤로가기가 먹히지 않는다.)
+ */
+export function CaveRoute() {
+  const navigate = useNavigate()
+  const woolCount = useWoolBalance()
+  const toSession = () => navigate('/cave/session', { replace: true })
+  return <CavePage woolCount={woolCount} onRunning={toSession} onStarted={toSession} />
+}
+
+/** 동굴 문 닫기 진행 중 — 탭바 없음(시안 63:1283). 끝나거나 진행 중 휴식이 없으면 시작 전 화면으로(replace). */
+export function CaveSessionRoute() {
+  const navigate = useNavigate()
+  const toCave = () => navigate('/cave', { replace: true })
+  return <CaveSessionPage onEnded={toCave} onNoSession={toCave} />
 }

@@ -1,0 +1,14 @@
+/* 시안: 102×39, 20px SemiBold, 금색(Design System --color-accent, 시안 #cda663) */
+.pill {
+  min-width: 102px;
+  padding: 4px 19px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-accent);
+  color: var(--color-white);
+  font-size: var(--font-size-large);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  white-space: nowrap;
+}

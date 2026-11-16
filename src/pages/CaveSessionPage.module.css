@@ -1,0 +1,70 @@
+/*
+ * 진행 중(시안 63:1283): 머리 → 배너 → 섬 → 남은 시간 → (남는 높이) → 버튼. 탭바 없음.
+ * 머리·배너·섬은 시작 전 화면(CavePage.module.css)과 같은 자리·크기 — 화면이 바뀌어도 섬이 움직이지 않게.
+ */
+.page {
+  --cave-scene-size: clamp(
+    200px,
+    calc(100dvh - 476px - env(safe-area-inset-top) - env(safe-area-inset-bottom)),
+    313px
+  );
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  /* 시안: 버튼이 화면 아래에서 51px(홈 인디케이터 34px 포함) 위. 인디케이터 자리는 기기 안전 영역으로 대신한다 */
+  padding: env(safe-area-inset-top) 0 calc(var(--space-4) + env(safe-area-inset-bottom));
+  /* 임의 결정(확인 필요): --app-max-width(440px)를 넘는 화면에서만 가운데 정렬, 아이폰은 꽉 채움 — 홈과 같음 */
+  max-width: var(--app-max-width);
+  margin: 0 auto;
+  overflow-x: hidden;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 0 var(--page-padding-x);
+}
+
+/* 시안: 배너 글자 16px Light — 공용 Banner(14px)와 달라 이 화면에서만 바꾼다(.body 를 붙여 공용 스타일보다 앞서게) */
+.body .banner {
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-light);
+  line-height: var(--line-height-normal);
+}
+
+.body > :first-child {
+  margin-top: 11px;
+}
+
+.scene {
+  margin-top: 41px;
+}
+
+/* 시안: 섬 아래 51px 에 남은 시간 */
+.timer {
+  display: flex;
+  justify-content: center;
+  margin-top: 51px;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: 43px;
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  color: var(--color-error);
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+  text-align: center;
+}

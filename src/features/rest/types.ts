@@ -1,5 +1,5 @@
 // 휴식(rest) 기능 타입. 근거: docs/api/rest.md
-import type { CurrentRestResponse, RestSession } from '@/shared/types'
+import type { RestSession } from '@/shared/types'
 
 export type {
   AfterMemoRequest,
@@ -40,10 +40,32 @@ export interface AfterMemoFormValues {
   afterMemo: string
 }
 
+/**
+ * 받아 둔 현재 휴식 상태. 응답을 받은 순간 (서버 시각 - 기기 시각)을 재 두어서, 캐시에서 다시 꺼내 써도
+ * 남은 시간을 서버 기준으로 계산할 수 있게 한다(응답의 serverTime 은 받은 순간에만 의미가 있다).
+ */
+export interface RestSnapshot {
+  /** 이력이 아예 없으면 null */
+  session: RestSession | null
+  serverOffsetMs: number
+}
+
 export type RestState =
   | { status: 'loading' }
   | { status: 'error' }
-  | { status: 'success'; data: CurrentRestResponse }
+  | ({ status: 'success' } & RestSnapshot)
+
+export type StartRestSessionState =
+  | { status: 'idle' }
+  | { status: 'starting' }
+  /** 이미 진행 중인 휴식이 있음(409 REST_ALREADY_RUNNING) — 현재 상태를 다시 받는다 */
+  | { status: 'already-running' }
+  | { status: 'error' }
+
+export type CancelRestSessionState =
+  | { status: 'idle' }
+  | { status: 'cancelling' }
+  | { status: 'error' }
 
 /** 현재 세션이 없으면 null */
 export type CurrentRestSession = RestSession | null

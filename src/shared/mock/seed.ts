@@ -1,5 +1,5 @@
 import { getTodaySeoul } from '@/shared/lib/formatRelativeDate'
-import type { ComfortType, Emotion, Id, IsoDateTime } from '@/shared/types'
+import type { ComfortType, Emotion, Id, IsoDateTime, RestSession } from '@/shared/types'
 
 // 가짜 DB 의 처음 상태. 예전에 각 기능 *Api.ts 에 있던 mock 데이터를 그대로 옮겼다.
 
@@ -38,6 +38,12 @@ export interface MockDbState {
   concerns: MockConcernRow[]
   /** 섬 꾸미기에서 산 아이템 ID. 아이템 목록 자체는 features/island/islandApi.ts 상수 */
   island: { ownedItemIds: string[] }
+  /**
+   * 휴식 세션(최근 것이 앞). DB 에 저장된 그대로의 행이라 예정 종료를 지난 `RUNNING` 이 남아 있을 수 있다 —
+   * 응답에서 `COMPLETED` 로 계산하는 규칙은 features/rest/restApi.ts 가 흉내 낸다(서버 몫).
+   */
+  restSessions: RestSession[]
+  nextRestSessionId: number
 }
 
 // 임의 결정(확인 필요): 감정 7개와 code(JOY…CALM)를 임의로 만들었다 — Figma 칩 이름 그대로, 실제 목록은 기획 합의 필요
@@ -107,5 +113,7 @@ export function createSeed(): MockDbState {
       concern('210', '2026-11-05T02:00:00Z', 'EMPATHY', '요즘 자주 눈물이 나요\n이유를 딱 집어 말할 수는 없는데 사소한 일에도 울컥해요.\n그냥 잠깐 쉬어도 되는 걸까요.'),
     ],
     island: { ownedItemIds: [] },
+    restSessions: [],
+    nextRestSessionId: 401,
   }
 }
