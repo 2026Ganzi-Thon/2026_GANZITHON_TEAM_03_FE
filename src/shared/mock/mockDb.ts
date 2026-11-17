@@ -1,6 +1,6 @@
 import { ApiError } from '@/shared/api'
 import { getTodaySeoul } from '@/shared/lib/formatRelativeDate'
-import type { Emotion, EmotionRecord, Id, IsoDateTime } from '@/shared/types'
+import type { Emotion, EmotionRecord, Id, IsoDateTime, RestSession } from '@/shared/types'
 import { createSeed } from './seed'
 import type { MockConcernRow, MockDbState, MockEmotionRecordRow } from './seed'
 
@@ -9,7 +9,8 @@ import type { MockConcernRow, MockDbState, MockEmotionRecordRow } from './seed'
 // storage 를 못 쓰면(사파리 비공개 모드 등) 메모리로만 동작한다(새로고침하면 시드).
 
 const STORAGE_KEY = 'polly.mockDb'
-const VERSION = 1
+// 2: 휴식 세션(restSessions) 추가
+const VERSION = 2
 
 let state: MockDbState | null = null
 
@@ -153,6 +154,26 @@ export const mockDb = {
     addOwnedItem: (itemId: string) =>
       write((draft) => {
         if (!draft.island.ownedItemIds.includes(itemId)) draft.island.ownedItemIds.push(itemId)
+      }),
+  },
+
+  rest: {
+    /** 저장된 세션 행 전체(최근 것이 앞). 상태 계산(예정 종료 지남 → COMPLETED)은 하지 않은 원래 값 */
+    list: (): RestSession[] => clone(db().restSessions),
+    /** 새 세션을 만든다. ID 는 여기서 매긴다 */
+    create: (input: Omit<RestSession, 'sessionId'>): RestSession =>
+      write((draft) => {
+        const row: RestSession = { sessionId: String(draft.nextRestSessionId++), ...input }
+        draft.restSessions.unshift(row)
+        return clone(row)
+      }),
+    /** 세션 행을 고친다. 없으면 undefined */
+    update: (sessionId: Id, patch: Partial<Omit<RestSession, 'sessionId'>>): RestSession | undefined =>
+      write((draft) => {
+        const row = draft.restSessions.find((item) => item.sessionId === sessionId)
+        if (!row) return undefined
+        Object.assign(row, patch)
+        return clone(row)
       }),
   },
 }

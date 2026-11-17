@@ -214,6 +214,25 @@ body {
   animation: view-sheet-in 0.35s cubic-bezier(0.4, 0, 1, 1) reverse both;
 }
 
+/*
+ * 동굴 문 닫기 시작 전 ↔ 진행 중: 아래 버튼(cave-action)이 새 자리로 미끄러지며 글자가 바뀌고, 골라진 시간 알약(cave-time)이
+ * 남은 시간 자리로 옮겨 간다. 섬은 두 화면에서 같은 자리라 그대로.
+ * 탭바(tabbar): 탭바 없는 화면으로 가면 아래로 내려가며 사라지고, 돌아오면 아래에서 올라온다. 탭바 있는 화면끼리는 제자리.
+ */
+::view-transition-group(cave-action),
+::view-transition-group(cave-time) {
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+::view-transition-new(tabbar):only-child {
+  animation: view-sheet-in 0.5s cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+::view-transition-old(tabbar):only-child {
+  animation: view-sheet-in 0.35s cubic-bezier(0.4, 0, 1, 1) reverse both;
+}
+
 @keyframes view-sheet-in {
   from {
     transform: translateY(100%);

@@ -1,0 +1,70 @@
+/*
+ * 세 칸이 보이는 휠. 칸마다 가운데에 걸리고(scroll-snap), 위아래 한 칸씩 여백을 둬서 첫·끝 칸도 가운데에 올 수 있다.
+ * 칸 높이 42px(시안 알약 가운데 사이 38~46px 의 평균), 위아래 끝은 조금 흐려져 iOS 휠처럼 이어져 보인다.
+ */
+.wheel {
+  --row: 42px;
+
+  height: calc(var(--row) * 3);
+  padding: var(--row) 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.35), #000 28%, #000 72%, rgb(0 0 0 / 0.35));
+  border-radius: var(--radius-md);
+}
+
+.wheel::-webkit-scrollbar {
+  display: none;
+}
+
+.wheel[data-disabled] {
+  overflow-y: hidden;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--row);
+  scroll-snap-align: center;
+}
+
+/* 가운데가 아닌 칸: 폭 80, 16px, 반투명. 색은 Design System 금색(--color-accent, 시안 #cda663) */
+.pill {
+  min-width: 80px;
+  padding: 0 15px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-accent);
+  color: var(--color-white);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  opacity: 0.5;
+  transition:
+    opacity 0.15s,
+    padding 0.15s,
+    font-size 0.15s;
+}
+
+/* 가운데 칸: 20px, 진하게 — 진행 중 화면의 남은 시간 알약과 같은 크기(102×38) */
+.pill[data-selected] {
+  /* 진행 중 화면의 남은 시간 알약(RestTimer)과 같은 이름 — 시작하면 골라진 시간이 남은 시간 자리로 옮겨 간다 */
+  view-transition-name: cave-time;
+  padding: 4px 19px;
+  font-size: var(--font-size-large);
+  opacity: 1;
+}
+
+.pill:disabled {
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pill {
+    transition: none;
+  }
+}

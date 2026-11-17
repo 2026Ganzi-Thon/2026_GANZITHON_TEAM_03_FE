@@ -2,6 +2,8 @@ import { useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import { Navigate, Outlet, ScrollRestoration, useLocation, useNavigate, useOutletContext, useParams } from 'react-router'
 import AuthPage from '@/pages/AuthPage'
+import CavePage from '@/pages/CavePage'
+import CaveSessionPage from '@/pages/CaveSessionPage'
 import CheesePage from '@/pages/CheesePage'
 import ConcernDetailPage from '@/pages/ConcernDetailPage'
 import EmotionPage from '@/pages/EmotionPage'
@@ -120,15 +122,16 @@ export function AppShell() {
   return <Outlet context={{ cheeseList, setCheeseList } satisfies AppShellContext} />
 }
 
-const TAB_PATHS: Record<string, string> = { home: '/', sheep: '/emotion', cheese: '/cheese' }
+const TAB_PATHS: Record<string, string> = { home: '/', sheep: '/emotion', cheese: '/cheese', cave: '/cave' }
 
 function tabOf(pathname: string) {
   if (pathname === '/emotion') return 'sheep'
   if (pathname === '/cheese') return 'cheese'
+  if (pathname === '/cave') return 'cave'
   return 'home'
 }
 
-/** 탭바가 있는 화면(홈·양 먹이주기·우유와 치즈 목록). cloud·cave 탭은 이동할 화면이 없어 동작 없음. */
+/** 탭바가 있는 화면(홈·양 먹이주기·우유와 치즈 목록·동굴 문 닫기). cloud 탭은 이동할 화면이 없어 동작 없음. */
 export function TabLayout() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -139,7 +142,9 @@ export function TabLayout() {
         value={tabOf(pathname)}
         onChange={(tab) => {
           const path = TAB_PATHS[tab]
-          if (path) navigate(path)
+          // 홈 ↔ 동굴 문 닫기는 두 화면 모두 섬 그림이 있어 섬이 옮겨 가는 전환을 켠다
+          const islandMove = (pathname === '/' && path === '/cave') || (pathname === '/cave' && path === '/')
+          if (path) navigate(path, { viewTransition: islandMove })
         }}
       />
     </>
@@ -155,6 +160,8 @@ export function HomeRoute() {
       onOpenRecords={() => navigate('/emotion')}
       // 섬 그림이 홈 자리에서 섬 꾸미기 자리로 옮겨 가는 전환(View Transitions, global.css 의 island)
       onOpenDecorate={() => navigate('/island', { viewTransition: true })}
+      // 섬 꾸미기와 같이 섬 그림이 홈 자리에서 동굴 화면 자리로 옮겨 간다
+      onCloseCave={() => navigate('/cave', { viewTransition: true })}
     />
   )
 }
@@ -236,6 +243,37 @@ export function ConcernDetailRoute() {
         setCheeseList((prev) => ({ ...prev, selectedId: null }))
         navigate('/cheese', { replace: true })
       }}
+    />
+  )
+}
+
+/**
+ * 동굴 문 닫기 시작 전 — 탭바 있음(시안 37:26). 쉬는 중이면 진행 중 화면으로.
+ * 임의 결정(확인 필요): 시작하면 진행 중 화면으로 replace — 진행 중 화면에서 브라우저 뒤로가기를 누르면 시작 전 화면이 아니라
+ * 그 전 화면(홈 등)으로 나간다. 휴식은 서버에서 계속되고, 다시 /cave 로 오면 진행 중 화면으로 돌아온다.
+ * (push 로 두면 뒤로가기 → /cave → 쉬는 중이라 다시 진행 중 화면으로 보내져 뒤로가기가 먹히지 않는다.)
+ */
+export function CaveRoute() {
+  const navigate = useNavigate()
+  const woolCount = useWoolBalance()
+  return (
+    <CavePage
+      woolCount={woolCount}
+      onRunning={() => navigate('/cave/session', { replace: true })}
+      // 문이 닫힌 뒤: 버튼이 아래 자리로 미끄러져 "동굴 문 열기"가 되고, 탭바는 내려가며 사라진다(global.css 의 cave-* 전환)
+      onStarted={() => navigate('/cave/session', { replace: true, viewTransition: true })}
+    />
+  )
+}
+
+/** 동굴 문 닫기 진행 중 — 탭바 없음(시안 63:1283). 끝나거나 진행 중 휴식이 없으면 시작 전 화면으로(replace). */
+export function CaveSessionRoute() {
+  const navigate = useNavigate()
+  return (
+    <CaveSessionPage
+      // 문이 열린 뒤: 버튼이 탭바 위 자리로 올라가 "동굴 문 닫기"가 되고, 탭바는 아래에서 올라온다
+      onEnded={() => navigate('/cave', { replace: true, viewTransition: true })}
+      onNoSession={() => navigate('/cave', { replace: true })}
     />
   )
 }
