@@ -7,4 +7,6 @@
   width: 100%;
   /* 페이지 폭 규칙(HomePage.module.css)과 같음 */
   max-width: var(--app-max-width);
+  /* 화면 전환 때 탭바가 있는 화면끼리는 제자리, 없는 화면으로 가면 내려가고 돌아오면 올라온다(global.css) */
+  view-transition-name: tabbar;
 }
