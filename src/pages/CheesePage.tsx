@@ -4,7 +4,8 @@ import styles from './CheesePage.module.css'
 
 export interface CheesePageProps {
   /** 보유한 양털 개수. care 기능 소관이라 호출하는 쪽이 넘긴다 */
-  woolCount: number
+  /** 아직 받지 못했으면 undefined(숫자 자리에 막대) */
+  woolCount: number | undefined
   /** 현재 페이지·선택은 상세에 다녀와도 유지되도록 호출하는 쪽이 들고 있다 */
   page: number
   onPageChange: (page: number) => void

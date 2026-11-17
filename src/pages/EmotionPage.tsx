@@ -12,7 +12,8 @@ import styles from './EmotionPage.module.css'
 
 export interface EmotionPageProps {
   /** 보유한 양털 개수. care 기능 소관이라 호출하는 쪽이 넘긴다 */
-  woolCount: number
+  /** 아직 받지 못했으면 undefined(숫자 자리에 막대) */
+  woolCount: number | undefined
   /** "먹이주기" — 작성 화면으로 */
   onOpenWrite?: () => void
   /** 기록 행을 눌렀을 때 — 그 기록의 상세 화면으로 */

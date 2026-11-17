@@ -1,11 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { BackButton } from '@/shared/ui/BackButton'
-import { Button } from '@/shared/ui/Button'
-import { Checkbox } from '@/shared/ui/Checkbox'
-import { Icon } from '@/shared/ui/Icon'
-import { Select } from '@/shared/ui/Select'
-import { TextField } from '@/shared/ui/TextField'
+import { useCompleteInitialProfile } from '@/features/account'
+import { BackButton, Button, Checkbox, Icon, Select, TextField } from '@/shared/ui'
 import styles from './InitialSetupPage.module.css'
 
 type ConsentKey = 'terms' | 'privacy' | 'marketing'
@@ -28,6 +24,7 @@ export interface InitialSetupPageProps {
   onBack: () => void
   onLogin: () => void
   onComplete: (values: InitialSetupValues) => void | Promise<void>
+  onBeforeComplete?: (values: InitialSetupValues) => boolean | Promise<boolean>
   onCheckNickname?: (nickname: string) => Promise<boolean>
   requiresConsent?: boolean
   consentNotice?: string
@@ -39,12 +36,14 @@ export default function InitialSetupPage({
   onBack,
   onLogin,
   onComplete,
+  onBeforeComplete,
   onCheckNickname,
   requiresConsent = true,
   consentNotice,
   isSubmitting = false,
   submissionError = '',
 }: InitialSetupPageProps) {
+  const profile = useCompleteInitialProfile()
   const [nickname, setNickname] = useState('')
   const [age, setAge] = useState('20대')
   const [nicknameMessage, setNicknameMessage] = useState('')
@@ -70,6 +69,7 @@ export default function InitialSetupPage({
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setFormError('')
+    if (profile.state.status === 'submitting' || isSubmitting) return
     if (requiresConsent && (!consents.terms || !consents.privacy)) {
       setFormError('필수 약관에 동의해주세요.')
       return
@@ -78,7 +78,14 @@ export default function InitialSetupPage({
       setNicknameMessage('닉네임을 2~8자로 입력해주세요.')
       return
     }
-    await onComplete({ nickname: nickname.trim(), ageGroup: age, consents, channels })
+
+    const values: InitialSetupValues = { nickname: nickname.trim(), ageGroup: age, consents, channels }
+    if (onBeforeComplete && !(await onBeforeComplete(values))) return
+    if (!(await profile.submit({ nickname: values.nickname, ageGroup: age }))) {
+      setFormError('프로필을 저장하지 못했어요. 잠시 뒤 다시 시도해주세요.')
+      return
+    }
+    await onComplete(values)
   }
 
   const handleNicknameCheck = async () => {
@@ -88,16 +95,15 @@ export default function InitialSetupPage({
       return
     }
     if (!onCheckNickname) {
-      setNicknameMessage('중복 확인은 서버 연동 후 사용할 수 있어요.')
+      setNicknameMessage('중복 확인은 서버 연결 후 사용할 수 있어요.')
       return
     }
-
     setNicknameChecking(true)
     try {
       const available = await onCheckNickname(value)
       setNicknameMessage(available ? '사용할 수 있는 닉네임이에요.' : '이미 사용 중인 닉네임이에요.')
-    } catch (error) {
-      setNicknameMessage(error instanceof Error ? error.message : '중복 확인을 하지 못했어요.')
+    } catch {
+      setNicknameMessage('중복 확인을 하지 못했어요. 다시 시도해주세요.')
     } finally {
       setNicknameChecking(false)
     }
@@ -105,7 +111,9 @@ export default function InitialSetupPage({
 
   return (
     <main className={styles.page} aria-label="초기 설정">
-      <BackButton className={styles.back} aria-label="뒤로 가기" onClick={onBack} />
+      <div className={styles.topBar}>
+        <BackButton className={styles.back} aria-label="뒤로 가기" onClick={onBack} />
+      </div>
 
       <header className={styles.heading}>
         <h1>회원가입</h1>
@@ -136,7 +144,7 @@ export default function InitialSetupPage({
                 variant="primary"
                 size="sm"
                 className={styles.nicknameCheck}
-                disabled={nicknameChecking || isSubmitting}
+                disabled={nicknameChecking || isSubmitting || profile.state.status === 'submitting'}
                 onClick={() => void handleNicknameCheck()}
               >
                 {nicknameChecking ? '확인 중' : '닉네임 중복확인'}
@@ -160,7 +168,7 @@ export default function InitialSetupPage({
           <option value="50대 이상">50대 이상</option>
         </Select>
 
-        <section className={styles.consents} aria-labelledby="consent-heading">
+        {requiresConsent && <section className={styles.consents} aria-labelledby="consent-heading">
           <h2 id="consent-heading">서비스 이용약관에 동의해주세요</h2>
           <Checkbox
             className={styles.allConsent}
@@ -183,7 +191,8 @@ export default function InitialSetupPage({
                   {' '}{consentLabels[key].label}
                 </Checkbox>
                 <button className={styles.detail} type="button" aria-label={`${consentLabels[key].label} 보기`}>
-                  <Icon name="chevron-right" size={16} />
+                  {/* 임의 결정(확인 필요): 시안 화살표(높이 8, 2px 선)와 같은 아이콘이 없어 공용 chevron-right 를 10px 로 줄여 씀 */}
+                  <Icon name="chevron-right" size={10} />
                 </button>
               </div>
             ))}
@@ -195,15 +204,12 @@ export default function InitialSetupPage({
             <Checkbox checked={channels.email} onChange={(event) => setChannels((current) => ({ ...current, email: event.currentTarget.checked }))}>이메일</Checkbox>
             <Checkbox checked={channels.sms} onChange={(event) => setChannels((current) => ({ ...current, sms: event.currentTarget.checked }))}>SMS/MMS</Checkbox>
           </div>
-        </section>
+        </section>}
 
       </form>
 
-      {(formError || submissionError) && (
-        <p className={styles.formError} role="alert">{formError || submissionError}</p>
-      )}
-
-      <Button className={styles.submit} variant="primary" size="lg" fullWidth type="submit" form="setup-form" disabled={isSubmitting}>
+      {(formError || submissionError) && <p className={styles.formError} role="alert">{formError || submissionError}</p>}
+      <Button className={styles.submit} variant="primary" size="lg" fullWidth type="submit" form="setup-form" disabled={isSubmitting || profile.state.status === 'submitting'}>
         회원가입
       </Button>
 

@@ -1,21 +1,19 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { BackButton } from '@/shared/ui/BackButton'
-import { Button } from '@/shared/ui/Button'
-import { Checkbox } from '@/shared/ui/Checkbox'
-import { TextField } from '@/shared/ui/TextField'
+import { BackButton, Button, Checkbox, TextField } from '@/shared/ui'
 import { GoogleIdentityButton } from '@/features/auth'
-import googleLogo from '@/assets/images/google-original.png'
 import styles from './AuthPage.module.css'
 
 export interface AuthPageProps {
   mode: 'login' | 'signup'
   onBack: () => void
   onSwitchMode: () => void
-  onContinue: () => void
+  onContinue: (values: { email: string; password: string }) => void | Promise<void>
   onGoogleCredential: (credential: string) => void
   googleLoading: boolean
   googleError: string
+  authLoading: boolean
+  authError: string
 }
 
 export default function AuthPage({
@@ -26,6 +24,8 @@ export default function AuthPage({
   onGoogleCredential,
   googleLoading,
   googleError,
+  authLoading,
+  authError,
 }: AuthPageProps) {
   const [remember, setRemember] = useState(false)
   const isSignup = mode === 'signup'
@@ -33,17 +33,23 @@ export default function AuthPage({
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    onContinue()
+    const form = new FormData(event.currentTarget)
+    onContinue({ email: String(form.get('email') ?? '').trim(), password: String(form.get('password') ?? '') })
   }
 
   return (
     <main className={styles.page} aria-label={isSignup ? '회원가입' : '로그인'}>
-      <BackButton className={styles.back} aria-label="뒤로 가기" onClick={onBack} />
+      <div className={styles.topBar}>
+        <BackButton className={styles.back} aria-label="뒤로 가기" onClick={onBack} />
+      </div>
 
       <header className={styles.heading}>
         <h1>{isSignup ? '회원가입' : '로그인'}</h1>
         <p>{isSignup ? '계정을 만들어주세요' : '계속하려면 로그인하세요'}</p>
       </header>
+
+      {/* 위·아래 두 빈칸이 화면 높이에 따라 늘고 준다(시안 852 기준 95 : 147) */}
+      <div className={styles.spacerTop} aria-hidden="true" />
 
       <div className={styles.googleArea} aria-busy={googleLoading}>
         {googleClientId ? (
@@ -53,14 +59,10 @@ export default function AuthPage({
             disabled={googleLoading}
           />
         ) : (
-          <button type="button" className={styles.google} disabled>
-            <img className={styles.googleMark} src={googleLogo} alt="" aria-hidden="true" />
-            <span>Google로 계속하기</span>
-          </button>
+          <p className={styles.googleError} role="status">Google Client ID 설정이 필요해요.</p>
         )}
         {googleLoading && <p className={styles.googleLoading} role="status">Google 로그인 중...</p>}
         {googleError && <p className={styles.googleError} role="alert">{googleError}</p>}
-        {!googleClientId && <p className={styles.googleError} role="status">Google Client ID 설정이 필요해요.</p>}
       </div>
       <p className={styles.divider}>또는</p>
 
@@ -82,7 +84,7 @@ export default function AuthPage({
           autoComplete={isSignup ? 'new-password' : 'current-password'}
           placeholder="비밀번호를 입력해주세요"
           hint="8자 이상, 대문자 포함, 숫자 포함, 특수문자 포함"
-          minLength={8}
+          minLength={isSignup ? 8 : undefined}
           required
         />
         <Checkbox
@@ -94,7 +96,10 @@ export default function AuthPage({
           로그인 유지하기
         </Checkbox>
 
-        <Button className={styles.submit} variant="primary" size="lg" fullWidth type="submit">
+        <div className={styles.spacerBottom} aria-hidden="true" />
+
+        {authError && <p className={styles.googleError} role="alert">{authError}</p>}
+        <Button className={styles.submit} variant="primary" size="lg" fullWidth type="submit" disabled={authLoading}>
           {isSignup ? '회원가입' : '로그인'}
         </Button>
       </form>
