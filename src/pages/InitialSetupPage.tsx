@@ -11,6 +11,13 @@ import styles from './InitialSetupPage.module.css'
 type ConsentKey = 'terms' | 'privacy' | 'marketing'
 type ChannelKey = 'push' | 'email' | 'sms'
 
+export interface InitialSetupValues {
+  nickname: string
+  ageGroup: string
+  consents: Record<ConsentKey, boolean>
+  channels: Record<ChannelKey, boolean>
+}
+
 const consentLabels: Record<ConsentKey, { marker: string; label: string }> = {
   terms: { marker: '필수', label: '서비스 이용약관' },
   privacy: { marker: '필수', label: '개인정보 처리방침' },
@@ -20,13 +27,29 @@ const consentLabels: Record<ConsentKey, { marker: string; label: string }> = {
 export interface InitialSetupPageProps {
   onBack: () => void
   onLogin: () => void
-  onComplete: () => void
+  onComplete: (values: InitialSetupValues) => void | Promise<void>
+  onCheckNickname?: (nickname: string) => Promise<boolean>
+  requiresConsent?: boolean
+  consentNotice?: string
+  isSubmitting?: boolean
+  submissionError?: string
 }
 
-export default function InitialSetupPage({ onBack, onLogin, onComplete }: InitialSetupPageProps) {
+export default function InitialSetupPage({
+  onBack,
+  onLogin,
+  onComplete,
+  onCheckNickname,
+  requiresConsent = true,
+  consentNotice,
+  isSubmitting = false,
+  submissionError = '',
+}: InitialSetupPageProps) {
   const [nickname, setNickname] = useState('')
   const [age, setAge] = useState('20대')
   const [nicknameMessage, setNicknameMessage] = useState('')
+  const [nicknameChecking, setNicknameChecking] = useState(false)
+  const [formError, setFormError] = useState('')
   const [consents, setConsents] = useState<Record<ConsentKey, boolean>>({
     terms: false,
     privacy: false,
@@ -44,14 +67,40 @@ export default function InitialSetupPage({ onBack, onLogin, onComplete }: Initia
     setChannels({ push: checked, email: checked, sms: checked })
   }
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!consents.terms || !consents.privacy) return
+    setFormError('')
+    if (requiresConsent && (!consents.terms || !consents.privacy)) {
+      setFormError('필수 약관에 동의해주세요.')
+      return
+    }
     if (nickname.trim().length < 2 || nickname.trim().length > 8) {
       setNicknameMessage('닉네임을 2~8자로 입력해주세요.')
       return
     }
-    onComplete()
+    await onComplete({ nickname: nickname.trim(), ageGroup: age, consents, channels })
+  }
+
+  const handleNicknameCheck = async () => {
+    const value = nickname.trim()
+    if (value.length < 2 || value.length > 8) {
+      setNicknameMessage('닉네임을 2~8자로 입력해주세요.')
+      return
+    }
+    if (!onCheckNickname) {
+      setNicknameMessage('중복 확인은 서버 연동 후 사용할 수 있어요.')
+      return
+    }
+
+    setNicknameChecking(true)
+    try {
+      const available = await onCheckNickname(value)
+      setNicknameMessage(available ? '사용할 수 있는 닉네임이에요.' : '이미 사용 중인 닉네임이에요.')
+    } catch (error) {
+      setNicknameMessage(error instanceof Error ? error.message : '중복 확인을 하지 못했어요.')
+    } finally {
+      setNicknameChecking(false)
+    }
   }
 
   return (
@@ -62,6 +111,8 @@ export default function InitialSetupPage({ onBack, onLogin, onComplete }: Initia
         <h1>회원가입</h1>
         <p>계정을 만들어주세요</p>
       </header>
+
+      {consentNotice && <p className={styles.consentNotice}>{consentNotice}</p>}
 
       <form id="setup-form" className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.nicknameGroup}>
@@ -74,6 +125,7 @@ export default function InitialSetupPage({ onBack, onLogin, onComplete }: Initia
             onChange={(event) => {
               setNickname(event.currentTarget.value)
               setNicknameMessage('')
+              setFormError('')
             }}
             minLength={2}
             maxLength={8}
@@ -84,13 +136,10 @@ export default function InitialSetupPage({ onBack, onLogin, onComplete }: Initia
                 variant="primary"
                 size="sm"
                 className={styles.nicknameCheck}
-                onClick={() => setNicknameMessage(
-                  nickname.trim().length >= 2 && nickname.trim().length <= 8
-                    ? '중복 확인은 서버 연동 후 사용할 수 있어요.'
-                    : '닉네임을 2~8자로 입력해주세요.',
-                )}
+                disabled={nicknameChecking || isSubmitting}
+                onClick={() => void handleNicknameCheck()}
               >
-                닉네임 중복확인
+                {nicknameChecking ? '확인 중' : '닉네임 중복확인'}
               </Button>
             }
           />
@@ -150,7 +199,11 @@ export default function InitialSetupPage({ onBack, onLogin, onComplete }: Initia
 
       </form>
 
-      <Button className={styles.submit} variant="primary" size="lg" fullWidth type="submit" form="setup-form">
+      {(formError || submissionError) && (
+        <p className={styles.formError} role="alert">{formError || submissionError}</p>
+      )}
+
+      <Button className={styles.submit} variant="primary" size="lg" fullWidth type="submit" form="setup-form" disabled={isSubmitting}>
         회원가입
       </Button>
 

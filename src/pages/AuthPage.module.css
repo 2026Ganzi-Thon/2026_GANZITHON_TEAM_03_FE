@@ -36,19 +36,45 @@
   line-height: var(--line-height-small);
 }
 
+.googleArea {
+  flex: none;
+  margin-top: 100px;
+}
+
 .google {
   position: relative;
   display: flex;
+  width: 100%;
   height: 39px;
   flex: none;
   align-items: center;
   justify-content: center;
-  margin-top: 100px;
   border-radius: var(--radius-sm);
   background: var(--color-white);
   box-shadow: var(--shadow-float);
   color: var(--color-black-1);
   font-size: var(--font-size-small);
+}
+
+.google:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.googleError,
+.googleLoading {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-small);
+  text-align: center;
+}
+
+.googleError {
+  color: var(--color-error);
+}
+
+.googleLoading {
+  color: var(--color-text-muted);
 }
 
 .googleMark {
@@ -118,7 +144,7 @@
 }
 
 @media (max-height: 700px) {
-  .google {
+  .googleArea {
     margin-top: 36px;
   }
 
