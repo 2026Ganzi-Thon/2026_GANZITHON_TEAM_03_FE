@@ -68,3 +68,8 @@
   line-height: var(--line-height-small);
   text-align: center;
 }
+
+/* 시작 전·진행 중 화면의 아래 버튼은 같은 이름 — 화면이 바뀔 때 버튼이 새 자리로 미끄러지며 글자가 바뀐다(app/global.css) */
+.action {
+  view-transition-name: cave-action;
+}

@@ -256,13 +256,24 @@ export function ConcernDetailRoute() {
 export function CaveRoute() {
   const navigate = useNavigate()
   const woolCount = useWoolBalance()
-  const toSession = () => navigate('/cave/session', { replace: true })
-  return <CavePage woolCount={woolCount} onRunning={toSession} onStarted={toSession} />
+  return (
+    <CavePage
+      woolCount={woolCount}
+      onRunning={() => navigate('/cave/session', { replace: true })}
+      // 문이 닫힌 뒤: 버튼이 아래 자리로 미끄러져 "동굴 문 열기"가 되고, 탭바는 내려가며 사라진다(global.css 의 cave-* 전환)
+      onStarted={() => navigate('/cave/session', { replace: true, viewTransition: true })}
+    />
+  )
 }
 
 /** 동굴 문 닫기 진행 중 — 탭바 없음(시안 63:1283). 끝나거나 진행 중 휴식이 없으면 시작 전 화면으로(replace). */
 export function CaveSessionRoute() {
   const navigate = useNavigate()
-  const toCave = () => navigate('/cave', { replace: true })
-  return <CaveSessionPage onEnded={toCave} onNoSession={toCave} />
+  return (
+    <CaveSessionPage
+      // 문이 열린 뒤: 버튼이 탭바 위 자리로 올라가 "동굴 문 닫기"가 되고, 탭바는 아래에서 올라온다
+      onEnded={() => navigate('/cave', { replace: true, viewTransition: true })}
+      onNoSession={() => navigate('/cave', { replace: true })}
+    />
+  )
 }

@@ -52,6 +52,8 @@
 
 /* 가운데 칸: 20px, 진하게 — 진행 중 화면의 남은 시간 알약과 같은 크기(102×38) */
 .pill[data-selected] {
+  /* 진행 중 화면의 남은 시간 알약(RestTimer)과 같은 이름 — 시작하면 골라진 시간이 남은 시간 자리로 옮겨 간다 */
+  view-transition-name: cave-time;
   padding: 4px 19px;
   font-size: var(--font-size-large);
   opacity: 1;

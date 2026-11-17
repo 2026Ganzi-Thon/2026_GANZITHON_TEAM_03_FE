@@ -86,6 +86,7 @@ export default function CaveSessionPage({ onEnded, onNoSession, onOpenGuide, onO
   }, [running, remaining, retry])
 
   const openConfirm = () => {
+    if (!running) return
     reset()
     setConfirming(true)
   }
@@ -119,7 +120,8 @@ export default function CaveSessionPage({ onEnded, onNoSession, onOpenGuide, onO
               </Button>
             </p>
           )}
-          <Button size="lg" fullWidth disabled={!running} onClick={openConfirm}>
+          {/* 끝나 문이 열리는 동안은 회색으로 바꾸지 않는다 — 그대로 시작 전 화면의 "동굴 문 닫기"로 이어진다(누름은 openConfirm 이 막음) */}
+          <Button className={styles.action} size="lg" fullWidth disabled={!running && !ended} onClick={openConfirm}>
             동굴 문 열기
           </Button>
         </div>

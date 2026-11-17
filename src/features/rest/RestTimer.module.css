@@ -1,5 +1,7 @@
 /* 시안: 102×39, 20px SemiBold, 금색(Design System --color-accent, 시안 #cda663) */
 .pill {
+  /* 시작 전 화면의 골라진 시간 알약(DurationPicker)과 같은 이름 */
+  view-transition-name: cave-time;
   min-width: 102px;
   padding: 4px 19px;
   border-radius: var(--radius-full);

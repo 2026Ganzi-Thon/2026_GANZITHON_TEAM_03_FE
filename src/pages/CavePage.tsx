@@ -61,6 +61,7 @@ export default function CavePage({ woolCount, onRunning, onStarted, onOpenGuide,
   }, [running, closing, onRunning])
 
   const handleStart = async () => {
+    if (closing) return
     setClosing(true)
     if (await start(duration)) {
       setDoorClosed(true)
@@ -72,7 +73,9 @@ export default function CavePage({ woolCount, onRunning, onStarted, onOpenGuide,
     }
   }
 
-  const busy = closing || running || state.status !== 'success'
+  // 문이 닫히는 동안(시작 성공 뒤)은 버튼을 회색으로 바꾸지 않는다 — 그대로 진행 중 화면의 "동굴 문 열기"로 이어진다.
+  // 누름은 handleStart 가 막는다
+  const busy = !doorClosed && (closing || running || state.status !== 'success')
 
   return (
     <main className={styles.page}>
@@ -101,7 +104,7 @@ export default function CavePage({ woolCount, onRunning, onStarted, onOpenGuide,
               동굴 문을 닫지 못했어요. 잠시 후 다시 시도해 주세요.
             </p>
           ) : null}
-          <Button size="lg" fullWidth disabled={busy} onClick={() => void handleStart()}>
+          <Button className={styles.action} size="lg" fullWidth disabled={busy} onClick={() => void handleStart()}>
             동굴 문 닫기
           </Button>
         </div>
