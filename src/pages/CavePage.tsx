@@ -9,6 +9,9 @@ import {
   useStartRestSession,
   waitForDoor,
 } from '@/features/rest'
+import type { CaveDecoration } from '@/features/rest'
+import { useIslandItems } from '@/features/island'
+import type { IslandItem } from '@/features/island'
 import { Banner, Button } from '@/shared/ui'
 import styles from './CavePage.module.css'
 
@@ -24,6 +27,19 @@ export interface CavePageProps {
   onOpenBanner?: () => void
 }
 
+/** 섬 꾸미기에서 산 가구를 동굴 섬에 놓을 모양으로 — 두 기능을 아는 페이지가 잇는다(규칙 2). 받는 중·실패면 빈 섬 */
+function toDecorations(items: IslandItem[]): CaveDecoration[] {
+  return items
+    .filter((item) => item.owned && item.placedImageUrl !== null)
+    .map((item) => ({
+      id: item.itemId,
+      name: item.name,
+      src: item.placedImageUrl ?? '',
+      order: item.placedOrder,
+      floatAt: item.floatAt,
+    }))
+}
+
 /**
  * "동굴 문 닫기" 시작 전(시안 37:26): 열린 동굴 섬, 휴식 시간 알약 3개, "동굴 문 닫기" 버튼. 탭바 있는 화면.
  * 들어오면 현재 휴식 상태를 조회해 쉬는 중이면 진행 중 화면으로 보낸다. 시작하면 문이 닫히는 전환 뒤 진행 중 화면으로 간다.
@@ -31,6 +47,8 @@ export interface CavePageProps {
 export default function CavePage({ woolCount, onRunning, onStarted, onOpenGuide, onOpenBanner }: CavePageProps) {
   const { state, retry } = useCurrentRestSession()
   const { state: startState, start } = useStartRestSession()
+  const { state: islandState } = useIslandItems()
+  const decorations = islandState.status === 'success' ? toDecorations(islandState.items) : []
   const [duration, setDuration] = useState(DEFAULT_REST_DURATION)
   /** 시작을 누른 뒤 진행 중 화면으로 갈 때까지. 그동안은 "이미 쉬는 중" 이동을 하지 않는다(문 닫히는 전환을 보여야 해서) */
   const [closing, setClosing] = useState(false)
@@ -63,7 +81,7 @@ export default function CavePage({ woolCount, onRunning, onStarted, onOpenGuide,
         <Banner className={styles.banner} onClick={onOpenBanner}>동굴 문을 닫고 나의 시간에 집중해보세요</Banner>
 
         <div className={styles.scene}>
-          <CaveScene closed={doorClosed || running} />
+          <CaveScene closed={doorClosed || running} decorations={decorations} />
         </div>
 
         <div className={styles.picker}>

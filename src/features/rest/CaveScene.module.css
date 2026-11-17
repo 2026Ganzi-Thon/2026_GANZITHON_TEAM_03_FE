@@ -100,15 +100,59 @@
   }
 }
 
-/* 움직임 줄이기: 문은 바로 바뀌고, 물결 띠는 멈춘 채로 둔다(홈과 같음) */
+/* ── 놓인 가구 ────────────────────────────────────────── */
+
+/* 문 자리를 경계로 나눈 두 겹. 두 마스크는 서로 반대라 합치면 가구 전체가 된다 */
+.decor {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* 동굴 안쪽: 문이 닫히면 문 그림과 같은 시간에 사라진다 */
+.inside {
+  -webkit-mask: url('../../assets/images/cave/door-inside-mask.webp') 0 0 / 100% 100% no-repeat;
+  mask: url('../../assets/images/cave/door-inside-mask.webp') 0 0 / 100% 100% no-repeat;
+  transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.root[data-closed] .inside {
+  opacity: 0;
+}
+
+/* 동굴 바깥: 늘 보인다 */
+.outside {
+  -webkit-mask: url('../../assets/images/cave/door-outside-mask.webp') 0 0 / 100% 100% no-repeat;
+  mask: url('../../assets/images/cave/door-outside-mask.webp') 0 0 / 100% 100% no-repeat;
+}
+
+/* 물에 뜬 가구(나룻배): 물결과 같은 박자로 오르내리며 까딱인다 — 홈 섬과 같은 값 */
+.float {
+  transform-origin: var(--float-x, 50%) var(--float-y, 50%);
+  animation: float var(--wave-bob) ease-in-out var(--wave-sync, 0s) infinite alternate;
+}
+
+@keyframes float {
+  from {
+    transform: translateY(-0.3%) rotate(-1.5deg);
+  }
+
+  to {
+    transform: translateY(0.3%) rotate(1.5deg);
+  }
+}
+
+/* 움직임 줄이기: 문·안쪽 가구는 바로 바뀌고, 물결 띠·나룻배는 멈춘 채로 둔다(홈과 같음) */
 @media (prefers-reduced-motion: reduce) {
-  .door {
+  .door,
+  .inside {
     transition: none;
   }
 
   .bob,
   .waveA,
-  .waveB {
+  .waveB,
+  .float {
     animation: none;
   }
 }

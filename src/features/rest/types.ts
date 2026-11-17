@@ -69,3 +69,18 @@ export type CancelRestSessionState =
 
 /** 현재 세션이 없으면 null */
 export type CurrentRestSession = RestSession | null
+
+/**
+ * 동굴 섬 위에 놓아 보일 가구(섬 꾸미기에서 산 것). 섬 꾸미기 기능 소관이라 페이지가 그 데이터를 이 모양으로 바꿔 넘긴다.
+ * 그림은 섬과 같은 크기의 투명 그림이라 자리·크기가 그림 안에 있다.
+ */
+export interface CaveDecoration {
+  id: string
+  name: string
+  /** 섬 위에 놓인 모습(섬과 같은 크기의 투명 그림) */
+  src: string
+  /** 겹치는 순서. 작을수록 아래 */
+  order: number
+  /** 물에 떠 있으면 흔들림 중심(%) — 물결 박자에 맞춰 까딱인다 */
+  floatAt: { x: number; y: number } | null
+}

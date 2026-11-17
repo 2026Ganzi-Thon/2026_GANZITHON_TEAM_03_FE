@@ -9,6 +9,9 @@ import {
   useRestCountdown,
   waitForDoor,
 } from '@/features/rest'
+import type { CaveDecoration } from '@/features/rest'
+import { useIslandItems } from '@/features/island'
+import type { IslandItem } from '@/features/island'
 import { Banner, Button } from '@/shared/ui'
 import styles from './CaveSessionPage.module.css'
 
@@ -20,6 +23,19 @@ export interface CaveSessionPageProps {
   onOpenGuide?: () => void
   /** 안내 배너. 이동할 곳이 아직 없다 */
   onOpenBanner?: () => void
+}
+
+/** 섬 꾸미기에서 산 가구를 동굴 섬에 놓을 모양으로 — 두 기능을 아는 페이지가 잇는다(규칙 2). 받는 중·실패면 빈 섬 */
+function toDecorations(items: IslandItem[]): CaveDecoration[] {
+  return items
+    .filter((item) => item.owned && item.placedImageUrl !== null)
+    .map((item) => ({
+      id: item.itemId,
+      name: item.name,
+      src: item.placedImageUrl ?? '',
+      order: item.placedOrder,
+      floatAt: item.floatAt,
+    }))
 }
 
 /**
@@ -34,6 +50,8 @@ export interface CaveSessionPageProps {
 export default function CaveSessionPage({ onEnded, onNoSession, onOpenGuide, onOpenBanner }: CaveSessionPageProps) {
   const { state, retry } = useCurrentRestSession()
   const { state: cancelState, cancel, reset } = useCancelRestSession()
+  const { state: islandState } = useIslandItems()
+  const decorations = islandState.status === 'success' ? toDecorations(islandState.items) : []
   const [confirming, setConfirming] = useState(false)
   /** 이 화면에서 진행 중인 휴식을 본 적이 있는지 — 끝났을 때 문을 열고 갈지, 바로 보낼지 */
   const sawRunning = useRef(false)
@@ -85,7 +103,7 @@ export default function CaveSessionPage({ onEnded, onNoSession, onOpenGuide, onO
 
         <div className={styles.scene}>
           {/* 끝났다는 응답을 받기 전까지는 닫혀 있다 — 열리는 것이 곧 끝났다는 표시 */}
-          <CaveScene closed={!ended} />
+          <CaveScene closed={!ended} decorations={decorations} />
         </div>
 
         <div className={styles.timer}>
