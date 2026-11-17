@@ -3,6 +3,13 @@
  * 화면이 바뀌어도 섬 크기·위치가 같다).
  */
 .root {
+  /* 물결 값은 홈 섬(features/island/IslandScene.module.css 의 --wave-*)과 같게 둔다 — 바꿀 때는 둘 다 */
+  --wave-opacity: 0.75;
+  --wave-flow-a: 5s;
+  --wave-flow-b: 7.5s;
+  --wave-bob: 2.8s;
+  --wave-rise: 0.9%;
+
   position: relative;
   width: var(--cave-scene-size, 313px);
   max-width: 100%;
@@ -29,8 +36,79 @@
   opacity: 1;
 }
 
+/* ── 물결(홈 섬과 같음) ───────────────────────────────── */
+
+/* 섬 그림에서 물인 곳만 보이게 자른다(water-mask: 물 = 불투명). 바위·선착장·기둥 위로는 물결이 올라가지 않는다 */
+.water {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: var(--wave-opacity);
+  pointer-events: none;
+  -webkit-mask: url('../../assets/images/island-water/water-mask.webp') 0 0 / 100% 100% no-repeat;
+  mask: url('../../assets/images/island-water/water-mask.webp') 0 0 / 100% 100% no-repeat;
+}
+
+.bob {
+  position: absolute;
+  inset: 0;
+  animation: wave-bob var(--wave-bob) ease-in-out var(--wave-sync, 0s) infinite alternate;
+}
+
+/* 빛 띠 그림은 가로로 이어 붙는다. 두 배 폭으로 깔고 절반만큼 밀면 끊김 없이 돈다 */
+.waveA,
+.waveB {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background-repeat: repeat-x;
+  background-size: 50% 100%;
+}
+
+.waveA {
+  background-image: url('../../assets/images/island-water/waves-a.webp');
+  animation: wave-flow-left var(--wave-flow-a) linear infinite;
+}
+
+.waveB {
+  left: -100%;
+  background-image: url('../../assets/images/island-water/waves-b.webp');
+  animation: wave-flow-right var(--wave-flow-b) linear infinite;
+}
+
+@keyframes wave-flow-left {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes wave-flow-right {
+  to {
+    transform: translateX(50%);
+  }
+}
+
+@keyframes wave-bob {
+  from {
+    transform: translateY(calc(var(--wave-rise) * -1));
+  }
+
+  to {
+    transform: translateY(var(--wave-rise));
+  }
+}
+
+/* 움직임 줄이기: 문은 바로 바뀌고, 물결 띠는 멈춘 채로 둔다(홈과 같음) */
 @media (prefers-reduced-motion: reduce) {
   .door {
     transition: none;
+  }
+
+  .bob,
+  .waveA,
+  .waveB {
+    animation: none;
   }
 }
