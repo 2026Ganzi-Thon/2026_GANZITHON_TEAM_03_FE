@@ -8,6 +8,8 @@
   max-width: 100%;
   aspect-ratio: 1;
   margin: 0 auto;
+  /* 홈·섬 꾸미기의 섬 그림과 같은 이름 — 홈에서 오갈 때 섬이 제자리로 옮겨 간다(app/global.css 의 island 전환) */
+  view-transition-name: island;
 }
 
 .layer {

@@ -142,7 +142,9 @@ export function TabLayout() {
         value={tabOf(pathname)}
         onChange={(tab) => {
           const path = TAB_PATHS[tab]
-          if (path) navigate(path)
+          // 홈 ↔ 동굴 문 닫기는 두 화면 모두 섬 그림이 있어 섬이 옮겨 가는 전환을 켠다
+          const islandMove = (pathname === '/' && path === '/cave') || (pathname === '/cave' && path === '/')
+          if (path) navigate(path, { viewTransition: islandMove })
         }}
       />
     </>
@@ -158,7 +160,8 @@ export function HomeRoute() {
       onOpenRecords={() => navigate('/emotion')}
       // 섬 그림이 홈 자리에서 섬 꾸미기 자리로 옮겨 가는 전환(View Transitions, global.css 의 island)
       onOpenDecorate={() => navigate('/island', { viewTransition: true })}
-      onCloseCave={() => navigate('/cave')}
+      // 섬 꾸미기와 같이 섬 그림이 홈 자리에서 동굴 화면 자리로 옮겨 간다
+      onCloseCave={() => navigate('/cave', { viewTransition: true })}
     />
   )
 }

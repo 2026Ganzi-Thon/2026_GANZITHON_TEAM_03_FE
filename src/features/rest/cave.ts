@@ -1,5 +1,8 @@
-/** 고를 수 있는 휴식 시간(초). 시안의 05:00 / 10:00 / 15:00 */
-export const REST_DURATION_OPTIONS = [5 * 60, 10 * 60, 15 * 60] as const
+/**
+ * 고를 수 있는 휴식 시간(초): 5분부터 60분까지 5분 단위. 끝은 명세의 허용 범위(60~3,600초, 제안) 안에서.
+ * 임의 결정(확인 필요): 5분 단위·최대 60분 — 시안은 05:00 / 10:00 / 15:00 세 개만 보인다(사용자 요청으로 휠로 바꿈)
+ */
+export const REST_DURATION_OPTIONS: readonly number[] = Array.from({ length: 12 }, (_, index) => (index + 1) * 5 * 60)
 
 /** 처음 골라져 있는 시간. 시안에서 가운데 10:00 이 선택된 모습 */
 export const DEFAULT_REST_DURATION = 10 * 60
