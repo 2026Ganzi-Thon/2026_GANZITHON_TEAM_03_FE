@@ -4,6 +4,7 @@ import {
   CaveRoute,
   CaveSessionRoute,
   CheeseRoute,
+  CheeseVaultRoute,
   ConcernDetailRoute,
   EmotionRecordRoute,
   EmotionRoute,
@@ -40,6 +41,8 @@ export const router = createBrowserRouter([
               { index: true, element: <HomeRoute /> },
               { path: 'emotion', element: <EmotionRoute /> },
               { path: 'cheese', element: <CheeseRoute /> },
+              // 정적 경로라 아래 'cheese/:concernId'(고민 상세)보다 먼저 맞는다(react-router 순위 규칙)
+              { path: 'cheese/vault', element: <CheeseVaultRoute /> },
               { path: 'cave', element: <CaveRoute /> },
             ],
           },

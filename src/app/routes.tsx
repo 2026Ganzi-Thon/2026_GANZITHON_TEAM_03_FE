@@ -5,6 +5,7 @@ import AuthPage from '@/pages/AuthPage'
 import CavePage from '@/pages/CavePage'
 import CaveSessionPage from '@/pages/CaveSessionPage'
 import CheesePage from '@/pages/CheesePage'
+import CheeseVaultPage from '@/pages/CheeseVaultPage'
 import ConcernDetailPage from '@/pages/ConcernDetailPage'
 import EmotionPage from '@/pages/EmotionPage'
 import EmotionRecordPage from '@/pages/EmotionRecordPage'
@@ -126,12 +127,13 @@ const TAB_PATHS: Record<string, string> = { home: '/', sheep: '/emotion', cheese
 
 function tabOf(pathname: string) {
   if (pathname === '/emotion') return 'sheep'
-  if (pathname === '/cheese') return 'cheese'
+  // 임의 결정(확인 필요): 치즈 보관함도 "고민치즈" 탭 — 시안(290:636)은 "홈"이 선택돼 있지만 템플릿 복사로 봄
+  if (pathname === '/cheese' || pathname === '/cheese/vault') return 'cheese'
   if (pathname === '/cave') return 'cave'
   return 'home'
 }
 
-/** 탭바가 있는 화면(홈·양 먹이주기·우유와 치즈 목록·동굴 문 닫기). cloud 탭은 이동할 화면이 없어 동작 없음. */
+/** 탭바가 있는 화면(홈·양 먹이주기·우유와 치즈 목록·치즈 보관함·동굴 문 닫기). cloud 탭은 이동할 화면이 없어 동작 없음. */
 export function TabLayout() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -224,8 +226,16 @@ export function CheeseRoute() {
       selectedId={cheeseList.selectedId}
       onSelect={(selectedId) => setCheeseList((prev) => ({ ...prev, selectedId }))}
       onOpenConcern={(id) => navigate(`/cheese/${encodeURIComponent(id)}`)}
+      onOpenVault={() => navigate('/cheese/vault')}
     />
   )
+}
+
+/** 내 치즈 보관함 — 탭바 있음(시안 290:636), "고민치즈" 탭. 뒤로가기는 우유와 치즈 목록으로. */
+export function CheeseVaultRoute() {
+  const navigate = useNavigate()
+  const woolCount = useWoolBalance()
+  return <CheeseVaultPage woolCount={woolCount} onBack={() => navigate('/cheese')} />
 }
 
 export function ConcernDetailRoute() {

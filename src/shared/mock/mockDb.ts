@@ -2,7 +2,7 @@ import { ApiError } from '@/shared/api'
 import { getTodaySeoul } from '@/shared/lib/formatRelativeDate'
 import type { Emotion, EmotionRecord, Id, IsoDateTime, RestSession } from '@/shared/types'
 import { createSeed } from './seed'
-import type { MockConcernRow, MockDbState, MockEmotionRecordRow } from './seed'
+import type { MockConcernRow, MockDbState, MockEmotionRecordRow, MockMyConcernRow } from './seed'
 
 // 가짜 DB(서버 DB 역할). 메모리 상태 하나를 두고 쓸 때마다 localStorage 에 저장, 처음 쓸 때 불러온다.
 // 저장 형식이 바뀌면 VERSION 을 올린다 — 버전이 다르거나 읽지 못하면 시드로 다시 시작한다.
@@ -10,7 +10,8 @@ import type { MockConcernRow, MockDbState, MockEmotionRecordRow } from './seed'
 
 const STORAGE_KEY = 'polly.mockDb'
 // 2: 휴식 세션(restSessions) 추가
-const VERSION = 2
+// 3: 내가 쓴 고민(myConcerns) 추가
+const VERSION = 3
 
 let state: MockDbState | null = null
 
@@ -147,6 +148,8 @@ export const mockDb = {
         const found = draft.concerns.find((item) => item.concernId === concernId)
         if (found) found.alreadyReplied = true
       }),
+    /** 내가 쓴 고민(최신이 앞). 상태 계산은 하지 않은 원래 값 */
+    listMine: (): MockMyConcernRow[] => clone(db().myConcerns),
   },
 
   island: {

@@ -1,0 +1,42 @@
+/* 카드 4개(126px) + 사이 간격 4px 세 번 = 516px. 카드가 1~3개인 페이지도 높이가 같아 점이 안 움직인다.
+   "더보기"로 카드를 펼치면 그만큼 길어진다 */
+.viewport {
+  min-height: 516px;
+}
+
+.scroller {
+  display: flex;
+  align-items: flex-start;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.slide {
+  flex: 0 0 100%;
+  padding: 0 var(--page-padding-x);
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* 스켈레톤은 슬라이드 밖이라 좌우 여백을 따로 준다 */
+.viewport > .page {
+  padding: 0 var(--page-padding-x);
+}
+
+/* 시안: 목록 끝에서 점까지 41px */
+.dots {
+  align-self: center;
+  margin-top: 41px;
+}
