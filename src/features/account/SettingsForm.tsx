@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent, ReactNode } from 'react'
+import { cx } from '@/shared/lib/cx'
 import { Button, Select, TextField, Toggle } from '@/shared/ui'
 import { loadNightAlarm, saveNightAlarm } from './nightAlarm'
 import { normalizeNickname } from './nickname'
@@ -10,6 +11,8 @@ import styles from './SettingsForm.module.css'
 
 /** 초기 설정 화면과 같은 선택지. 화면 값을 그대로 `ageGroup` 으로 보낸다(코드 목록 미정 — docs/decisions.md) */
 const AGE_GROUPS = ['10대', '20대', '30대', '40대', '50대 이상']
+/** 시안 폭(75px)에 글자가 다 안 들어가는 선택지 */
+const WIDE_AGE_GROUP = '50대 이상'
 
 /** 저장 성공 안내를 보여주는 시간 */
 const SAVED_NOTICE_MS = 2500
@@ -207,7 +210,7 @@ export function SettingsForm({ info }: SettingsFormProps) {
         )}
 
         <Select
-          className={styles.age}
+          className={cx(styles.age, ageGroup === WIDE_AGE_GROUP && styles.ageWide)}
           label="나이대"
           name="ageGroup"
           value={ageGroup}
