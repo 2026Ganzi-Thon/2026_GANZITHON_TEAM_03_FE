@@ -1,6 +1,6 @@
 import { ApiError } from '@/shared/api'
 import { getTodaySeoul } from '@/shared/lib/formatRelativeDate'
-import type { Emotion, EmotionRecord, Id, IsoDateTime, RestSession } from '@/shared/types'
+import type { Emotion, EmotionRecord, Id, IsoDateTime, Reply, RestSession } from '@/shared/types'
 import { createSeed } from './seed'
 import type { MockConcernRow, MockDbState, MockEmotionRecordRow, MockMyConcernRow } from './seed'
 
@@ -11,7 +11,8 @@ import type { MockConcernRow, MockDbState, MockEmotionRecordRow, MockMyConcernRo
 const STORAGE_KEY = 'polly.mockDb'
 // 2: 휴식 세션(restSessions) 추가
 // 3: 내가 쓴 고민(myConcerns) 추가
-const VERSION = 3
+// 4: 내가 쓴 고민에 받은 위로(replies) 추가
+const VERSION = 4
 
 let state: MockDbState | null = null
 
@@ -156,6 +157,20 @@ export const mockDb = {
       }),
     /** 내가 쓴 고민(최신이 앞). 상태 계산은 하지 않은 원래 값 */
     listMine: (): MockMyConcernRow[] => clone(db().myConcerns),
+    getMine: (concernId: Id): MockMyConcernRow | undefined =>
+      clone(db().myConcerns.find((item) => item.concernId === concernId)),
+    /** 개봉 표시(이미 열었으면 그대로). 위로가 하나도 없으면 `fallbackReply`(기본 위로)를 넣는다. 바뀐 행을 돌려준다 */
+    openMine: (concernId: Id, fallbackReply: Omit<Reply, 'replyId' | 'createdAt'>): MockMyConcernRow | undefined =>
+      write((draft) => {
+        const row = draft.myConcerns.find((item) => item.concernId === concernId)
+        if (!row) return undefined
+        if (!row.openedAt) {
+          const at = now()
+          row.openedAt = at
+          if (row.replies.length === 0) row.replies.push({ replyId: `${concernId}-system`, createdAt: at, ...fallbackReply })
+        }
+        return clone(row)
+      }),
   },
 
   island: {

@@ -1,5 +1,5 @@
 import { getTodaySeoul } from '@/shared/lib/formatRelativeDate'
-import type { ComfortType, Emotion, Id, IsoDateTime, RestSession } from '@/shared/types'
+import type { ComfortType, Emotion, Id, IsoDateTime, Reply, RestSession } from '@/shared/types'
 
 // 가짜 DB 의 처음 상태. 예전에 각 기능 *Api.ts 에 있던 mock 데이터를 그대로 옮겼다.
 
@@ -36,6 +36,8 @@ export interface MockMyConcernRow {
   openedAt: IsoDateTime | null
   /** 보관 전이면 null */
   savedAt: IsoDateTime | null
+  /** 다른 사람들이 남긴 위로(작성 시각 오름차순). 개봉 전에는 응답에 나가지 않는다 */
+  replies: Reply[]
 }
 
 export interface MockDbState {
@@ -118,7 +120,11 @@ function myConcern(
   ageHours: number,
   comfortType: ComfortType,
   content: string,
-  { openedAfter = null, savedAfter = null }: { openedAfter?: number | null; savedAfter?: number | null } = {},
+  {
+    openedAfter = null,
+    savedAfter = null,
+    replies = [],
+  }: { openedAfter?: number | null; savedAfter?: number | null; replies?: string[] } = {},
 ): MockMyConcernRow {
   const at = (afterHours: number | null) => (afterHours === null ? null : hoursFromNow(afterHours - ageHours))
   return {
@@ -129,6 +135,13 @@ function myConcern(
     maturesAt: hoursFromNow(MATURE_HOURS - ageHours),
     openedAt: at(openedAfter),
     savedAt: at(savedAfter),
+    // 위로는 쓴 뒤 숙성 시간 안에 고르게 남았다고 본다(오래된 것이 앞)
+    replies: replies.map((reply, index) => ({
+      replyId: `${concernId}-${index + 1}`,
+      content: reply,
+      fromSystem: false,
+      createdAt: hoursFromNow(Math.min(((index + 1) * MATURE_HOURS) / (replies.length + 1), ageHours) - ageHours),
+    })),
   }
 }
 
@@ -160,15 +173,15 @@ export function createSeed(): MockDbState {
     ],
     // 숙성 중·숙성 끝·개봉·보관이 섞이게. 본문 첫 줄이 제목, 일부는 본문이 짧아 "더보기"가 없다
     myConcerns: [
-      myConcern('301', 2, 'EMPATHY', '발표를 망친 것 같아 계속 마음에 걸려요\n준비를 오래 했는데 막상 앞에 서니 머릿속이 하얘졌어요.\n다들 괜찮았다고 하는데 저만 자꾸 그 장면을 다시 떠올리게 돼요.\n다음 발표가 벌써부터 무서워요.'),
-      myConcern('302', 9, 'ADVICE', '이사를 갈지 말지 고민이에요\n회사와 가까운 곳으로 가면 출퇴근이 편해지지만 월세가 꽤 올라요.\n지금 동네에 정이 많이 들기도 했고요. 어떤 걸 더 중요하게 봐야 할까요?'),
-      myConcern('303', 30, 'EXPERIENCE', '새로운 취미를 찾고 싶어요\n퇴근하면 휴대폰만 보다가 잠들어요.'),
-      myConcern('304', 52, 'EMPATHY', '동생과 크게 다퉜어요\n별일 아닌 걸로 시작했는데 서로 날 선 말을 주고받았어요.\n먼저 사과하고 싶은데 어떻게 말을 꺼내야 할지 모르겠어요.\n시간이 지날수록 더 어색해지는 것 같아요.', { openedAfter: 30 }),
-      myConcern('305', 75, 'ADVICE', '공부 계획을 세워도 지키지 못해요\n매일 아침 계획표를 새로 쓰는데 저녁이 되면 절반도 못 했어요.\n계획을 줄여야 할지, 제가 의지가 약한 건지 모르겠어요.', { openedAfter: 26, savedAfter: 27 }),
-      myConcern('306', 98, 'EXPERIENCE', '첫 자취를 앞두고 설레면서도 걱정돼요\n요리도 청소도 다 혼자 해야 한다니 막막해요.\n먼저 자취해 본 분들은 처음에 뭐가 제일 힘들었나요?', { openedAfter: 40 }),
+      myConcern('301', 2, 'EMPATHY', '발표를 망친 것 같아 계속 마음에 걸려요\n준비를 오래 했는데 막상 앞에 서니 머릿속이 하얘졌어요.\n다들 괜찮았다고 하는데 저만 자꾸 그 장면을 다시 떠올리게 돼요.\n다음 발표가 벌써부터 무서워요.', { replies: ['저도 발표 때 머리가 하얘진 적이 있어요. 그만큼 잘하고 싶었던 거예요.'] }),
+      myConcern('302', 9, 'ADVICE', '이사를 갈지 말지 고민이에요\n회사와 가까운 곳으로 가면 출퇴근이 편해지지만 월세가 꽤 올라요.\n지금 동네에 정이 많이 들기도 했고요. 어떤 걸 더 중요하게 봐야 할까요?', { replies: ['출퇴근 시간이 줄면 하루가 정말 달라지더라고요.', '정든 동네라면 조금 더 지내 보면서 천천히 정해도 괜찮아요.'] }),
+      myConcern('303', 30, 'EXPERIENCE', '새로운 취미를 찾고 싶어요\n퇴근하면 휴대폰만 보다가 잠들어요.', { replies: ['산책이나 그림 그리기처럼 작게 시작할 수 있는 걸 추천해요.'] }),
+      myConcern('304', 52, 'EMPATHY', '동생과 크게 다퉜어요\n별일 아닌 걸로 시작했는데 서로 날 선 말을 주고받았어요.\n먼저 사과하고 싶은데 어떻게 말을 꺼내야 할지 모르겠어요.\n시간이 지날수록 더 어색해지는 것 같아요.', { openedAfter: 30, replies: ['먼저 사과하고 싶다는 마음이 벌써 큰 용기예요.', '"그때 내가 말이 심했어" 한마디면 충분할 때가 많더라고요.', '저도 동생이랑 그런 적 있는데, 밥 한 끼 같이 먹으면서 풀렸어요.'] }),
+      myConcern('305', 75, 'ADVICE', '공부 계획을 세워도 지키지 못해요\n매일 아침 계획표를 새로 쓰는데 저녁이 되면 절반도 못 했어요.\n계획을 줄여야 할지, 제가 의지가 약한 건지 모르겠어요.', { openedAfter: 26, savedAfter: 27, replies: ['계획을 절반으로 줄여 보세요. 다 해낸 날이 늘면 자신감도 붙어요.', '의지가 약한 게 아니라 계획이 너무 많았던 걸 수도 있어요.'] }),
+      myConcern('306', 98, 'EXPERIENCE', '첫 자취를 앞두고 설레면서도 걱정돼요\n요리도 청소도 다 혼자 해야 한다니 막막해요.\n먼저 자취해 본 분들은 처음에 뭐가 제일 힘들었나요?', { openedAfter: 40, replies: ['처음엔 밥 챙겨 먹는 게 제일 힘들었어요. 간단한 반찬 몇 개만 익혀 두면 훨씬 편해요.'] }),
       myConcern('307', 130, 'EMPATHY', '요즘 잠을 잘 못 자요'),
-      myConcern('308', 170, 'EMPATHY', '좋아하던 일이 점점 버거워져요\n처음엔 정말 즐거워서 시작한 일인데 요즘은 아침마다 출근이 두려워요.\n쉬고 싶다는 말을 꺼내면 다들 실망할 것 같아서 아무 말도 못 하고 있어요.\n이 마음을 어떻게 다뤄야 할지 모르겠어요.', { openedAfter: 30, savedAfter: 31 }),
-      myConcern('309', 220, 'ADVICE', '돈 관리를 제대로 해 보고 싶어요\n월급날이 지나면 어디에 썼는지 모르게 금방 비어요.\n가계부를 써 봤는데 일주일을 못 갔어요.', { openedAfter: 50 }),
+      myConcern('308', 170, 'EMPATHY', '좋아하던 일이 점점 버거워져요\n처음엔 정말 즐거워서 시작한 일인데 요즘은 아침마다 출근이 두려워요.\n쉬고 싶다는 말을 꺼내면 다들 실망할 것 같아서 아무 말도 못 하고 있어요.\n이 마음을 어떻게 다뤄야 할지 모르겠어요.', { openedAfter: 30, savedAfter: 31, replies: ['좋아하던 일이 버거워지는 건 그만큼 오래 애썼다는 뜻이에요.', '쉬고 싶다는 말은 실망시키는 말이 아니라 오래 가고 싶다는 말이에요.', '잠깐 멈추는 것도 일을 사랑하는 방법이라고 생각해요.'] }),
+      myConcern('309', 220, 'ADVICE', '돈 관리를 제대로 해 보고 싶어요\n월급날이 지나면 어디에 썼는지 모르게 금방 비어요.\n가계부를 써 봤는데 일주일을 못 갔어요.', { openedAfter: 50, replies: ['가계부 대신 일주일에 한 번 통장만 확인해 보는 것부터 시작해 보세요.'] }),
     ],
     island: { ownedItemIds: [] },
     restSessions: [],

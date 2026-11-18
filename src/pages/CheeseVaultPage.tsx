@@ -5,13 +5,18 @@ import styles from './CheeseVaultPage.module.css'
 export interface CheeseVaultPageProps {
   /** 보유한 양털 개수. 아직 받지 못했으면 undefined(숫자 자리에 막대) */
   woolCount: number | undefined
+  /** 현재 페이지는 상세에 다녀와도 유지되도록 호출하는 쪽이 들고 있다 */
+  page: number
+  onPageChange: (page: number) => void
+  /** 카드의 "더보기" — 내 고민 상세(받은 위로)로 */
+  onOpenConcern: (concernId: string) => void
   /** 뒤로가기 화살표 — 우유와 치즈 목록으로 */
   onBack?: () => void
   onOpenGuide?: () => void
 }
 
-/** "내 치즈 보관함"(시안 290:636): 내가 쓴 고민을 4개씩 넘겨 보고, "더보기"로 본문 전체를 펼친다. */
-export default function CheeseVaultPage({ woolCount, onBack, onOpenGuide }: CheeseVaultPageProps) {
+/** "내 치즈 보관함"(시안 290:636): 내가 쓴 고민을 4개씩 넘겨 보고, "더보기"로 그 고민의 상세(받은 위로)에 간다. */
+export default function CheeseVaultPage({ woolCount, page, onPageChange, onOpenConcern, onBack, onOpenGuide }: CheeseVaultPageProps) {
   const { state, retry } = useMyConcerns()
 
   return (
@@ -32,7 +37,13 @@ export default function CheeseVaultPage({ woolCount, onBack, onOpenGuide }: Chee
           <p className={styles.message}>아직 쓴 고민이 없어요</p>
         </div>
       ) : (
-        <VaultCarousel loading={state.status === 'loading'} items={state.status === 'success' ? state.items : []} />
+        <VaultCarousel
+          loading={state.status === 'loading'}
+          items={state.status === 'success' ? state.items : []}
+          page={page}
+          onPageChange={onPageChange}
+          onOpen={onOpenConcern}
+        />
       )}
     </main>
   )
