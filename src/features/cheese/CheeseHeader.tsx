@@ -2,19 +2,21 @@ import { Header, IconButton, WoolCounter } from '@/shared/ui'
 import styles from './CheeseHeader.module.css'
 
 export interface CheeseHeaderProps {
+  /** 화면 제목. 기본 "우유와 치즈"(치즈 보관함은 "내 치즈 보관함") */
+  title?: string
   /** 보유한 양털 개수. 양털은 care 기능 소관이라 페이지가 props 로 내려준다. 아직 모르면 undefined(숫자 자리에 막대) */
   woolCount: number | undefined
   onOpenGuide?: () => void
 }
 
 /**
- * 우유와 치즈 화면 공통 머리: 제목 "우유와 치즈", 오른쪽에 양털 알약과 안내(!) 아이콘.
+ * 우유와 치즈 화면 공통 머리: 제목(기본 "우유와 치즈"), 오른쪽에 양털 알약과 안내(!) 아이콘.
  * 기능끼리 import 금지라 emotion 의 EmotionHeader 와 같은 구성을 여기에도 둔다(공용 승격 후보).
  */
-export function CheeseHeader({ woolCount, onOpenGuide }: CheeseHeaderProps) {
+export function CheeseHeader({ title = '우유와 치즈', woolCount, onOpenGuide }: CheeseHeaderProps) {
   return (
     <Header
-      title="우유와 치즈"
+      title={title}
       actions={
         <>
           <WoolCounter count={woolCount} loading={woolCount === undefined} />

@@ -1,7 +1,7 @@
-import { useLayoutEffect, useRef } from 'react'
 import { PageIndicator } from '@/shared/ui'
 import { MilkCard, MilkCardSkeleton } from './MilkCard'
 import { CARDS_PER_PAGE, chunkConcerns, getDotWindow } from './carouselPages'
+import { usePageScroller } from './usePageScroller'
 import type { ConcernCard } from './types'
 import styles from './MilkCarousel.module.css'
 
@@ -19,24 +19,9 @@ export interface MilkCarouselProps {
 
 /** 우유병 카드를 3개씩 좌우 페이지로 넘겨 보는 목록(scroll-snap)과 페이지 점. */
 export function MilkCarousel({ loading, items, page, onPageChange, selectedId, onSelect, onOpen }: MilkCarouselProps) {
-  const scrollerRef = useRef<HTMLUListElement>(null)
   const pages = chunkConcerns(items)
   const pageCount = Math.max(pages.length, 1)
-  const safePage = Math.min(page, pageCount - 1)
-
-  // 처음 그릴 때(상세에서 돌아왔을 때 포함) 기억해 둔 페이지 위치로 바로 가 있는다
-  useLayoutEffect(() => {
-    const scroller = scrollerRef.current
-    if (scroller) scroller.scrollLeft = safePage * scroller.clientWidth
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- 마운트 때 한 번만 맞춘다. 이후는 사용자의 스와이프가 기준
-  }, [loading])
-
-  const handleScroll = () => {
-    const scroller = scrollerRef.current
-    if (!scroller || scroller.clientWidth === 0) return
-    const next = Math.round(scroller.scrollLeft / scroller.clientWidth)
-    if (next !== safePage && next < pageCount) onPageChange(next)
-  }
+  const { scrollerRef, safePage, handleScroll } = usePageScroller({ page, pageCount, onPageChange, resetKey: loading })
 
   const dots = getDotWindow(pageCount, safePage)
 

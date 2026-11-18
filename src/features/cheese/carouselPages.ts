@@ -12,10 +12,15 @@ export function getDotWindow(pageCount: number, page: number): { count: number; 
   return { count, current: page - start }
 }
 
-export function chunkConcerns(items: ConcernCard[]): ConcernCard[][] {
-  const pages: ConcernCard[][] = []
-  for (let index = 0; index < items.length; index += CARDS_PER_PAGE) {
-    pages.push(items.slice(index, index + CARDS_PER_PAGE))
+/** 목록을 `size` 개씩 페이지로 나눈다. 우유 목록(3개)·치즈 보관함(4개)이 같이 쓴다. */
+export function chunkPages<T>(items: T[], size: number): T[][] {
+  const pages: T[][] = []
+  for (let index = 0; index < items.length; index += size) {
+    pages.push(items.slice(index, index + size))
   }
   return pages
+}
+
+export function chunkConcerns(items: ConcernCard[]): ConcernCard[][] {
+  return chunkPages(items, CARDS_PER_PAGE)
 }
