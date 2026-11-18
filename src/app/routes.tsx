@@ -13,6 +13,7 @@ import EmotionWritePage from '@/pages/EmotionWritePage'
 import HomePage from '@/pages/HomePage'
 import InitialSetupPage from '@/pages/InitialSetupPage'
 import IslandDecoratePage from '@/pages/IslandDecoratePage'
+import MyConcernDetailPage from '@/pages/MyConcernDetailPage'
 import OnboardingPage from '@/pages/OnboardingPage'
 import SplashPage from '@/pages/SplashPage'
 import { useWoolBalance } from '@/shared/wool'
@@ -110,17 +111,21 @@ interface CheeseListState {
 interface AppShellContext {
   cheeseList: CheeseListState
   setCheeseList: Dispatch<SetStateAction<CheeseListState>>
+  /** 치즈 보관함의 현재 페이지 — 내 고민 상세에 다녀와도 유지 */
+  vaultPage: number
+  setVaultPage: Dispatch<SetStateAction<number>>
 }
 
 /**
- * 앱 화면 공통 부모: 시작 흐름 가드 + 우유와 치즈 목록 상태.
+ * 앱 화면 공통 부모: 시작 흐름 가드 + 우유와 치즈 목록·치즈 보관함 상태.
  * 목록의 현재 페이지·선택은 상세(/cheese/:concernId)에 다녀와도 유지돼야 해서(docs/api/common.md 고민 목록 규칙)
  * 목록·상세를 함께 감싸는 여기서 들고 있는다. 다른 탭에 다녀와도 유지 — 라우터 전 App.tsx 와 같은 동작.
  */
 export function AppShell() {
   const [cheeseList, setCheeseList] = useState<CheeseListState>({ page: 0, selectedId: null })
+  const [vaultPage, setVaultPage] = useState(0)
   if (!hasPassedEntry()) return <Navigate to="/splash" replace />
-  return <Outlet context={{ cheeseList, setCheeseList } satisfies AppShellContext} />
+  return <Outlet context={{ cheeseList, setCheeseList, vaultPage, setVaultPage } satisfies AppShellContext} />
 }
 
 const TAB_PATHS: Record<string, string> = { home: '/', sheep: '/emotion', cheese: '/cheese', cave: '/cave' }
@@ -231,11 +236,28 @@ export function CheeseRoute() {
   )
 }
 
-/** 내 치즈 보관함 — 탭바 있음(시안 290:636), "고민치즈" 탭. 뒤로가기는 우유와 치즈 목록으로. */
+/** 내 치즈 보관함 — 탭바 있음(시안 290:636), "고민치즈" 탭. 뒤로가기는 우유와 치즈 목록으로, "더보기"는 내 고민 상세로. */
 export function CheeseVaultRoute() {
   const navigate = useNavigate()
   const woolCount = useWoolBalance()
-  return <CheeseVaultPage woolCount={woolCount} onBack={() => navigate('/cheese')} />
+  const { vaultPage, setVaultPage } = useOutletContext<AppShellContext>()
+  return (
+    <CheeseVaultPage
+      woolCount={woolCount}
+      page={vaultPage}
+      onPageChange={setVaultPage}
+      onOpenConcern={(id) => navigate(`/cheese/vault/${encodeURIComponent(id)}`)}
+      onBack={() => navigate('/cheese')}
+    />
+  )
+}
+
+/** 내 고민 상세(받은 위로) — 탭바 없음(고민 상세와 같음). 뒤로가기는 치즈 보관함으로. */
+export function MyConcernDetailRoute() {
+  const navigate = useNavigate()
+  const woolCount = useWoolBalance()
+  const { concernId = '' } = useParams()
+  return <MyConcernDetailPage key={concernId} woolCount={woolCount} concernId={concernId} onBack={() => navigate('/cheese/vault')} />
 }
 
 export function ConcernDetailRoute() {

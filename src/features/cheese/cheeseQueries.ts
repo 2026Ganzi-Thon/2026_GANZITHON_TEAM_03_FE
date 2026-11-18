@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query'
 import type { QueryClient } from '@tanstack/react-query'
-import { fetchConcernDetail, fetchConcerns, fetchMyConcerns } from './cheeseApi'
+import { fetchConcernDetail, fetchConcernReplies, fetchConcerns, fetchMyConcerns } from './cheeseApi'
 import type { ConcernListResponse } from './types'
 
 export const cheeseKeys = {
@@ -8,6 +8,7 @@ export const cheeseKeys = {
   concerns: () => [...cheeseKeys.all, 'concerns'] as const,
   concern: (concernId: string) => [...cheeseKeys.all, 'concern', concernId] as const,
   myConcerns: () => [...cheeseKeys.all, 'myConcerns'] as const,
+  replies: (concernId: string) => [...cheeseKeys.all, 'replies', concernId] as const,
 }
 
 /**
@@ -45,6 +46,14 @@ export const myConcernsQueryOptions = () =>
   queryOptions({
     queryKey: cheeseKeys.myConcerns(),
     queryFn: () => fetchMyConcerns({ page: 0, size: MY_CONCERNS_PAGE_SIZE }),
+  })
+
+/** 개봉한 내 치즈의 받은 위로. 개봉 전(409)·남의 고민(404)은 재시도하지 않는다. */
+export const concernRepliesQueryOptions = (concernId: string) =>
+  queryOptions({
+    queryKey: cheeseKeys.replies(concernId),
+    queryFn: () => fetchConcernReplies(concernId),
+    retry: false,
   })
 
 /** 목록 캐시에서 고민 하나를 뺀다(위로를 남겼거나 마감·삭제된 고민). 재조회는 하지 않는다. */
