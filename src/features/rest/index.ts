@@ -1,5 +1,6 @@
 export { CaveHeader } from './CaveHeader'
 export { CaveScene } from './CaveScene'
+export { preloadCaveAssets } from './preloadCaveAssets'
 export { CaveOpenModal } from './CaveOpenModal'
 export { LayDownModal } from './LayDownModal'
 export { DurationPicker } from './DurationPicker'
