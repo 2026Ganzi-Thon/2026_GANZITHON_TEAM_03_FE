@@ -2,7 +2,10 @@ import { useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import { Navigate, Outlet, ScrollRestoration, useLocation, useNavigate, useOutletContext, useParams } from 'react-router'
 import AuthPage from '@/pages/AuthPage'
+import CavePage from '@/pages/CavePage'
+import CaveSessionPage from '@/pages/CaveSessionPage'
 import CheesePage from '@/pages/CheesePage'
+import CheeseVaultPage from '@/pages/CheeseVaultPage'
 import ConcernDetailPage from '@/pages/ConcernDetailPage'
 import EmotionPage from '@/pages/EmotionPage'
 import EmotionRecordPage from '@/pages/EmotionRecordPage'
@@ -10,7 +13,9 @@ import EmotionWritePage from '@/pages/EmotionWritePage'
 import HomePage from '@/pages/HomePage'
 import InitialSetupPage from '@/pages/InitialSetupPage'
 import IslandDecoratePage from '@/pages/IslandDecoratePage'
+import MyConcernDetailPage from '@/pages/MyConcernDetailPage'
 import OnboardingPage from '@/pages/OnboardingPage'
+import SettingsPage from '@/pages/SettingsPage'
 import SplashPage from '@/pages/SplashPage'
 import { useWoolBalance } from '@/shared/wool'
 import AppTabBar from './AppTabBar'
@@ -107,28 +112,34 @@ interface CheeseListState {
 interface AppShellContext {
   cheeseList: CheeseListState
   setCheeseList: Dispatch<SetStateAction<CheeseListState>>
+  /** 치즈 보관함의 현재 페이지 — 내 고민 상세에 다녀와도 유지 */
+  vaultPage: number
+  setVaultPage: Dispatch<SetStateAction<number>>
 }
 
 /**
- * 앱 화면 공통 부모: 시작 흐름 가드 + 우유와 치즈 목록 상태.
+ * 앱 화면 공통 부모: 시작 흐름 가드 + 우유와 치즈 목록·치즈 보관함 상태.
  * 목록의 현재 페이지·선택은 상세(/cheese/:concernId)에 다녀와도 유지돼야 해서(docs/api/common.md 고민 목록 규칙)
  * 목록·상세를 함께 감싸는 여기서 들고 있는다. 다른 탭에 다녀와도 유지 — 라우터 전 App.tsx 와 같은 동작.
  */
 export function AppShell() {
   const [cheeseList, setCheeseList] = useState<CheeseListState>({ page: 0, selectedId: null })
+  const [vaultPage, setVaultPage] = useState(0)
   if (!hasPassedEntry()) return <Navigate to="/splash" replace />
-  return <Outlet context={{ cheeseList, setCheeseList } satisfies AppShellContext} />
+  return <Outlet context={{ cheeseList, setCheeseList, vaultPage, setVaultPage } satisfies AppShellContext} />
 }
 
-const TAB_PATHS: Record<string, string> = { home: '/', sheep: '/emotion', cheese: '/cheese' }
+const TAB_PATHS: Record<string, string> = { home: '/', sheep: '/emotion', cheese: '/cheese', cave: '/cave' }
 
 function tabOf(pathname: string) {
   if (pathname === '/emotion') return 'sheep'
-  if (pathname === '/cheese') return 'cheese'
+  // 임의 결정(확인 필요): 치즈 보관함도 "고민치즈" 탭 — 시안(290:636)은 "홈"이 선택돼 있지만 템플릿 복사로 봄
+  if (pathname === '/cheese' || pathname === '/cheese/vault') return 'cheese'
+  if (pathname === '/cave') return 'cave'
   return 'home'
 }
 
-/** 탭바가 있는 화면(홈·양 먹이주기·우유와 치즈 목록). cloud·cave 탭은 이동할 화면이 없어 동작 없음. */
+/** 탭바가 있는 화면(홈·양 먹이주기·우유와 치즈 목록·치즈 보관함·동굴 문 닫기). cloud 탭은 이동할 화면이 없어 동작 없음. */
 export function TabLayout() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -139,7 +150,9 @@ export function TabLayout() {
         value={tabOf(pathname)}
         onChange={(tab) => {
           const path = TAB_PATHS[tab]
-          if (path) navigate(path)
+          // 홈 ↔ 동굴 문 닫기는 두 화면 모두 섬 그림이 있어 섬이 옮겨 가는 전환을 켠다
+          const islandMove = (pathname === '/' && path === '/cave') || (pathname === '/cave' && path === '/')
+          if (path) navigate(path, { viewTransition: islandMove })
         }}
       />
     </>
@@ -155,14 +168,39 @@ export function HomeRoute() {
       onOpenRecords={() => navigate('/emotion')}
       // 섬 그림이 홈 자리에서 섬 꾸미기 자리로 옮겨 가는 전환(View Transitions, global.css 의 island)
       onOpenDecorate={() => navigate('/island', { viewTransition: true })}
+      // 섬 꾸미기와 같이 섬 그림이 홈 자리에서 동굴 화면 자리로 옮겨 간다
+      onCloseCave={() => navigate('/cave', { viewTransition: true })}
+      onOpenSettings={() => navigate('/settings')}
     />
   )
 }
 
-/** 섬 꾸미기 — 탭바 없음(시안 102:744). 설정 화면이 없어 설정 아이콘은 동작 없음. */
+/** 섬 꾸미기 — 탭바 없음(시안 102:744). */
 export function IslandDecorateRoute() {
   const navigate = useNavigate()
-  return <IslandDecoratePage onBack={() => navigate('/', { viewTransition: true })} />
+  return (
+    <IslandDecoratePage
+      onBack={() => navigate('/', { viewTransition: true })}
+      onOpenSettings={() => navigate('/settings')}
+    />
+  )
+}
+
+/**
+ * 설정 — 탭바 없음(시안 290:891). 홈·섬 꾸미기 머리의 설정 아이콘으로 들어온다.
+ * 임의 결정(확인 필요): 뒤로가기는 브라우저 기록으로 들어온 화면에 돌아가고, 주소로 바로 열어 기록이 없으면 홈으로(replace).
+ * 저장하지 않은 변경은 확인 없이 버린다.
+ * 임의 결정(확인 필요): "계정 바꾸기"(Google로 계속하기)는 실제 구글 로그인이 생기기 전까지 로그인 화면으로 보낸다(push — 뒤로가기로 설정에 돌아옴).
+ */
+export function SettingsRoute() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  return (
+    <SettingsPage
+      onBack={() => (location.key === 'default' ? navigate('/', { replace: true }) : navigate(-1))}
+      onSwitchAccount={() => navigate('/login')}
+    />
+  )
 }
 
 export function EmotionRoute() {
@@ -217,8 +255,33 @@ export function CheeseRoute() {
       selectedId={cheeseList.selectedId}
       onSelect={(selectedId) => setCheeseList((prev) => ({ ...prev, selectedId }))}
       onOpenConcern={(id) => navigate(`/cheese/${encodeURIComponent(id)}`)}
+      onOpenVault={() => navigate('/cheese/vault')}
     />
   )
+}
+
+/** 내 치즈 보관함 — 탭바 있음(시안 290:636), "고민치즈" 탭. 뒤로가기는 우유와 치즈 목록으로, "더보기"는 내 고민 상세로. */
+export function CheeseVaultRoute() {
+  const navigate = useNavigate()
+  const woolCount = useWoolBalance()
+  const { vaultPage, setVaultPage } = useOutletContext<AppShellContext>()
+  return (
+    <CheeseVaultPage
+      woolCount={woolCount}
+      page={vaultPage}
+      onPageChange={setVaultPage}
+      onOpenConcern={(id) => navigate(`/cheese/vault/${encodeURIComponent(id)}`)}
+      onBack={() => navigate('/cheese')}
+    />
+  )
+}
+
+/** 내 고민 상세(받은 위로) — 탭바 없음(고민 상세와 같음). 뒤로가기는 치즈 보관함으로. */
+export function MyConcernDetailRoute() {
+  const navigate = useNavigate()
+  const woolCount = useWoolBalance()
+  const { concernId = '' } = useParams()
+  return <MyConcernDetailPage key={concernId} woolCount={woolCount} concernId={concernId} onBack={() => navigate('/cheese/vault')} />
 }
 
 export function ConcernDetailRoute() {
@@ -236,6 +299,37 @@ export function ConcernDetailRoute() {
         setCheeseList((prev) => ({ ...prev, selectedId: null }))
         navigate('/cheese', { replace: true })
       }}
+    />
+  )
+}
+
+/**
+ * 동굴 문 닫기 시작 전 — 탭바 있음(시안 37:26). 쉬는 중이면 진행 중 화면으로.
+ * 임의 결정(확인 필요): 시작하면 진행 중 화면으로 replace — 진행 중 화면에서 브라우저 뒤로가기를 누르면 시작 전 화면이 아니라
+ * 그 전 화면(홈 등)으로 나간다. 휴식은 서버에서 계속되고, 다시 /cave 로 오면 진행 중 화면으로 돌아온다.
+ * (push 로 두면 뒤로가기 → /cave → 쉬는 중이라 다시 진행 중 화면으로 보내져 뒤로가기가 먹히지 않는다.)
+ */
+export function CaveRoute() {
+  const navigate = useNavigate()
+  const woolCount = useWoolBalance()
+  return (
+    <CavePage
+      woolCount={woolCount}
+      onRunning={() => navigate('/cave/session', { replace: true })}
+      // 문이 닫힌 뒤: 버튼이 아래 자리로 미끄러져 "동굴 문 열기"가 되고, 탭바는 내려가며 사라진다(global.css 의 cave-* 전환)
+      onStarted={() => navigate('/cave/session', { replace: true, viewTransition: true })}
+    />
+  )
+}
+
+/** 동굴 문 닫기 진행 중 — 탭바 없음(시안 63:1283). 끝나거나 진행 중 휴식이 없으면 시작 전 화면으로(replace). */
+export function CaveSessionRoute() {
+  const navigate = useNavigate()
+  return (
+    <CaveSessionPage
+      // 문이 열린 뒤: 버튼이 탭바 위 자리로 올라가 "동굴 문 닫기"가 되고, 탭바는 아래에서 올라온다
+      onEnded={() => navigate('/cave', { replace: true, viewTransition: true })}
+      onNoSession={() => navigate('/cave', { replace: true })}
     />
   )
 }

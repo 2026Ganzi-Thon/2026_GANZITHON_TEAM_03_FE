@@ -1,0 +1,4 @@
+/* 실패 안내는 오류 색으로 — 공용 토큰 --color-error(섬 꾸미기 구매 확인과 같음) */
+.warning {
+  color: var(--color-error);
+}

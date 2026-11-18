@@ -66,6 +66,15 @@ body {
   line-height: var(--line-height-normal);
 }
 
+/* 부산단디손글씨체(부산광역시 전용서체, 무료 배포). 한글 2,350자 + 영문·숫자만 남긴 woff2 — 원본 9MB */
+@font-face {
+  font-family: 'BusanDandiScript';
+  src: url('../assets/fonts/BusanDandiScript.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* 디자인 토큰 (색상·간격 등) */
 
@@ -99,6 +108,8 @@ body {
   --font-family:
     'Inter', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui,
     sans-serif;
+  /* "OO의 섬" 제목 전용 손글씨체(시안 BusanDandiScript). 파일에 없는 글자는 전역 폰트로 보인다 */
+  --font-family-title: 'BusanDandiScript', var(--font-family);
   --font-weight-regular: 400;
   --font-weight-bold: 700;
   --letter-spacing-tight: -0.02em;
@@ -211,6 +222,25 @@ body {
 }
 
 ::view-transition-old(island-sheet):only-child {
+  animation: view-sheet-in 0.35s cubic-bezier(0.4, 0, 1, 1) reverse both;
+}
+
+/*
+ * 동굴 문 닫기 시작 전 ↔ 진행 중: 아래 버튼(cave-action)이 새 자리로 미끄러지며 글자가 바뀌고, 골라진 시간 알약(cave-time)이
+ * 남은 시간 자리로 옮겨 간다. 섬은 두 화면에서 같은 자리라 그대로.
+ * 탭바(tabbar): 탭바 없는 화면으로 가면 아래로 내려가며 사라지고, 돌아오면 아래에서 올라온다. 탭바 있는 화면끼리는 제자리.
+ */
+::view-transition-group(cave-action),
+::view-transition-group(cave-time) {
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+::view-transition-new(tabbar):only-child {
+  animation: view-sheet-in 0.5s cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+::view-transition-old(tabbar):only-child {
   animation: view-sheet-in 0.35s cubic-bezier(0.4, 0, 1, 1) reverse both;
 }
 
