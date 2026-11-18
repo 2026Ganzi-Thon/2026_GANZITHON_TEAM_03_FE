@@ -5,9 +5,10 @@
  * 화면이 낮으면 섬이 최소 200px 까지 줄어든다(섬 말고 이 화면에 필요한 높이 476px).
  */
 .page {
+  /* 섬 크기는 100svh(주소창이 펴진 높이) 기준 — dvh 는 Safari 주소창이 접히고 펴질 때 바뀌어 섬 이동 전환 도중 크기가 다시 바뀌며 떨렸다 */
   --cave-scene-size: clamp(
     200px,
-    calc(100dvh - 476px - env(safe-area-inset-top) - env(safe-area-inset-bottom)),
+    calc(100svh - 476px - env(safe-area-inset-top) - env(safe-area-inset-bottom)),
     313px
   );
 

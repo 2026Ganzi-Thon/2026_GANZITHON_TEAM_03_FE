@@ -145,6 +145,18 @@
   }
 }
 
+/*
+ * 화면 전환(View Transition) 중에는 계속 도는 물결·나룻배를 멈춘다 — 옮겨 가는 섬 그림을 매 프레임 다시 뜨지 않게
+ * (iPhone 에서 전환이 끊기는 원인). 전환이 끝나면 이어서 움직인다. :active-view-transition 을 모르는 브라우저는 그대로.
+ * 놓일 때 한 번 나타나는 움직임(.item)은 멈추지 않는다 — 멈추면 전환 동안 가구가 안 보인다.
+ */
+:global(:root:active-view-transition) .bob,
+:global(:root:active-view-transition) .waveA,
+:global(:root:active-view-transition) .waveB,
+:global(:root:active-view-transition) .float:not(.item) {
+  animation-play-state: paused;
+}
+
 /* 움직임 줄이기: 물결 띠는 멈춘 채로 두고, 아이템은 바로 나타난다 */
 @media (prefers-reduced-motion: reduce) {
   .bob,
