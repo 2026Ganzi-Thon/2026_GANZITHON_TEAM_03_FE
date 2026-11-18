@@ -212,6 +212,18 @@ body {
   animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
 
+/*
+ * 섬은 양쪽이 같은 그림이라 이전·새 그림을 겹쳐 바꾸지 않고 새 그림 한 장만 옮긴다. 두 장을 겹치면 iPhone Safari 에서
+ * 크기가 다른 두 섬이 따로 그려져 잔상처럼 보였다(크롬은 한 자리에 겹쳐 티가 안 남).
+ */
+::view-transition-old(island) {
+  display: none;
+}
+
+::view-transition-new(island) {
+  animation: none;
+}
+
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 0.3s;

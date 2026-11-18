@@ -7,7 +7,8 @@
 .page {
   --island-top-bar: 100px;
   --island-sheet-peek: calc(89px + env(safe-area-inset-bottom));
-  --island-sheet-height: calc(100dvh - env(safe-area-inset-top) - var(--island-top-bar) - 200px);
+  /* 펼친 시트 높이(= 섬 자리)는 100svh 기준 — dvh 는 Safari 주소창이 접히고 펴질 때 바뀌어 섬 이동 전환이 떨렸다 */
+  --island-sheet-height: calc(100svh - env(safe-area-inset-top) - var(--island-top-bar) - 200px);
 
   /*
    * 화면에 못 박는다: 아무 데나 위아래로 끌어도 화면 전체가 따라 움직이지(iOS 고무줄 스크롤) 않게 한다.
