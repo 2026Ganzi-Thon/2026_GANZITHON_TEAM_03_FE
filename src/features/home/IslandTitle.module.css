@@ -12,10 +12,10 @@
   border-radius: 0 var(--radius-full) var(--radius-full) 0;
   background-color: var(--color-primary);
   color: var(--color-white);
-  /* 임의 결정(확인 필요): 전용 폰트(BusanDandiScript) 대신 전역 폰트 토큰을 쓴다 */
-  font-family: var(--font-family);
+  /* 시안의 전용 손글씨체(BusanDandiScript Regular 24px) */
+  font-family: var(--font-family-title);
   font-size: var(--font-size-h5);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
   line-height: var(--line-height-h5);
   white-space: nowrap;
   overflow: hidden;
