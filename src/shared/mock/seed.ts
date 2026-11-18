@@ -22,6 +22,22 @@ export interface MockConcernRow {
   alreadyReplied: boolean
 }
 
+/**
+ * 내가 쓴 고민 한 행. 위의 `concerns`(다른 사람이 쓴 고민, 위로할 목록)와 따로 둔다.
+ * 상태(숙성 중·숙성 끝·개봉·보관)는 저장하지 않고 시각으로 계산한다(docs/api/cheese.md "개념") — features/cheese/cheeseApi.ts 가 흉내 낸다.
+ */
+export interface MockMyConcernRow {
+  concernId: Id
+  content: string
+  comfortType: ComfortType
+  createdAt: IsoDateTime
+  maturesAt: IsoDateTime
+  /** 개봉 전이면 null */
+  openedAt: IsoDateTime | null
+  /** 보관 전이면 null */
+  savedAt: IsoDateTime | null
+}
+
 export interface MockDbState {
   user: {
     /** 초기 설정 전이면 null */
@@ -36,6 +52,8 @@ export interface MockDbState {
   emotionRecords: MockEmotionRecordRow[]
   nextEmotionRecordId: number
   concerns: MockConcernRow[]
+  /** 내가 쓴 고민(최신이 앞) */
+  myConcerns: MockMyConcernRow[]
   /** 섬 꾸미기에서 산 아이템 ID. 아이템 목록 자체는 features/island/islandApi.ts 상수 */
   island: { ownedItemIds: string[] }
   /**
@@ -86,6 +104,34 @@ function concern(concernId: string, createdAt: string, comfortType: ComfortType,
   return { concernId, content, comfortType, createdAt, alreadyReplied: false }
 }
 
+/** 지금에서 `hours` 시간 뒤(음수면 전) ISO 시각. 시드를 처음 만들 때 한 번만 계산해 절대 시각으로 저장한다. */
+function hoursFromNow(hours: number): IsoDateTime {
+  return new Date(Date.now() + hours * 60 * 60 * 1000).toISOString()
+}
+
+// 임의 결정(확인 필요): 시드의 숙성 시간은 24시간 — 명세 미결정(docs/api/cheese.md 1번)
+const MATURE_HOURS = 24
+
+/** 내가 쓴 고민 시드: 쓴 지 `ageHours` 시간 전, 개봉·보관은 쓴 뒤 몇 시간 뒤인지(없으면 null) */
+function myConcern(
+  concernId: string,
+  ageHours: number,
+  comfortType: ComfortType,
+  content: string,
+  { openedAfter = null, savedAfter = null }: { openedAfter?: number | null; savedAfter?: number | null } = {},
+): MockMyConcernRow {
+  const at = (afterHours: number | null) => (afterHours === null ? null : hoursFromNow(afterHours - ageHours))
+  return {
+    concernId,
+    content,
+    comfortType,
+    createdAt: hoursFromNow(-ageHours),
+    maturesAt: hoursFromNow(MATURE_HOURS - ageHours),
+    openedAt: at(openedAfter),
+    savedAt: at(savedAfter),
+  }
+}
+
 export function createSeed(): MockDbState {
   return {
     user: { nickname: '온기', ageGroup: null, introduction: '', profileCompleted: true },
@@ -111,6 +157,18 @@ export function createSeed(): MockDbState {
       concern('208', '2026-11-07T08:30:00Z', 'ADVICE', '하고 싶은 일과 해야 하는 일 사이에서 고민이에요\n안정적인 길을 가자니 마음이 무겁고, 하고 싶은 걸 하자니 불안해요.\n어떤 기준으로 정하면 좋을까요?'),
       concern('209', '2026-11-06T14:00:00Z', 'EXPERIENCE', '부모님께 속마음을 말하기가 어려워요\n걱정하실까 봐 늘 괜찮다고만 해요.'),
       concern('210', '2026-11-05T02:00:00Z', 'EMPATHY', '요즘 자주 눈물이 나요\n이유를 딱 집어 말할 수는 없는데 사소한 일에도 울컥해요.\n그냥 잠깐 쉬어도 되는 걸까요.'),
+    ],
+    // 숙성 중·숙성 끝·개봉·보관이 섞이게. 본문 첫 줄이 제목, 일부는 본문이 짧아 "더보기"가 없다
+    myConcerns: [
+      myConcern('301', 2, 'EMPATHY', '발표를 망친 것 같아 계속 마음에 걸려요\n준비를 오래 했는데 막상 앞에 서니 머릿속이 하얘졌어요.\n다들 괜찮았다고 하는데 저만 자꾸 그 장면을 다시 떠올리게 돼요.\n다음 발표가 벌써부터 무서워요.'),
+      myConcern('302', 9, 'ADVICE', '이사를 갈지 말지 고민이에요\n회사와 가까운 곳으로 가면 출퇴근이 편해지지만 월세가 꽤 올라요.\n지금 동네에 정이 많이 들기도 했고요. 어떤 걸 더 중요하게 봐야 할까요?'),
+      myConcern('303', 30, 'EXPERIENCE', '새로운 취미를 찾고 싶어요\n퇴근하면 휴대폰만 보다가 잠들어요.'),
+      myConcern('304', 52, 'EMPATHY', '동생과 크게 다퉜어요\n별일 아닌 걸로 시작했는데 서로 날 선 말을 주고받았어요.\n먼저 사과하고 싶은데 어떻게 말을 꺼내야 할지 모르겠어요.\n시간이 지날수록 더 어색해지는 것 같아요.', { openedAfter: 30 }),
+      myConcern('305', 75, 'ADVICE', '공부 계획을 세워도 지키지 못해요\n매일 아침 계획표를 새로 쓰는데 저녁이 되면 절반도 못 했어요.\n계획을 줄여야 할지, 제가 의지가 약한 건지 모르겠어요.', { openedAfter: 26, savedAfter: 27 }),
+      myConcern('306', 98, 'EXPERIENCE', '첫 자취를 앞두고 설레면서도 걱정돼요\n요리도 청소도 다 혼자 해야 한다니 막막해요.\n먼저 자취해 본 분들은 처음에 뭐가 제일 힘들었나요?', { openedAfter: 40 }),
+      myConcern('307', 130, 'EMPATHY', '요즘 잠을 잘 못 자요'),
+      myConcern('308', 170, 'EMPATHY', '좋아하던 일이 점점 버거워져요\n처음엔 정말 즐거워서 시작한 일인데 요즘은 아침마다 출근이 두려워요.\n쉬고 싶다는 말을 꺼내면 다들 실망할 것 같아서 아무 말도 못 하고 있어요.\n이 마음을 어떻게 다뤄야 할지 모르겠어요.', { openedAfter: 30, savedAfter: 31 }),
+      myConcern('309', 220, 'ADVICE', '돈 관리를 제대로 해 보고 싶어요\n월급날이 지나면 어디에 썼는지 모르게 금방 비어요.\n가계부를 써 봤는데 일주일을 못 갔어요.', { openedAfter: 50 }),
     ],
     island: { ownedItemIds: [] },
     restSessions: [],
