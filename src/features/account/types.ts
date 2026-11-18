@@ -43,5 +43,14 @@ export type MyInfoState =
   | { status: 'error' }
   | { status: 'success'; data: MyInfo }
 
+/** 내 정보 수정(설정 화면 저장) 상태. duplicated: 409 닉네임 중복, invalid: 400 형식 오류 */
+export type UpdateMyInfoState =
+  | { status: 'idle' }
+  | { status: 'submitting' }
+  | { status: 'success' }
+  | { status: 'duplicated' }
+  | { status: 'invalid' }
+  | { status: 'error' }
+
 /** 약관 종류별 현재 동의 상태. 이력이 없는 종류는 없다. */
 export type ConsentStatusMap = Partial<Record<ConsentType, ConsentItem>>
