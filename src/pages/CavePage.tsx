@@ -4,7 +4,10 @@ import {
   CaveScene,
   DEFAULT_REST_DURATION,
   DurationPicker,
+  LayDownModal,
   REST_DURATION_OPTIONS,
+  requestMotionPermission,
+  useFlatSensor,
   useCurrentRestSession,
   useStartRestSession,
   waitForDoor,
@@ -60,7 +63,8 @@ export default function CavePage({ woolCount, onRunning, onStarted, onOpenGuide,
     if (running && !closing) onRunning?.()
   }, [running, closing, onRunning])
 
-  const handleStart = async () => {
+  /** 휴식을 시작하고 문이 다 닫히면 진행 중 화면으로 */
+  const begin = async () => {
     if (closing) return
     setClosing(true)
     if (await start(duration)) {
@@ -73,8 +77,41 @@ export default function CavePage({ woolCount, onRunning, onStarted, onOpenGuide,
     }
   }
 
+  /** "휴대폰을 바닥에 눕혀보세요!" 안내를 띄우고 눕히길 기다리는 중 */
+  const [waitingFlat, setWaitingFlat] = useState(false)
+  /** 센서가 없는 기기(데스크톱 등)로 확인됨 — 안내 없이 버튼으로 바로 시작 */
+  const [sensorMissing, setSensorMissing] = useState(false)
+
+  // 들어올 때 센서가 있는지 미리 본다: 빈 값이 오면 센서 없는 기기. 아무 값도 안 오는 것(iPhone 의 권한 받기 전)으로는 정하지 않는다
+  useFlatSensor(!waitingFlat && !sensorMissing, (sensor) => {
+    if (sensor === 'unsupported') setSensorMissing(true)
+  })
+
+  // 눕힌 것이 1초 이어지면 안내를 닫고 시작한다. 권한을 받고도 센서 값이 오지 않으면 기다리지 않고 바로 시작
+  useFlatSensor(waitingFlat, (sensor) => {
+    if (sensor === 'tilted') return
+    setWaitingFlat(false)
+    void begin()
+  })
+
+  /**
+   * "동굴 문 닫기": 센서 권한을 받고(iPhone 은 이 누름 순간에 권한 창을 띄워야 해서 await 전에 부른다) 눕히길 기다린다.
+   * 권한을 거절했거나 센서를 쓸 수 없으면 지금처럼 바로 시작한다(명세: 센서 권한 거절·미지원 시 수동 시작).
+   */
+  const handleStart = () => {
+    if (closing || waitingFlat) return
+    if (sensorMissing) {
+      void begin()
+      return
+    }
+    void requestMotionPermission().then((granted) => {
+      if (granted) setWaitingFlat(true)
+      else void begin()
+    })
+  }
+
   // 문이 닫히는 동안(시작 성공 뒤)은 버튼을 회색으로 바꾸지 않는다 — 그대로 진행 중 화면의 "동굴 문 열기"로 이어진다.
-  // 누름은 handleStart 가 막는다
+  // 누름은 handleStart·begin 이 막는다
   const busy = !doorClosed && (closing || running || state.status !== 'success')
 
   return (
@@ -104,11 +141,13 @@ export default function CavePage({ woolCount, onRunning, onStarted, onOpenGuide,
               동굴 문을 닫지 못했어요. 잠시 후 다시 시도해 주세요.
             </p>
           ) : null}
-          <Button className={styles.action} size="lg" fullWidth disabled={busy} onClick={() => void handleStart()}>
+          <Button className={styles.action} size="lg" fullWidth disabled={busy} onClick={handleStart}>
             동굴 문 닫기
           </Button>
         </div>
       </div>
+
+      <LayDownModal open={waitingFlat} onCancel={() => setWaitingFlat(false)} />
     </main>
   )
 }

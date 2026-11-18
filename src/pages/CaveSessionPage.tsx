@@ -6,7 +6,9 @@ import {
   RestTimer,
   useCancelRestSession,
   useCurrentRestSession,
+  useFlatSensor,
   useRestCountdown,
+  useWakeLock,
   waitForDoor,
 } from '@/features/rest'
 import type { CaveDecoration } from '@/features/rest'
@@ -53,6 +55,8 @@ export default function CaveSessionPage({ onEnded, onNoSession, onOpenGuide, onO
   const { state: islandState } = useIslandItems()
   const decorations = islandState.status === 'success' ? toDecorations(islandState.items) : []
   const [confirming, setConfirming] = useState(false)
+  /** 확인 팝업이 휴대폰을 들어서 저절로 뜬 것인지 — 그렇다면 다시 눕히면 닫는다 */
+  const [lifted, setLifted] = useState(false)
   /** 이 화면에서 진행 중인 휴식을 본 적이 있는지 — 끝났을 때 문을 열고 갈지, 바로 보낼지 */
   const sawRunning = useRef(false)
   const leaving = useRef(false)
@@ -85,9 +89,26 @@ export default function CaveSessionPage({ onEnded, onNoSession, onOpenGuide, onO
     return () => window.clearInterval(timer)
   }, [running, remaining, retry])
 
+  // 쉬는 동안 화면이 꺼지지 않게 — 꺼지면 센서 값이 오지 않아 휴대폰을 든 것을 알 수 없다
+  useWakeLock(running)
+
+  // 쉬는 동안 휴대폰을 들면 "동굴 문을 열까요?"를 저절로 띄우고, 다시 눕히면 닫고 계속 쉰다.
+  // 들었다는 것만으로 끝내지 않는다(명세: 확인창 뒤 중도 종료). 센서가 없으면 아무 일도 없다(버튼으로만 연다)
+  useFlatSensor(running, (sensor) => {
+    if (sensor === 'tilted' && !confirming) {
+      reset()
+      setLifted(true)
+      setConfirming(true)
+    } else if (sensor === 'flat' && lifted && cancelState.status !== 'cancelling') {
+      setLifted(false)
+      setConfirming(false)
+    }
+  })
+
   const openConfirm = () => {
     if (!running) return
     reset()
+    setLifted(false)
     setConfirming(true)
   }
 
@@ -129,9 +150,13 @@ export default function CaveSessionPage({ onEnded, onNoSession, onOpenGuide, onO
 
       <CaveOpenModal
         open={confirming && running}
+        lifted={lifted}
         state={cancelState}
         onConfirm={() => void confirmOpen()}
-        onClose={() => setConfirming(false)}
+        onClose={() => {
+          setConfirming(false)
+          setLifted(false)
+        }}
       />
     </main>
   )
