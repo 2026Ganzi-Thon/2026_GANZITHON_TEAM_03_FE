@@ -210,6 +210,8 @@ body {
 ::view-transition-group(island) {
   animation-duration: 0.5s;
   animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  /* 크기 변화는 app/viewTransitions.ts 가 width·height 대신 왼쪽 위 기준 scale 로 바꾼다 */
+  transform-origin: 0 0;
 }
 
 /*
