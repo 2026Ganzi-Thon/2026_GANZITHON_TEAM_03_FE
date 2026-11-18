@@ -14,6 +14,7 @@ import HomePage from '@/pages/HomePage'
 import InitialSetupPage from '@/pages/InitialSetupPage'
 import IslandDecoratePage from '@/pages/IslandDecoratePage'
 import OnboardingPage from '@/pages/OnboardingPage'
+import SettingsPage from '@/pages/SettingsPage'
 import SplashPage from '@/pages/SplashPage'
 import { useWoolBalance } from '@/shared/wool'
 import AppTabBar from './AppTabBar'
@@ -164,14 +165,37 @@ export function HomeRoute() {
       onOpenDecorate={() => navigate('/island', { viewTransition: true })}
       // 섬 꾸미기와 같이 섬 그림이 홈 자리에서 동굴 화면 자리로 옮겨 간다
       onCloseCave={() => navigate('/cave', { viewTransition: true })}
+      onOpenSettings={() => navigate('/settings')}
     />
   )
 }
 
-/** 섬 꾸미기 — 탭바 없음(시안 102:744). 설정 화면이 없어 설정 아이콘은 동작 없음. */
+/** 섬 꾸미기 — 탭바 없음(시안 102:744). */
 export function IslandDecorateRoute() {
   const navigate = useNavigate()
-  return <IslandDecoratePage onBack={() => navigate('/', { viewTransition: true })} />
+  return (
+    <IslandDecoratePage
+      onBack={() => navigate('/', { viewTransition: true })}
+      onOpenSettings={() => navigate('/settings')}
+    />
+  )
+}
+
+/**
+ * 설정 — 탭바 없음(시안 290:891). 홈·섬 꾸미기 머리의 설정 아이콘으로 들어온다.
+ * 임의 결정(확인 필요): 뒤로가기는 브라우저 기록으로 들어온 화면에 돌아가고, 주소로 바로 열어 기록이 없으면 홈으로(replace).
+ * 저장하지 않은 변경은 확인 없이 버린다.
+ * 임의 결정(확인 필요): "계정 바꾸기"(Google로 계속하기)는 실제 구글 로그인이 생기기 전까지 로그인 화면으로 보낸다(push — 뒤로가기로 설정에 돌아옴).
+ */
+export function SettingsRoute() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  return (
+    <SettingsPage
+      onBack={() => (location.key === 'default' ? navigate('/', { replace: true }) : navigate(-1))}
+      onSwitchAccount={() => navigate('/login')}
+    />
+  )
 }
 
 export function EmotionRoute() {

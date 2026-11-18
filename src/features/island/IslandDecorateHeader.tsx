@@ -20,7 +20,7 @@ export function IslandDecorateHeader({ woolCount, onOpenSettings }: IslandDecora
       actions={
         <>
           <WoolCounter count={woolCount} loading={woolCount === undefined} />
-          {/* 설정 화면이 아직 없다 — 콜백만 연결 */}
+          {/* 설정 화면(/settings)으로 — 이동은 라우트가 연결 */}
           <IconButton icon="settings" aria-label="설정" className={styles.settings} onClick={onOpenSettings} />
         </>
       }

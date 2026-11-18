@@ -88,6 +88,12 @@ export const mockDb = {
         draft.user = { ...profile, profileCompleted: true }
         return clone(draft.user)
       }),
+    /** 내 정보 수정(설정 화면). 넘긴 항목만 바꾸고 반영 뒤 값을 돌려준다 — 저장 형식은 그대로 */
+    update: (patch: Partial<Pick<MockDbState['user'], 'nickname' | 'ageGroup' | 'introduction'>>) =>
+      write((draft) => {
+        draft.user = { ...draft.user, ...patch }
+        return clone(draft.user)
+      }),
   },
 
   wool: {
