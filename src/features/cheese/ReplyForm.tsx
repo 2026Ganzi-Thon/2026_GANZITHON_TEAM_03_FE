@@ -12,6 +12,9 @@ export interface ReplyFormProps {
   onSubmit: (content: string) => void
 }
 
+/** 위로 최대 글자 수 — 백엔드 ComfortReplyRequest 의 상한(앞뒤 공백을 뺀 500자)과 같다 */
+const REPLY_MAX_LENGTH = 500
+
 const PROFANITY_MESSAGE = '다른 폴리가 상처받을 수 있는 표현이 있어요. 조금만 다듬어 주세요.'
 
 /**
@@ -56,6 +59,7 @@ export function ReplyForm({ disabled, submitting, notice, onSubmit }: ReplyFormP
         hideLabel
         placeholder="고민에 답변을 하고 치즈를 만들어주세요."
         value={content}
+        maxLength={REPLY_MAX_LENGTH}
         disabled={disabled}
         error={profane ? PROFANITY_MESSAGE : undefined}
         onChange={(event) => {
