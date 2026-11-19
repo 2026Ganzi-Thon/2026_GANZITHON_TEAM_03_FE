@@ -24,6 +24,6 @@ export interface HomeSummaryResponse {
   woolBalance: number
   today: DateString
   todayEmotion: HomeTodayEmotion
-  /** 숙성이 끝났지만 아직 개봉하지 않은 내 고민 수 (제안 필드) */
+  /** 숙성이 끝났지만 아직 개봉하지 않은 내 고민 수 (백엔드 HomeService에서 계산) */
   maturedConcernCount: number
 }

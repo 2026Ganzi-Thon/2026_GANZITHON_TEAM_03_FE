@@ -25,7 +25,8 @@ export interface IslandDecoratePageProps {
  * "섬 꾸미기"(시안 102:744): 섬 그림 아래 시트에서 아이템을 분류별로 보고 양털로 산다.
  * 카드를 한 번 누르면 그 아이템이 섬에 놓여 보이고(미리보기, 한 번에 하나), 선택된 카드를 한 번 더 누르면 구매 확인이 뜬다.
  * 산 아이템은 섬에 계속 놓여 있다. 탭바는 없다.
- * "내 양털"은 이 화면의 조회 값(woolBalance)을 쓴다 — mock 끼리는 같은 잔액을 봐서 홈 등 다른 화면과 숫자가 같다(임시, docs/decisions.md).
+ * "내 양털"은 이 화면의 조회 값(woolBalance)을 쓴다 — 지금은 서버 `/wool-wallet` 값이라 홈 등 다른 화면과 숫자가 같다.
+ * 섬 꾸미기 API 가 없어 구매는 잔액이 값 이상인지만 확인하고 양털을 깎지 않는다(임시, docs/decisions.md).
  */
 export default function IslandDecoratePage({ onBack, onOpenSettings }: IslandDecoratePageProps) {
   const { state, retry } = useIslandItems()

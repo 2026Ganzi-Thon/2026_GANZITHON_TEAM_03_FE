@@ -88,7 +88,13 @@ http.interceptors.response.use(undefined, async (error: unknown) => {
     apiError.status === 401 &&
     apiError.code === 'AUTH_ACCESS_TOKEN_EXPIRED'
 
-  if (!expired) throw apiError
+  if (!expired) {
+    // 토큰을 붙인 요청이 토큰 오류(없음·위조·재발급 뒤에도 만료)로 거절되면 로그인이 풀린 것이다 — 앱에 알린다(로그인 화면으로)
+    if (config !== undefined && !config.skipAuth && apiError.status === 401 && apiError.code.startsWith('AUTH_ACCESS_TOKEN_')) {
+      notifyAuthLost()
+    }
+    throw apiError
+  }
 
   await refreshAccessToken()
   config.retried = true // 원래 요청은 최대 한 번만 다시 보낸다.
