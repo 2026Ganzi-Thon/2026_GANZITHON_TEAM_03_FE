@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { discardChallenge, getChallenge, loadGoogleIdentityScript } from './googleIdentity'
+import { getChallenge, loadGoogleIdentityScript, markChallengeUsed } from './googleIdentity'
 import styles from './GoogleIdentityButton.module.css'
 
 interface GoogleIdentityButtonProps {
   clientId: string
   onCredential: (credential: string) => void
   disabled?: boolean
+  /** 로그인이 실패해 다시 눌러야 할 때 바꾼다 — 새 challenge(nonce)로 버튼을 다시 준비한다 */
+  retryKey?: number
 }
 
-export function GoogleIdentityButton({ clientId, onCredential, disabled = false }: GoogleIdentityButtonProps) {
+export function GoogleIdentityButton({ clientId, onCredential, disabled = false, retryKey = 0 }: GoogleIdentityButtonProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const credentialHandler = useRef(onCredential)
   const [error, setError] = useState('')
@@ -40,7 +42,7 @@ export function GoogleIdentityButton({ clientId, onCredential, disabled = false 
       })
     }
 
-    // challenge 를 받아 GIS 를 (다시) 초기화한다. 로그인 한 번마다 새 nonce 가 필요해서, 인증 정보를 받으면 바로 다음 것을 준비한다
+    // challenge 를 받아 GIS 를 초기화한다. 새 nonce 는 credential 을 받은 직후가 아니라, 로그인이 실패해 다시 누를 때(retryKey) 받는다
     const prepare = async () => {
       const [, challenge] = await Promise.all([loadGoogleIdentityScript(), getChallenge()])
       if (!active) return
@@ -51,11 +53,10 @@ export function GoogleIdentityButton({ clientId, onCredential, disabled = false 
         nonce: challenge.nonce,
         ux_mode: 'popup',
         callback: ({ credential }) => {
-          discardChallenge()
-          if (credential) credentialHandler.current(credential)
-          else setError('Google 인증 정보를 받지 못했어요. 다시 시도해 주세요.')
-          // 이번 로그인이 실패해 다시 누를 때를 위해 다음 nonce 로 다시 준비(버튼은 그대로 둔다)
-          void prepare().catch(() => {})
+          if (!credential) { setError('Google 인증 정보를 받지 못했어요. 다시 시도해 주세요.'); return }
+          // 신규 가입이면 약관 입력 뒤 같은 credential 로 다시 보낸다 — 그때까지 새 challenge 를 받지 않는다
+          markChallengeUsed()
+          credentialHandler.current(credential)
         },
       })
       if (!resizeObserver) {
@@ -76,7 +77,7 @@ export function GoogleIdentityButton({ clientId, onCredential, disabled = false 
       resizeObserver?.disconnect()
       container.replaceChildren()
     }
-  }, [clientId])
+  }, [clientId, retryKey])
 
   return (
     <div className={styles.wrapper}>
