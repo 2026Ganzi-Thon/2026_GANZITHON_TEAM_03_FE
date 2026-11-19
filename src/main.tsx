@@ -9,9 +9,10 @@ import App from '@/app/App'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/app/queryClient'
 import { installViewTransitionTweaks } from '@/app/viewTransitions'
-import { registerSW } from 'virtual:pwa-register'
+import { registerServiceWorker } from '@/app/serviceWorker'
 
-registerSW({ immediate: true })
+// 새 배포는 앱이 화면에서 내려갈 때 반영한다 — 바로 새로고침하면 스플래시가 두 번 나온다(app/serviceWorker.ts)
+registerServiceWorker()
 
 // 화면 전환(섬 이동) 손질 — 라우터가 전환을 시작하기 전에 감싸 둔다(app/viewTransitions.ts)
 installViewTransitionTweaks()
