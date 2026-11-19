@@ -8,7 +8,8 @@ import {
   VaultCarousel,
 } from '@/features/cheese'
 import type { CheeseTab, VaultCardItem } from '@/features/cheese'
-import { BackButton, Button, Tabs } from '@/shared/ui'
+import sheepSadImage from '@/assets/images/sheep-sad.webp'
+import { BackButton, Button, EmptyState, Tabs } from '@/shared/ui'
 import styles from './CheeseVaultPage.module.css'
 
 export interface CheeseVaultPageProps {
@@ -82,16 +83,20 @@ function MyConcernList({ onWrite, ...rest }: ListProps & { onWrite?: () => void 
       {...rest}
       state={state.status === 'success' ? { status: 'success', items: toMyVaultCards(state.items) } : state}
       onRetry={retry}
-      // 임의 결정(확인 필요): 빈 목록 안내 문구와 "고민 남기기" 버튼 — 시안에 없음
+      // 임의 결정(확인 필요): 빈 목록 안내 — 시안에 없음. 캐릭터 시트의 우는 양 얼굴(SAD)을 오려 쓰고, 설명은 우유와 치즈 시안 문구를 따른다
       empty={
-        <>
-          <p className={styles.message}>아직 쓴 고민이 없어요</p>
-          {onWrite && (
-            <Button variant="outline" size="sm" onClick={onWrite}>
-              고민 남기기
-            </Button>
-          )}
-        </>
+        <EmptyState
+          image={sheepSadImage}
+          title="아직 쓴 고민이 없어요"
+          description="나누고 싶은 고민을 남기면 다른 섬의 누군가가 천천히 위로를 더해요."
+          action={
+            onWrite && (
+              <Button variant="outline" size="sm" onClick={onWrite}>
+                고민 남기기
+              </Button>
+            )
+          }
+        />
       }
     />
   )
@@ -104,13 +109,13 @@ function SavedConcernList(props: ListProps) {
       {...props}
       state={state.status === 'success' ? { status: 'success', items: toSavedVaultCards(state.items) } : state}
       onRetry={retry}
-      // 임의 결정(확인 필요): 빈 보관함 안내 문구 — 시안에 없음
+      // 임의 결정(확인 필요): 빈 보관함 안내 — 시안에 없음. 내 고민 탭과 같은 우는 양
       empty={
-        <p className={styles.message}>
-          보관한 치즈가 없어요.
-          <br />
-          개봉한 치즈를 보관하면 여기에 모여요.
-        </p>
+        <EmptyState
+          image={sheepSadImage}
+          title="보관한 치즈가 없어요"
+          description="개봉한 치즈를 보관하면 여기에 모여요."
+        />
       }
     />
   )
