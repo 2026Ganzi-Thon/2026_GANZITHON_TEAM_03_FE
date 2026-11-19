@@ -1,35 +1,29 @@
-/* 제목: 앱 아이콘을 위에, 제목을 그 아래 가운데 */
+/* 제목 줄: 앱 아이콘 + 제목 */
 .heading {
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: var(--space-3);
-  text-align: center;
+  margin-bottom: var(--space-2);
 }
 
 .appIcon {
   flex: none;
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-float);
-}
-
-.lead {
-  text-align: center;
 }
 
 .strong {
   font-weight: var(--font-weight-medium);
 }
 
-/* iOS 순서 안내: 아이콘과 한 줄 글을 세로 가운데로 맞춘다. 목록 묶음은 팝업 가운데 */
+/* iOS 순서 안내 */
 .steps {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  width: fit-content;
-  margin: var(--space-4) auto 0;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
   padding: 0;
   list-style: none;
 }
@@ -45,27 +39,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-md);
   background-color: var(--color-bg);
   color: var(--color-info);
 }
 
-/* 버튼 줄: 가로 꽉, 두 개면 반씩 */
-.actions {
-  display: flex;
-  gap: var(--space-2);
-  width: 100%;
-}
-
-.actions > * {
-  flex: 1;
-}
-
-/* 실패 안내는 오류 색으로 — 공용 토큰 --color-error */
+/* 실패 안내는 오류 색으로 — 공용 토큰 --color-error(동굴 문 열기·섬 구매 확인과 같음) */
 .warning {
-  margin-top: var(--space-2);
   color: var(--color-error);
-  text-align: center;
 }
