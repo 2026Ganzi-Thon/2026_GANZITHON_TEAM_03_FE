@@ -1,5 +1,6 @@
 export type * from './types'
 export { GoogleIdentityButton } from './GoogleIdentityButton'
+export { preloadGoogleSignIn } from './googleIdentity'
 export { signInWithEmail, signOut } from './authApi'
 export { createGoogleLoginChallenge, isGoogleSignupConsentRequired, signInWithGoogle } from './googleAuth'
 export type { GoogleSignupConsent } from './googleAuth'
