@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 import {
   CheeseHeader,
+  VAULT_GUIDE_CARDS,
+  VAULT_GUIDE_STEPS,
   toMyVaultCards,
   toSavedVaultCards,
   useMyConcerns,
@@ -9,7 +12,8 @@ import {
 } from '@/features/cheese'
 import type { CheeseTab, VaultCardItem } from '@/features/cheese'
 import sheepSadImage from '@/assets/images/sheep-sad.webp'
-import { BackButton, Button, EmptyState, Tabs } from '@/shared/ui'
+import { BackButton, Button, EmptyState, GuideNudge, GuideTour, Tabs } from '@/shared/ui'
+import { hasSeenGuide, markGuideSeen } from '@/shared/lib/guideSeen'
 import styles from './CheeseVaultPage.module.css'
 
 export interface CheeseVaultPageProps {
@@ -26,7 +30,6 @@ export interface CheeseVaultPageProps {
   onWrite?: () => void
   /** 뒤로가기 화살표 — 우유와 치즈 목록으로 */
   onBack?: () => void
-  onOpenGuide?: () => void
 }
 
 // 임의 결정(확인 필요): 시안(290:636)은 목록 하나뿐이지만, API 가 "내 고민 전체"(숙성 중 포함)와 "보관한 치즈"를 따로 줘서 탭 두 개로 나눈다.
@@ -46,26 +49,47 @@ export default function CheeseVaultPage({
   onOpenConcern,
   onWrite,
   onBack,
-  onOpenGuide,
 }: CheeseVaultPageProps) {
+  // 오른쪽 위 `!` — 사용법 안내. 안내 중에는 "내 고민" 탭에 고정 예시 카드로 그린다(화살표가 늘 같은 자리를 가리키게)
+  const [guideOpen, setGuideOpen] = useState(false)
+  // 이 기기에서 이 화면에 처음 들어왔으면 `!` 아래에 "처음이신가요?" 말풍선(화면마다 한 번, 뜬 순간 본 것으로 기억)
+  const [nudgeOpen, setNudgeOpen] = useState(() => !hasSeenGuide('vault'))
+  const openGuide = () => {
+    setNudgeOpen(false)
+    setGuideOpen(true)
+  }
+  const shownTab = guideOpen ? 'mine' : tab
   return (
     <main className={styles.page}>
-      <CheeseHeader title="내 치즈 보관함" woolCount={woolCount} onOpenGuide={onOpenGuide} />
+      <CheeseHeader title="내 치즈 보관함" woolCount={woolCount} onOpenGuide={openGuide} />
       <BackButton className={styles.back} onClick={onBack} />
-      <Tabs
-        className={styles.tabs}
-        aria-label="치즈 보관함 목록"
-        items={TABS}
-        value={tab}
-        onChange={(value) => onTabChange(value as CheeseTab)}
-      />
-      <div role="tabpanel" className={styles.panel} aria-label={TABS.find((item) => item.value === tab)?.label}>
-        {tab === 'mine' ? (
+      <div data-guide="tabs">
+        <Tabs
+          className={styles.tabs}
+          aria-label="치즈 보관함 목록"
+          items={TABS}
+          value={shownTab}
+          onChange={(value) => onTabChange(value as CheeseTab)}
+        />
+      </div>
+      <div role="tabpanel" className={styles.panel} aria-label={TABS.find((item) => item.value === shownTab)?.label}>
+        {guideOpen ? (
+          <VaultCarousel items={VAULT_GUIDE_CARDS} page={0} onPageChange={() => {}} onOpen={() => {}} guideTargets />
+        ) : tab === 'mine' ? (
           <MyConcernList page={page} onPageChange={onPageChange} onOpen={onOpenConcern} onWrite={onWrite} />
         ) : (
           <SavedConcernList page={page} onPageChange={onPageChange} onOpen={onOpenConcern} />
         )}
       </div>
+
+      <GuideNudge
+        open={nudgeOpen && !guideOpen}
+        target="guide-button"
+        onOpen={openGuide}
+        onDismiss={() => setNudgeOpen(false)}
+        onShown={() => markGuideSeen('vault')}
+      />
+      <GuideTour open={guideOpen} steps={VAULT_GUIDE_STEPS} onClose={() => setGuideOpen(false)} />
     </main>
   )
 }

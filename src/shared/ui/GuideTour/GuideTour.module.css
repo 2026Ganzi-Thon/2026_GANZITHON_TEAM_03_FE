@@ -1,0 +1,89 @@
+/* 앱 폭 전체를 덮는 투명 막: 뒤 버튼이 눌리지 않게 하고, 누르면 다음 단계로 */
+.layer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  z-index: var(--z-modal);
+  width: 100%;
+  max-width: var(--app-max-width);
+  translate: -50% 0;
+  cursor: pointer;
+}
+
+.bubble {
+  position: absolute;
+  width: min(281px, calc(100% - 32px));
+  box-sizing: border-box;
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  box-shadow: var(--shadow-float);
+  cursor: default;
+  animation: guideIn 0.15s ease-out;
+}
+
+/* 말풍선과 같은 흰 정사각형을 45도 돌린 꼬리 — 말풍선 밖으로 6px */
+.arrow {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--color-white);
+  translate: -50% 0;
+  rotate: 45deg;
+}
+
+.arrowDown {
+  bottom: -6px;
+  box-shadow: 3px 3px 4px rgb(0 0 0 / 0.06);
+}
+
+.arrowUp {
+  top: -6px;
+  box-shadow: -3px -3px 4px rgb(0 0 0 / 0.04);
+}
+
+.title {
+  position: relative;
+  margin: 0;
+  color: var(--color-black-1);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+}
+
+.body {
+  position: relative;
+  margin: var(--space-1) 0 0;
+  color: var(--color-gray-2);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-light);
+  line-height: var(--line-height-small);
+  word-break: keep-all;
+}
+
+.footer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-2);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+@keyframes guideIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble {
+    animation: none;
+  }
+}
