@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import { Navigate, Outlet, ScrollRestoration, useLocation, useNavigate, useOutletContext, useParams } from 'react-router'
 import AuthPage from '@/pages/AuthPage'
@@ -22,7 +22,8 @@ import { isGoogleSignupConsentRequired, signInWithEmail, signInWithGoogle } from
 import { fetchNicknameAvailability } from '@/features/account'
 import type { InitialSetupValues } from '@/pages/InitialSetupPage'
 import AppTabBar from './AppTabBar'
-import { hasPassedEntry, markEntryPassed, markOnboardingSeen } from './entry'
+import { markOnboardingSeen } from './entry'
+import { logout, openSession, useSession } from './session'
 
 // 라우트 요소: 페이지의 콜백 props 를 useNavigate·useParams 로 경로에 연결한다(페이지는 react-router 를 모른다).
 // 끝난 화면(스플래시 종료·온보딩 완료·로그인 완료·저장·삭제·위로 완료)에서의 이동은 replace — 브라우저 뒤로가기가 끝난 화면으로 돌아가지 않게.
@@ -42,13 +43,21 @@ export function RootLayout() {
 
 // ── 시작 흐름 ────────────────────────────────────────────
 
+/**
+ * 스플래시가 끝나면 로그인 세션(./session.ts)에 따라: 앱 화면 / 초기 설정 / 온보딩.
+ * 쿠키로 복원하는 중이면 끝날 때까지 스플래시 마지막 화면(사라진 뒤의 배경)에서 기다린다.
+ */
 export function SplashRoute() {
   const navigate = useNavigate()
-  return (
-    <SplashPage
-      onComplete={() => navigate('/onboarding', { replace: true })}
-    />
-  )
+  const session = useSession()
+  const [done, setDone] = useState(false)
+  useEffect(() => {
+    if (!done || session.status === 'restoring') return
+    if (session.status === 'ready') navigate('/', { replace: true })
+    else if (session.status === 'needsSetup') navigate('/setup', { replace: true, state: { requiresConsent: false } })
+    else navigate('/onboarding', { replace: true })
+  }, [done, session.status, navigate])
+  return <SplashPage onComplete={() => setDone(true)} />
 }
 
 export function OnboardingRoute() {
@@ -76,12 +85,12 @@ function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {
     setGoogleError('')
     try {
       const result = await signInWithGoogle(credential)
+      openSession(result.user.profileCompleted)
       if (result.isNewUser) {
         navigate('/setup', { state: { googleCredential: credential, requiresConsent: false } })
       } else if (!result.user.profileCompleted) {
         navigate('/setup', { state: { requiresConsent: false } })
       } else {
-        markEntryPassed()
         navigate('/', { replace: true })
       }
     } catch (error) {
@@ -105,10 +114,10 @@ function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {
     setAuthLoading(true)
     try {
       const result = await signInWithEmail(email, password)
+      openSession(result.user.profileCompleted)
       if (!result.user.profileCompleted) {
         navigate('/setup', { state: { requiresConsent: false } })
       } else {
-        markEntryPassed()
         navigate('/', { replace: true })
       }
     } catch (error) {
@@ -169,7 +178,7 @@ export function SetupRoute() {
         }
       }}
       onComplete={() => {
-        markEntryPassed()
+        openSession(true)
         navigate('/', { replace: true })
       }}
     />
@@ -192,14 +201,19 @@ interface AppShellContext {
 }
 
 /**
- * 앱 화면 공통 부모: 시작 흐름 가드 + 우유와 치즈 목록·치즈 보관함 상태.
+ * 앱 화면 공통 부모: 로그인 세션 가드 + 우유와 치즈 목록·치즈 보관함 상태.
+ * 세션(./session.ts): 복원 중이면 아무것도 그리지 않고 기다림(배경색만, 보통 수백 ms), 로그인 안 됨이면 앱을 막 연 경우 스플래시부터·
+ * 로그인이 풀렸거나 로그아웃했으면 로그인 화면으로, 초기 설정 전이면 초기 설정으로.
  * 목록의 현재 페이지·선택은 상세(/cheese/:concernId)에 다녀와도 유지돼야 해서(docs/api/common.md 고민 목록 규칙)
  * 목록·상세를 함께 감싸는 여기서 들고 있는다. 다른 탭에 다녀와도 유지 — 라우터 전 App.tsx 와 같은 동작.
  */
 export function AppShell() {
   const [cheeseList, setCheeseList] = useState<CheeseListState>({ page: 0, selectedId: null })
   const [vaultPage, setVaultPage] = useState(0)
-  if (!hasPassedEntry()) return <Navigate to="/splash" replace />
+  const session = useSession()
+  if (session.status === 'restoring') return null
+  if (session.status === 'signedOut') return <Navigate to={session.reason === 'initial' ? '/splash' : '/login'} replace />
+  if (session.status === 'needsSetup') return <Navigate to="/setup" replace state={{ requiresConsent: false }} />
   return <Outlet context={{ cheeseList, setCheeseList, vaultPage, setVaultPage } satisfies AppShellContext} />
 }
 
@@ -264,7 +278,7 @@ export function IslandDecorateRoute() {
  * 설정 — 탭바 없음(시안 290:891). 홈·섬 꾸미기 머리의 설정 아이콘으로 들어온다.
  * 임의 결정(확인 필요): 뒤로가기는 브라우저 기록으로 들어온 화면에 돌아가고, 주소로 바로 열어 기록이 없으면 홈으로(replace).
  * 저장하지 않은 변경은 확인 없이 버린다.
- * 임의 결정(확인 필요): "계정 바꾸기"(Google로 계속하기)는 실제 구글 로그인이 생기기 전까지 로그인 화면으로 보낸다(push — 뒤로가기로 설정에 돌아옴).
+ * "계정 바꾸기"(Google로 계속하기)는 로그아웃(`POST /auth/logout`) 뒤 로그인 화면으로 — 세션이 닫히면 AppShell 이 /login 으로 replace 한다.
  */
 export function SettingsRoute() {
   const navigate = useNavigate()
@@ -272,7 +286,7 @@ export function SettingsRoute() {
   return (
     <SettingsPage
       onBack={() => (location.key === 'default' ? navigate('/', { replace: true }) : navigate(-1))}
-      onSwitchAccount={() => navigate('/login')}
+      onSwitchAccount={() => logout()}
     />
   )
 }

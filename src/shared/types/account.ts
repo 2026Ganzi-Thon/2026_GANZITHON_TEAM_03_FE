@@ -6,7 +6,8 @@ export interface Profile {
   nickname: string
   /** 구글 기본 이미지 등. 업로드 교체는 별도 계약 필요 */
   profileImageUrl: string | null
-  introduction: string
+  /** 소개(최대 200자). 백엔드 기준 아직 쓰지 않았으면 null */
+  introduction: string | null
   /** 코드 목록 미정 */
   ageGroup: string | null
   /** 지역 단위·필수 여부 미정 */

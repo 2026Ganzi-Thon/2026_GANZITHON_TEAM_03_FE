@@ -42,7 +42,7 @@ export interface UpdateEmotionRecordRequest {
   memo?: string | null
 }
 
-/** from/to를 둘 다 생략하면 이번 달 1일~오늘. 전달 시 둘 다 필요(최대 366일, 미래 불가) */
+/** from/to를 둘 다 생략하면 이번 달 1일~오늘. 전달 시 둘 다 필요(from~to 사이 365일까지, to는 서버 기준 오늘 이후 불가) */
 export interface EmotionRecordListParams extends PageParams {
   from?: DateString
   to?: DateString
