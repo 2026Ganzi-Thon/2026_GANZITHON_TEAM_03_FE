@@ -678,3 +678,13 @@ PR 댓글 자동 답변(Claude)의 근거. 작성 규칙은 `CLAUDE.md`의 "의�
 
 - 구글 credential을 받으면 challenge를 "쓴 것"으로만 표시하고 새로 받지 않음 — 신규 가입은 약관 입력 뒤 같은 credential로 다시 보내는데, 그사이 새 challenge가 쿠키를 덮어써 AUTH_GOOGLE_CHALLENGE_INVALID로 가입이 막혔음. 새 challenge는 로그인 실패 후 재시도·로그인 화면 재진입 때만
 - [ ] 약관 입력 중 서버 challenge 유효시간(5분)이 지나면 "구글 인증 시간이 지났어요" 안내와 "구글로 다시 로그인" 버튼 — 백엔드에 10~15분 연장 요청 중
+
+## 2026-11-20 백엔드 새 반영분 연결 (`feature/backend-sync-1120`, 백엔드 develop `6493ad3..28fcf78`)
+
+- 요청·응답·오류 코드는 백엔드 코드 기준, 배포 Swagger(`/v3/api-docs`)로 경로만 대조 — `docs/api/*.md`를 코드에 맞춰 고침
+- 섬 꾸미기를 실제 API(`GET /island/items`, `POST /island/items/{id}/purchases`)로 바꿈 — 가짜 DB(`shared/mock`, localStorage `polly.mockDb`)·`?reset`의 산 가구 초기화 삭제, 기기에 남은 `polly.mockDb`는 앱 시작 때 지움. 전에 기기에서 "산" 가구는 서버로 옮기지 않음(서버에 산 기록이 없음)
+- 섬 아이템 그림은 서버 값이 null이라 `itemId`로 프론트 그림을 채움(카드 그림 번호 01~12 = 서버 ID). 카드 그림은 12종 모두 넣어 서버가 3·4·5·6·8을 팔기 시작해도 카드는 보이게, 놓인 그림은 있는 7종만
+- 섬 구매 `Idempotency-Key`는 같은 아이템을 다시 사는 동안 서버가 처리했는지 모르는 실패 뒤에만 같은 키(`isOutcomeUnknown`) — 고민 작성·돌봄과 같은 규칙
+- 구매 성공 응답의 잔액을 섬 목록·양털 잔액 캐시에 바로 넣고, 홈 요약·양털 잔액·양털 내역은 기존 공통 규칙(`app/queryClient.ts`, 모든 mutation 성공 → `homeKeys.summary`·`woolKeys.all`)으로 다시 받음 — 양털 내역 키가 `['wool', 'transactions']`라 함께 갱신됨
+- 구매 확인 문구를 "지금은 시험 운영 중이라 사도 양털이 줄지 않아요" → "구매하면 양털이 N개 남아요"로 되돌림(서버가 실제로 깎음)
+- [ ] 서버가 그림 주소를 주면 서버 값을 우선 — 다른 출처 그림이면 CORS 허용이 있어야 홈 양이 가구 뒤로 숨는 기준(발 위치)을 잴 수 있음
