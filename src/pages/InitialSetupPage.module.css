@@ -232,3 +232,11 @@
   color: var(--color-primary);
   font-weight: var(--font-weight-semibold);
 }
+
+/* 제출 오류 뒤에 붙는 이어갈 동작(인증 메일 다시 받기·로그인 등) */
+.errorAction {
+  margin-left: var(--space-2);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: underline;
+}

@@ -20,15 +20,17 @@ export function useCompleteInitialProfile() {
           ? { status: 'error' }
           : { status: 'idle' }
 
-  /** 저장하고 성공 여부를 돌려준다. 저장 중에 다시 부르면 무시한다(false). */
-  const submit = async (body: InitialProfileRequest): Promise<boolean> => {
-    if (mutation.isPending) return false
+  /**
+   * 저장하고 결과를 돌려준다. 저장 중에 다시 부르면 무시한다(`ok: false`, error 없음).
+   * 실패하면 오류를 함께 준다 — 닉네임 중복 409 `USER_NICKNAME_DUPLICATED`, 형식 400 `COMMON_INVALID_REQUEST`.
+   */
+  const submit = async (body: InitialProfileRequest): Promise<{ ok: true } | { ok: false; error?: unknown }> => {
+    if (mutation.isPending) return { ok: false }
     try {
       await mutation.mutateAsync(body)
-      return true
-    } catch {
-      // 오류는 mutation 상태로 노출된다
-      return false
+      return { ok: true }
+    } catch (error) {
+      return { ok: false, error }
     }
   }
 
