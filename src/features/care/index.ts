@@ -1,1 +1,5 @@
 export type * from './types'
+export { CareCollection } from './CareCollection'
+export { CARE_CATEGORIES } from './careActions'
+export type { CareActionCategory, CategorizedCareAction } from './careActions'
+export { careKeys, useCareActions, useCompleteCareAction, useTodayCareCompletions } from './careQueries'

@@ -20,6 +20,7 @@ import {
   SignupRoute,
   SplashRoute,
   TabLayout,
+  WoolCollectionRoute,
 } from './routes'
 
 // 경로 정의는 여기 한곳. 페이지는 콜백 props 만 받고, 이동은 ./routes 의 라우트 요소가 연결한다.
@@ -46,6 +47,7 @@ export const router = createBrowserRouter([
               // 정적 경로라 아래 'cheese/:concernId'(고민 상세)보다 먼저 맞는다(react-router 순위 규칙)
               { path: 'cheese/vault', element: <CheeseVaultRoute /> },
               { path: 'cave', element: <CaveRoute /> },
+              { path: 'wool', element: <WoolCollectionRoute /> },
             ],
           },
           { path: 'emotion/write', element: <EmotionWriteRoute /> },

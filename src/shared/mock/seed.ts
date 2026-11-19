@@ -1,7 +1,7 @@
 import { getTodaySeoul } from '@/shared/lib/formatRelativeDate'
-import type { ComfortType, Emotion, Id, IsoDateTime, Reply, RestSession } from '@/shared/types'
+import type { CareCompletion, ComfortType, Emotion, Id, IsoDateTime, Reply, RestSession } from '@/shared/types'
 
-// 가짜 DB 의 처음 상태. 예전에 각 기능 *Api.ts 에 있던 mock 데이터를 그대로 옮겼다.
+// 가짜 DB 의 처음 상태.
 
 /** 감정 기록 한 행. 감정은 ID 로만 들고 있다가 읽을 때 감정 목록과 합친다(서버 조인 흉내). */
 export interface MockEmotionRecordRow {
@@ -49,6 +49,8 @@ export interface MockDbState {
     profileCompleted: boolean
   }
   wool: { balance: number; updatedAt: IsoDateTime | null }
+  careCompletions: CareCompletion[]
+  nextCareCompletionId: number
   emotions: Emotion[]
   /** 최신 날짜가 앞 */
   emotionRecords: MockEmotionRecordRow[]
@@ -150,6 +152,8 @@ export function createSeed(): MockDbState {
     user: { nickname: '온기', ageGroup: null, introduction: '', profileCompleted: true },
     // 임의 결정(확인 필요): 양털 시드 47 — 섬 꾸미기 시안 값. 아이템 값이 12·24라 12로는 하나밖에 못 산다
     wool: { balance: 47, updatedAt: null },
+    careCompletions: [],
+    nextCareCompletionId: 1,
     emotions: EMOTIONS,
     emotionRecords: [
       record('104', daysAgo(1), '산책하고 나니 조금 편안해졌다.', ['7']),

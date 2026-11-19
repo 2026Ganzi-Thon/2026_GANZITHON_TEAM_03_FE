@@ -1,6 +1,6 @@
 import { ApiError } from '@/shared/api'
 import { getTodaySeoul } from '@/shared/lib/formatRelativeDate'
-import type { Emotion, EmotionRecord, Id, IsoDateTime, Reply, RestSession } from '@/shared/types'
+import type { CareCompletion, Emotion, EmotionRecord, Id, IsoDateTime, Reply, RestSession } from '@/shared/types'
 import { createSeed } from './seed'
 import type { MockConcernRow, MockDbState, MockEmotionRecordRow, MockMyConcernRow } from './seed'
 
@@ -12,7 +12,8 @@ const STORAGE_KEY = 'polly.mockDb'
 // 2: 휴식 세션(restSessions) 추가
 // 3: 내가 쓴 고민(myConcerns) 추가
 // 4: 내가 쓴 고민에 받은 위로(replies) 추가
-const VERSION = 4
+// 5: 오늘의 돌봄 행동 완료 내역 추가
+const VERSION = 5
 
 let state: MockDbState | null = null
 
@@ -20,8 +21,13 @@ function load(): MockDbState {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (raw) {
-      const { version, ...rest } = JSON.parse(raw) as { version?: number } & MockDbState
-      if (version === VERSION) return rest
+      const { version, ...rest } = JSON.parse(raw) as { version?: number } & Partial<MockDbState>
+      if (version === VERSION) return rest as MockDbState
+      if (version === 4) {
+        const migrated = { ...rest, careCompletions: [], nextCareCompletionId: 1 } as MockDbState
+        persist(migrated)
+        return migrated
+      }
     }
   } catch {
     // 읽지 못하면 시드로
@@ -116,6 +122,32 @@ export const mockDb = {
       }),
   },
 
+  care: {
+    listToday: (): CareCompletion[] => clone(db().careCompletions.filter((item) => item.actionDate === getTodaySeoul())),
+    complete: (careActionId: Id, rewardAmount: number) =>
+      write((draft) => {
+        const today = getTodaySeoul()
+        if (draft.careCompletions.some((item) => item.careActionId === careActionId && item.actionDate === today && item.isCompleted)) {
+          throw new ApiError(409, { code: 'CARE_ALREADY_COMPLETED', message: '오늘 이미 완료한 돌봄 행동이에요.' })
+        }
+        const completionId = String(draft.nextCareCompletionId++)
+        const at = now()
+        const completion: CareCompletion = {
+          completionId,
+          careActionId,
+          actionDate: today,
+          rewardAmount,
+          isCompleted: true,
+          completedAt: at,
+          cancelledAt: null,
+          earningTransactionId: `care-${completionId}`,
+        }
+        draft.careCompletions.unshift(completion)
+        draft.wool = { balance: draft.wool.balance + rewardAmount, updatedAt: at }
+        return { completion: clone(completion), balance: draft.wool.balance }
+      }),
+  },
+
   emotion: {
     /** 감정 목록 전체(비활성 포함) */
     catalog: () => clone(db().emotions),
@@ -182,7 +214,7 @@ export const mockDb = {
   },
 
   rest: {
-    /** 저장된 세션 행 전체(최근 것이 앞). 상태 계산(예정 종료 지남 → COMPLETED)은 하지 않은 원래 값 */
+    /** 저장된 세션 행 전체(최근 것이 앞). 상태 계산 */
     list: (): RestSession[] => clone(db().restSessions),
     /** 새 세션을 만든다. ID 는 여기서 매긴다 */
     create: (input: Omit<RestSession, 'sessionId'>): RestSession =>

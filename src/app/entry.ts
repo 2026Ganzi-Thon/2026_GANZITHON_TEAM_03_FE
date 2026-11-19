@@ -6,6 +6,7 @@
 // 기존 `polly.entryPassed`는 입력값 없이도 홈으로 보냈던 임시 로그인에서 기록될 수 있어 새 키로 분리한다.
 const PASSED_KEY = 'polly.entryPassed.v2'
 const ONBOARDING_KEY = 'polly.onboardingSeen'
+const MOCK_AUTH_KEY = 'polly.devMockAuth'
 
 const memory = { passed: false, onboardingSeen: false }
 
@@ -27,6 +28,28 @@ function write(storage: () => Storage, key: string) {
 
 /** 이번 세션에 시작 흐름을 통과했는지 */
 export function hasPassedEntry(): boolean {
+  // Local-only shortcut for screen demos. This only passes the app entry guard;
+  // it does not create an OAuth token or a backend-authenticated session.
+  if (import.meta.env.DEV) {
+    const mockAuth = new URLSearchParams(window.location.search).get('mockAuth')
+    if (mockAuth === '1') {
+      try {
+        window.sessionStorage.setItem(MOCK_AUTH_KEY, '1')
+      } catch {
+        // Continue for this check even when sessionStorage is unavailable.
+      }
+      return true
+    }
+    if (mockAuth === '0') {
+      try {
+        window.sessionStorage.removeItem(MOCK_AUTH_KEY)
+      } catch {
+        // The shortcut remains limited to this page load.
+      }
+    } else if (read(() => window.sessionStorage, MOCK_AUTH_KEY)) {
+      return true
+    }
+  }
   return memory.passed || read(() => window.sessionStorage, PASSED_KEY)
 }
 
@@ -53,6 +76,7 @@ export function clearEntry() {
   memory.onboardingSeen = false
   try {
     window.sessionStorage.removeItem(PASSED_KEY)
+    window.sessionStorage.removeItem(MOCK_AUTH_KEY)
   } catch {
     // 못 지워도 메모리 값은 비웠다
   }
