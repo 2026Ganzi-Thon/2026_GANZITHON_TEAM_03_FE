@@ -110,11 +110,11 @@ export function ConcernForm({ submitting, notice, onSubmit }: ConcernFormProps) 
         }}
       />
 
-      {/* C02-1 공개 안내 — 숙성 시간은 서버 설정(기본 24시간)이라 "하루"로 적는다 */}
+      {/* C02-1 공개 안내 — 숙성 시간은 서버 설정(app.activity.concern-maturing-minutes, 기본 10분 — 백엔드 V15)이라 "10분"으로 적는다 */}
       <p className={styles.guide}>
         고민은 이름 없이 다른 섬의 폴리들에게 보여요.
         <br />
-        하루 동안 숙성되며 위로를 모으고, 숙성이 끝나면 치즈를 열어 받은 위로를 볼 수 있어요.
+        10분 동안 숙성되며 위로를 모으고, 숙성이 끝나면 치즈를 열어 받은 위로를 볼 수 있어요.
       </p>
 
       <p className={styles.notice} role={notice ? 'alert' : undefined}>

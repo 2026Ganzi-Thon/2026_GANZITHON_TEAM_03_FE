@@ -82,3 +82,9 @@
     animation: none;
   }
 }
+
+/* 남은 시간: 1초마다 바뀌어도 글자 폭이 흔들리지 않게 숫자 폭을 고정 */
+.countdown {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-weight-semibold);
+}

@@ -56,7 +56,7 @@ Response `data`
 | --- | --- | --- |
 | concernId | string | |
 | status | `"MATURING"` | 항상 MATURING |
-| maturesAt | string | 숙성 종료 시각 = 작성 시각 + 서버 설정 `app.activity.concern-maturing-hours`(기본 24시간) |
+| maturesAt | string | 숙성 종료 시각 = 작성 시각 + 서버 설정 `app.activity.concern-maturing-minutes`(기본 10분, 백엔드 V15 — 그 전에 쓴 숙성 중 고민도 10분으로 줄임) |
 | createdAt | string | |
 
 | HTTP | 코드 | 의미 |

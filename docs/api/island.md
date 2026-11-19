@@ -30,7 +30,7 @@ type IslandItem = {
 }
 ```
 
-### 시드(V11)
+### 시드(V11, 가격은 V16에서 모두 1로)
 
 | itemId | name | category | price | placedOrder | floatAt | displayOrder |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -41,6 +41,8 @@ type IslandItem = {
 | 10 | 우편함 | PROP | 24 | 8 | null | 10 |
 | 11 | 나룻배 | PROP | 12 | 12 | {65.5, 85} | 11 |
 | 12 | 러그 | PATH | 24 | 1 | null | 12 |
+
+> V16(`UPDATE island_items SET price = 1`)로 지금 가격은 모두 **1**이다. 아래 표의 가격은 V11 처음 값.
 
 `itemId`는 프론트 그림 번호(`src/assets/images/island-items/01~12`)와 같다. 3·4·5·6·8(디딤돌·울타리·벤치·해먹·먹이통)은 시드에 없다.
 

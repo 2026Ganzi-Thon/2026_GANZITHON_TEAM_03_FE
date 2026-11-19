@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/shared/ui'
 import { formatConcernDate } from './concernText'
 import type { MyConcernRepliesState } from './useMyConcernDetail'
@@ -9,10 +9,15 @@ export interface ReceivedRepliesProps {
   onRetry?: () => void
 }
 
-/** 숙성 끝까지 남은 시간 글자: 1시간 안이면 "곧", 아니면 올림한 시간 */
+/** 숙성 끝까지 남은 시간 글자(1초마다 줄어듦): "7분 42초 뒤에", 1분 안이면 "42초 뒤에", 끝났으면 "곧"(서버 숙성 시간 10분 — 백엔드 V15) */
 function formatRemaining(maturesAt: string, now: number): string {
-  const hours = Math.ceil((Date.parse(maturesAt) - now) / (60 * 60 * 1000))
-  return hours <= 1 ? '곧' : `${hours}시간 뒤에`
+  const seconds = Math.ceil((Date.parse(maturesAt) - now) / 1000)
+  if (seconds <= 0) return '곧'
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const rest = seconds % 60
+  if (hours > 0) return `${hours}시간 ${minutes}분 뒤에`
+  return minutes > 0 ? `${minutes}분 ${rest}초 뒤에` : `${rest}초 뒤에`
 }
 
 /**
@@ -20,8 +25,14 @@ function formatRemaining(maturesAt: string, now: number): string {
  * 숙성 중이면 위로 대신 남은 시간 안내를 보여준다.
  */
 export function ReceivedReplies({ state, onRetry }: ReceivedRepliesProps) {
-  // 남은 시간은 화면에 들어온 시각 기준으로 한 번만 계산한다(매초 갱신하지 않음)
-  const [now] = useState(() => Date.now())
+  // 남은 시간은 1초마다 다시 계산한다(초 단위로 줄어드는 모습). 숙성이 끝나면 상세를 다시 받아 열린다(useMyConcernDetail)
+  const [now, setNow] = useState(() => Date.now())
+  const maturing = state.status === 'maturing'
+  useEffect(() => {
+    if (!maturing) return
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [maturing])
 
   return (
     <section className={styles.root} aria-label="받은 위로">
@@ -30,7 +41,7 @@ export function ReceivedReplies({ state, onRetry }: ReceivedRepliesProps) {
         <p className={styles.notice}>
           치즈가 숙성되고 있어요.
           <br />
-          {formatRemaining(state.maturesAt, now)} 위로를 열어볼 수 있어요.
+          <span className={styles.countdown}>{formatRemaining(state.maturesAt, now)}</span> 위로를 열어볼 수 있어요.
         </p>
       ) : state.status === 'error' ? (
         <div className={styles.error} role="alert">
