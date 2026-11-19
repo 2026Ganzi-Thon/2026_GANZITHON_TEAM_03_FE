@@ -6,7 +6,7 @@
 
 - **돌봄 행동**(예: 물 한 잔 마시기)을 오늘 완료하면 서버가 정한 **양털**을 적립한다. 보상량은 클라이언트가 정하지 않는다. 행동 이름·설명·보상값은 문서의 예시이고 기획에서 확정한다.
 - 같은 날 같은 행동은 "현재 완료"가 하나만 유지된다. **당일에 한해 취소하면 양털을 회수**하고, 취소 후 다시 완료할 수 있다(초안).
-- 양털 변동은 거래(`EARN` 적립, `REVERSE` 회수)로 쌓고, 과거 거래는 지우거나 수정하지 않는다.
+- 양털 변동은 거래(`EARN` 적립, `REVERSE` 회수, `SPEND` 섬 꾸미기 구매)로 쌓고, 과거 거래는 지우거나 수정하지 않는다.
 - 체크박스는 행 존재 여부가 아니라 **`isCompleted`** 로 표시한다.
 
 ```ts
@@ -45,7 +45,8 @@ Response `data.items` (`active=true`, `displayOrder` 오름차순 → `id` 오�
 | --- | --- | --- | --- |
 | careActionId | string | N | |
 | name | string | N | 예: 물 한 잔 마시기 |
-| description | string \| null | Y | 예: 지금 물을 한 잔 마셔보세요. |
+| category | string | N | 분류(탭) — `움직이기`·`마음돌봄`·`쉬어가기`·`일상가꾸기`, 그 밖의 행동은 `기타`(V13 기본값). 2026-11-20 추가 |
+| description | string \| null | Y | 예: 지금 물을 한 잔 마셔보세요. V14 기본 행동은 null |
 | rewardAmount | integer | N | 현재 지급량, 0 이상 |
 | displayOrder | integer | N | 표시 순서 |
 
@@ -55,6 +56,19 @@ Response `data.items` (`active=true`, `displayOrder` 오름차순 → `id` 오�
 | 400 | COMMON_INVALID_REQUEST | 요청 형식 오류 |
 | 401 | AUTH_ACCESS_TOKEN_INVALID / _EXPIRED | 토큰 오류 / 만료 |
 | 500 | COMMON_INTERNAL_ERROR | 서버 오류 |
+
+### 기본 데이터(V14, 백엔드 `docs/care-catalog.md`)
+
+없는 행동만 보상 양털 4개·활성으로 넣는다(이름이 같은 기존 행동은 ID·보상·순서·활성 그대로, 분류가 `기타`면 분류만 채움).
+
+| displayOrder | category | name |
+| --- | --- | --- |
+| 1~4 | 움직이기 | 물 한 잔 마시기 · 간단한 간식 먹기 · 10분 산책하기 · 편안한 옷으로 갈아입기 |
+| 5~8 | 마음돌봄 | 양 먹이주기: 오늘의 마음을 한 줄로 적기 · 오늘 내가 애쓴 일 하나 알아주기 · 내 기분을 색이나 낙서로 표현하기 · 편한 사람에게 내 기분 이야기하기 |
+| 9~12 | 쉬어가기 | 동굴 5분 닫기: 휴대폰을 5분 뒤집어보세요 · 불필요한 알림 잠시 끄기 · 좋아하는 음악 한 곡 듣기 · 따뜻한 음료 천천히 마시기 |
+| 13~16 | 일상가꾸기 | 침구 정리하기 · 책상 위 물건 정리하기 · 사용한 컵 하나 씻기 · 마음에 드는 순간 사진으로 남기기 |
+
+프론트는 `category`를 그대로 탭으로 쓴다(`features/care/careCategories.ts`). 기본 4개 탭은 늘 보이고, 그 밖의 분류는 뒤에(`기타`는 맨 뒤).
 
 ## 2. 오늘의 돌봄 완료 내역 조회
 
@@ -195,7 +209,7 @@ Response `data`
 
 `GET /api/v1/wool-transactions?page=0&size=20` · 200
 
-내 양털 증감 이력을 최신순으로 조회한다. **백엔드 `CareService.transactions` 기준(2026-11-19 대조)** — 아래 형식과 같다. 지금 백엔드가 만드는 종류는 돌봄 완료 적립 `EARN`(+)과 완료 취소 회수 `REVERSE`(−)뿐이고, 행동 이름·거래 후 잔액은 응답에 없다.
+내 양털 증감 이력을 최신순으로 조회한다. **백엔드 `CareService.transactions` 기준(2026-11-19 대조)** — 아래 형식과 같다. 백엔드가 만드는 종류는 돌봄 완료 적립 `EARN`(+), 완료 취소 회수 `REVERSE`(−), 섬 꾸미기 구매 `SPEND`(−, 2026-11-20 추가 — [island.md](./island.md))다. 행동 이름·산 아이템·거래 후 잔액은 응답에 없다.
 
 | 필드 | 위치 | 타입 | 필수 | 제약 |
 | --- | --- | --- | --- | --- |
@@ -208,10 +222,10 @@ Response `data` (`createdAt` 내림차순 → `id` 내림차순)
 {
   items: {
     transactionId: string
-    amount: number                       // EARN 양수, REVERSE 음수
-    transactionType: 'EARN' | 'REVERSE'  // 제안
-    careCompletionId: string | null
-    reversesTransactionId: string | null // 회수 대상 원거래, EARN은 null
+    amount: number                       // EARN 양수, REVERSE·SPEND 음수
+    transactionType: 'EARN' | 'REVERSE' | 'SPEND'
+    careCompletionId: string | null      // SPEND 는 null
+    reversesTransactionId: string | null // 회수 대상 원거래, EARN·SPEND는 null
     createdAt: string
   }[]
   page: number      // 0부터
@@ -239,7 +253,7 @@ Response `data` (`createdAt` 내림차순 → `id` 내림차순)
 | 401 | AUTH_ACCESS_TOKEN_INVALID / _EXPIRED | 토큰 오류 / 만료 |
 | 500 | COMMON_INTERNAL_ERROR | 서버 오류 |
 
-메모: 현재 잔액을 과거 거래의 잔액처럼 표시하지 않는다. offset 방식이라 페이지 사이에 새 거래가 생기면 다음 페이지에 같은 거래가 다시 올 수 있다(프론트는 transactionId 로 중복 제거). 프론트: 양털 모으기의 "내 양털" 알약 → `/wool/history`, 날짜별·무한 스크롤(size 20). 구매·선물 같은 소비는 이 초안 범위가 아니다.
+메모: 현재 잔액을 과거 거래의 잔액처럼 표시하지 않는다. offset 방식이라 페이지 사이에 새 거래가 생기면 다음 페이지에 같은 거래가 다시 올 수 있다(프론트는 transactionId 로 중복 제거). 프론트: 양털 모으기의 "내 양털" 알약 → `/wool/history`, 날짜별·무한 스크롤(size 20). 섬 꾸미기 구매는 "섬 꾸미기 구매"로 보여준다(산 아이템은 응답에 없음).
 
 ## 미결정 사항 (이 도메인)
 

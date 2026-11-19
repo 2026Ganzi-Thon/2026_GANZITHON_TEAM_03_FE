@@ -17,7 +17,7 @@ import type {
 } from './types'
 
 // 고민·위로(치즈) API. 응답·오류 코드는 백엔드 ConcernController·ConcernService·ComfortReplyService·CheeseService 기준.
-// 목록(위로할 고민·내 고민)의 preview 는 서버가 본문 앞 100자로 자른다 — 본문 전체는 상세(GET /concerns/{id})에서 받는다.
+// 목록(위로할 고민·내 고민·보관함)은 제목(title)과 본문 앞 100자(preview)를 준다 — 본문 전체는 상세(GET /concerns/{id})에서 받는다.
 
 /** 위로 작성: 이미 남긴 고민(409) */
 export const REPLY_ALREADY_EXISTS = 'REPLY_ALREADY_EXISTS'
@@ -40,6 +40,8 @@ export const COMMON_STATE_CONFLICT = 'COMMON_STATE_CONFLICT'
 
 /** 고민 본문 최대 글자 수 — 백엔드 ConcernCreateRequest.CONTENT_LIMIT(앞뒤 공백을 뺀 코드 포인트 1000자) */
 export const CONCERN_MAX_LENGTH = 1000
+/** 고민 제목 최대 글자 수 — 백엔드 ConcernCreateRequest.TITLE_LIMIT(앞뒤 공백을 뺀 코드 포인트 50자, 한 줄) */
+export const CONCERN_TITLE_MAX_LENGTH = 50
 
 const path = (concernId: string) => `/concerns/${encodeURIComponent(concernId)}`
 
@@ -49,13 +51,18 @@ export function fetchConcerns(): Promise<ConcernListResponse> {
 }
 
 /**
- * 고민을 쓰고 숙성을 시작한다(201). 내용은 앞뒤 공백을 뺀 1~1000자, 위로 방식은 EMPATHY·EXPERIENCE·ADVICE, 다른 필드가 있으면 400.
+ * 고민을 쓰고 숙성을 시작한다(201). 제목은 앞뒤 공백을 뺀 1~50자 한 줄(줄바꿈·탭 같은 제어 문자면 400), 내용은 앞뒤 공백을 뺀 1~1000자,
+ * 위로 방식은 EMPATHY·EXPERIENCE·ADVICE, 다른 필드가 있으면 400.
  * `Idempotency-Key`(UUID) 필수 — 없거나 형식이 틀리면 400. 같은 키·같은 본문이면 처음 응답을 그대로 돌려주고, 같은 키·다른 본문이면 409.
  * 숙성 시간은 서버 설정(`app.activity.concern-maturing-hours`, 기본 24시간)이라 응답의 maturesAt 을 쓴다.
  * 오류: 400 COMMON_INVALID_REQUEST, 409 COMMON_IDEMPOTENCY_CONFLICT·COMMON_STATE_CONFLICT. `POST /api/v1/concerns`.
  */
 export function createConcern(body: CreateConcernRequest, idempotencyKey: string): Promise<CreateConcernResponse> {
-  return api.post<CreateConcernResponse>('/concerns', { content: body.content, comfortType: body.comfortType }, { idempotencyKey })
+  return api.post<CreateConcernResponse>(
+    '/concerns',
+    { title: body.title, content: body.content, comfortType: body.comfortType },
+    { idempotencyKey },
+  )
 }
 
 /** 고민 상세(받은 위로는 포함하지 않는다). 내 고민이면 maturesAt 이 온다. 없으면 404. `GET /api/v1/concerns/{concernId}` 의 `data`. */

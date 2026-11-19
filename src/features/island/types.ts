@@ -1,16 +1,16 @@
-// 섬 꾸미기(island) 기능 타입. API 가 아직 없어서 형태를 프론트가 제안한다(미확정) — docs/api/island.md
+// 섬 꾸미기(island) 기능 타입. 백엔드 IslandItemResponse·IslandItemsResponse·IslandPurchaseResponse 기준 — docs/api/island.md
 
 /** 아이템 분류. 화면의 칩 이름은 `ISLAND_CATEGORIES`(categories.ts) */
 export type IslandItemCategory = 'PLANT' | 'PATH' | 'FURNITURE' | 'LIGHT' | 'PROP'
 
-/** 섬 꾸미기 아이템 하나 (제안) */
+/** 섬 꾸미기 아이템 하나 */
 export interface IslandItem {
   itemId: string
   name: string
   category: IslandItemCategory
   /** 구매에 드는 양털 개수 */
   price: number
-  /** 목록 카드 그림. 없으면 자리만 둔다 */
+  /** 목록 카드 그림. 서버는 아직 null 이라 프론트 그림을 itemId 로 채운다(islandApi). 없으면 자리만 둔다 */
   imageUrl: string | null
   /**
    * 섬에 놓인 모습: 섬 그림과 같은 크기(정사각형)의 투명 그림. 섬 그림 위에 그대로 겹치면 제자리에 놓인다
@@ -27,14 +27,14 @@ export interface IslandItem {
   owned: boolean
 }
 
-/** `GET /island/items` 의 `data` (제안) */
+/** `GET /island/items` 의 `data` */
 export interface IslandItemsResponse {
   /** 지금 쓸 수 있는 양털. 구매 판단과 머리의 "내 양털"에 쓴다 */
   woolBalance: number
   items: IslandItem[]
 }
 
-/** `POST /island/items/{itemId}/purchases` 의 `data` (제안) */
+/** `POST /island/items/{itemId}/purchases` 의 `data` (201) */
 export interface PurchaseIslandItemResponse {
   /** 산 뒤의 아이템(`owned: true`) */
   item: IslandItem

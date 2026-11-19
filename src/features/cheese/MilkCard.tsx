@@ -1,7 +1,7 @@
 import { Checkbox } from '@/shared/ui'
 import milkBottleImage from '@/assets/images/milk-bottle.webp'
 import { cx } from '@/shared/lib/cx'
-import { splitConcernText, toPreviewBody } from './concernText'
+import { concernBody, toPreviewBody } from './concernText'
 import type { ConcernCard } from './types'
 import styles from './MilkCard.module.css'
 
@@ -13,10 +13,10 @@ export interface MilkCardProps {
   onOpen: () => void
 }
 
-/** 우유병 카드: 원형 체크로 고르고, 제목(본문 첫 줄)과 본문 미리보기 3줄 + "…더보기". 선택하면 배경이 들어간다. */
+/** 우유병 카드: 원형 체크로 고르고, 제목과 본문 미리보기 3줄 + "…더보기". 선택하면 배경이 들어간다. */
 export function MilkCard({ concern, selected, onSelect, onOpen }: MilkCardProps) {
-  const { title, body } = splitConcernText(concern.preview)
-  const preview = toPreviewBody(body)
+  const { title } = concern
+  const preview = toPreviewBody(concernBody(title, concern.preview))
 
   return (
     <li className={cx(styles.card, selected && styles.selected)}>

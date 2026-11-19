@@ -9,7 +9,7 @@ export const islandKeys = {
 }
 
 /**
- * 아이템 목록 + 양털 잔액. 양털은 다른 화면(돌봄 등)에서 바뀌므로 들어올 때마다 뒤에서 새로 받는다(staleTime 0, 홈과 같음).
+ * 아이템 목록 + 양털 잔액(`GET /island/items`). 홈 섬의 산 가구도 이 쿼리를 쓴다. 양털은 다른 화면(돌봄 등)에서 바뀌므로 들어올 때마다 뒤에서 새로 받는다(staleTime 0, 홈과 같음).
  * 캐시가 있으면 스켈레톤 없이 바로 보인다.
  */
 export const islandItemsQueryOptions = () =>

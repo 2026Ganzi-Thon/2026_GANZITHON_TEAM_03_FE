@@ -21,7 +21,7 @@ Response `data`
 | todayEmotion.recorded | boolean | N | 오늘 감정 기록 여부 |
 | todayEmotion.recordId | string \| null | Y | 기록이 없으면 null |
 | todayEmotion.emotions | `{ emotionId, code, name }[]` | N | 기록이 없으면 `[]` |
-| maturedConcernCount | integer | N | 숙성이 끝났지만 아직 개봉하지 않은 내 고민 수 (제안 필드) |
+| maturedConcernCount | integer | N | 숙성이 끝났지만 아직 개봉하지 않은 내 고민 수 (백엔드 `ConcernRepository.countUnopenedMatured`) |
 
 ```json
 {
@@ -51,4 +51,6 @@ Response `data`
 - `maturedConcernCount`가 1 이상이면 홈에서 "숙성이 끝난 치즈가 있어요" 알림을 띄워 내 치즈 목록(개봉)으로 이어준다.
 - 홈의 "누적 양털"이라는 표현과 이 API의 `woolBalance`(현재 사용 가능 잔액)는 다른 값일 수 있어 표시 의미를 합의해야 한다.
 
-미결정: 오늘의 감정 요약 로직(현재는 오늘 고른 감정을 그대로 반환), 나의 섬에 보여줄 요소와 섬꾸미기 데이터, `maturedConcernCount` 포함 여부.
+미결정: 오늘의 감정 요약 로직(현재는 오늘 고른 감정을 그대로 반환), 나의 섬에 산 가구를 이 API에 넣을지(지금은 홈도 `GET /island/items`를 부름 — [island.md](./island.md)).
+
+2026-11-20 대조: 응답 모양 변경 없음(백엔드가 숙성 치즈 수 계산만 JPA로 옮김).

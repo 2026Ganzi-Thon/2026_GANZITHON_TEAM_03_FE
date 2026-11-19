@@ -1,7 +1,7 @@
 import { useId, useState } from 'react'
 import { containsProfanity } from '@/shared/lib/profanity'
 import { Button, Chip, TextArea, TextField } from '@/shared/ui'
-import { CONCERN_MAX_LENGTH } from './cheeseApi'
+import { CONCERN_MAX_LENGTH, CONCERN_TITLE_MAX_LENGTH } from './cheeseApi'
 import { COMFORT_TYPE_LABELS } from './concernText'
 import type { ComfortType } from './types'
 import styles from './ConcernForm.module.css'
@@ -10,26 +10,24 @@ export interface ConcernFormProps {
   submitting?: boolean
   /** 버튼 위 안내(저장 실패 등). 자리는 늘 잡혀 있어 생기고 사라져도 버튼이 움직이지 않는다 */
   notice?: string
-  onSubmit: (values: { content: string; comfortType: ComfortType }) => void
+  onSubmit: (values: { title: string; content: string; comfortType: ComfortType }) => void
 }
-
-// 임의 결정(확인 필요): 제목 최대 40자 — API 에 제목 필드가 없어 본문 첫 줄로 보내고(목록·상세가 첫 줄을 제목으로 보여줌), 카드 한 줄에 들어갈 만큼만
-const TITLE_MAX_LENGTH = 40
 
 const COMFORT_TYPES: ComfortType[] = ['EMPATHY', 'EXPERIENCE', 'ADVICE']
 
 const PROFANITY_MESSAGE = '다른 폴리가 상처받을 수 있는 표현이 있어요. 조금만 다듬어 주세요.'
 
-/** 서버로 보낼 본문: "제목\n내용"(내용이 없으면 제목만). 서버는 앞뒤 공백을 뺀 코드 포인트로 1000자를 센다 */
-function toContent(title: string, body: string): string {
-  const head = title.trim()
-  const rest = body.trim()
-  return rest ? `${head}\n${rest}` : head
+/** 서버로 보낼 제목: 한 줄이어야 해서(제어 문자면 서버 400) 붙여 넣은 탭 등 제어 문자는 공백으로 바꾸고 앞뒤 공백을 뺀다 */
+function toTitle(title: string): string {
+  return title.replace(/\p{Cc}/gu, ' ').trim()
 }
+
+/** 코드 포인트 글자 수(서버와 같은 기준 — 이모지 하나가 한 글자) */
+const countChars = (text: string) => Array.from(text).length
 
 /**
  * 고민 쓰기 폼(시안 없음): 제목(한 줄) + 받고 싶은 위로 방식(하나) + 내용 + 공개 안내 + `고민 남기기`.
- * 제목과 위로 방식을 골라야 보낼 수 있다. 내용은 비워도 된다.
+ * 제목·위로 방식·내용이 모두 있어야 보낼 수 있다(백엔드: 제목 1~50자, 내용 1~1000자, 둘 다 앞뒤 공백 제외).
  * 제출할 때만 비속어를 검사해 걸리면 보내지 않는다(위로 쓰기 ReplyForm 과 같은 방식).
  * 임의 결정(확인 필요): 화면 구성·문구 전부 — 시안에 고민 쓰기 화면이 없어 양 먹이주기(EmotionWritePage)·위로 쓰기 톤으로 만들었다.
  */
@@ -41,16 +39,19 @@ export function ConcernForm({ submitting, notice, onSubmit }: ConcernFormProps) 
   const [checking, setChecking] = useState(false)
   const [profane, setProfane] = useState(false)
 
-  const content = toContent(title, body)
-  const length = Array.from(content).length
+  const cleanTitle = toTitle(title)
+  const content = body.trim()
+  const length = countChars(content)
   const tooLong = length > CONCERN_MAX_LENGTH
-  const canSubmit = title.trim() !== '' && comfortType !== null && !tooLong && !submitting && !checking
+  const titleTooLong = countChars(cleanTitle) > CONCERN_TITLE_MAX_LENGTH
+  const canSubmit =
+    cleanTitle !== '' && !titleTooLong && comfortType !== null && content !== '' && !tooLong && !submitting && !checking
 
   const handleSubmit = async () => {
     if (!comfortType) return
     setChecking(true)
     try {
-      if (await containsProfanity(content)) {
+      if (await containsProfanity(`${cleanTitle}\n${content}`)) {
         setProfane(true)
         return
       }
@@ -59,7 +60,7 @@ export function ConcernForm({ submitting, notice, onSubmit }: ConcernFormProps) 
     } finally {
       setChecking(false)
     }
-    onSubmit({ content, comfortType })
+    onSubmit({ title: cleanTitle, content, comfortType })
   }
 
   return (
@@ -74,7 +75,7 @@ export function ConcernForm({ submitting, notice, onSubmit }: ConcernFormProps) 
         label="고민 제목"
         placeholder="고민을 한 줄로 적어주세요"
         value={title}
-        maxLength={TITLE_MAX_LENGTH}
+        maxLength={CONCERN_TITLE_MAX_LENGTH}
         enterKeyHint="next"
         onChange={(event) => {
           setTitle(event.target.value)

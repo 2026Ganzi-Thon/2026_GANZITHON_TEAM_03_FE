@@ -1,4 +1,4 @@
-import { CheeseHeader, CheeseVaultBanner, MilkCarousel, useConcerns } from '@/features/cheese'
+import { CheeseBanner, CheeseHeader, CheeseVaultButton, MilkCarousel, useConcerns } from '@/features/cheese'
 import { Button } from '@/shared/ui'
 import styles from './CheesePage.module.css'
 
@@ -13,14 +13,17 @@ export interface CheesePageProps {
   onSelect: (concernId: string | null) => void
   /** 고민 상세로 — "위로 남기기" 버튼과 카드의 "…더보기" */
   onOpenConcern: (concernId: string) => void
-  /** "고민 남기기" — 고민 쓰기로 */
+  /** 아래 금색 카드 "고민 치즈 남기기" — 고민 쓰기로 */
   onWrite?: () => void
-  /** "내 치즈 보관함" 배너 */
+  /** "고민 목록" 줄 오른쪽 "내 치즈 보관함" 버튼 */
   onOpenVault?: () => void
   onOpenGuide?: () => void
 }
 
-/** "우유와 치즈": 이웃 폴리의 고민(우유병)을 3개씩 넘겨 보고 하나를 골라 위로하러 간다. 내 고민은 "고민 남기기"로 쓴다. */
+/**
+ * "우유와 치즈"(시안 396:293): 이웃 폴리의 고민(우유병)을 3개씩 넘겨 보고 하나를 골라 위로하러 간다.
+ * "고민 목록" 줄 오른쪽 버튼은 보관함으로, 아래 금색 카드 "고민 치즈 남기기"는 고민 쓰기로 간다.
+ */
 export default function CheesePage({
   woolCount,
   page,
@@ -45,6 +48,11 @@ export default function CheesePage({
         <br />
         치즈를 만들어주세요
       </p>
+
+      <div className={styles.listHead}>
+        <h2 className={styles.listTitle}>고민 목록</h2>
+        <CheeseVaultButton onClick={onOpenVault} />
+      </div>
 
       {state.status === 'error' ? (
         <div className={styles.status} role="alert">
@@ -71,17 +79,13 @@ export default function CheesePage({
       )}
 
       <div className={styles.actions}>
-        {/* 임의 결정(확인 필요): 고민 쓰기 진입 — 시안에 없어 "위로 남기기"와 같은 줄 왼쪽에 테두리 버튼으로 둔다(줄 높이 그대로) */}
-        <Button variant="outline" onClick={onWrite}>
-          고민 남기기
-        </Button>
         <Button disabled={!selected} onClick={() => selected && onOpenConcern(selected)}>
           위로 남기기
         </Button>
       </div>
 
-      <div className={styles.vault}>
-        <CheeseVaultBanner onClick={onOpenVault} />
+      <div className={styles.banner}>
+        <CheeseBanner title="고민 치즈 남기기" caption="내 치즈는 보관함에 보관돼요" onClick={onWrite} />
       </div>
     </main>
   )

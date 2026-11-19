@@ -4,6 +4,8 @@
 const ONBOARDING_KEY = 'polly.onboardingSeen'
 // 예전 임시 로그인(이번 탭에 시작 흐름을 통과했는지)이 쓰던 키 — 지금은 쓰지 않아 지운다
 const LEGACY_PASSED_KEYS = ['polly.entryPassed', 'polly.entryPassed.v2']
+// 섬 꾸미기 API 가 생기기 전 기기에 두던 가짜 DB(산 가구 ID) — 지금은 서버가 보유를 준다. 남은 것을 지운다
+const LEGACY_LOCAL_KEYS = ['polly.mockDb']
 
 const memory = { onboardingSeen: false }
 
@@ -37,11 +39,18 @@ export function clearOnboardingSeen() {
   }
 }
 
-/** 예전 임시 로그인 기록을 지운다(앱 시작 때 한 번) */
+/** 예전 임시 로그인 기록과 섬 꾸미기 가짜 DB 를 지운다(앱 시작 때 한 번) */
 export function clearLegacyEntry() {
   for (const key of LEGACY_PASSED_KEYS) {
     try {
       window.sessionStorage.removeItem(key)
+    } catch {
+      // 지우지 못해도 읽는 곳이 없다
+    }
+  }
+  for (const key of LEGACY_LOCAL_KEYS) {
+    try {
+      window.localStorage.removeItem(key)
     } catch {
       // 지우지 못해도 읽는 곳이 없다
     }
