@@ -47,6 +47,17 @@ export function useMyConcernDetail(concernId: string) {
     if (shouldOpen && openStatus === 'idle') openNow()
   }, [shouldOpen, openStatus, openNow])
 
+  // 숙성이 끝나는 순간 상세를 다시 받는다 — 서버 숙성 시간이 10분이라 화면을 보며 기다리는 경우가 많다.
+  // MATURED 가 되면 위의 effect 가 바로 개봉해 받은 위로를 보여준다
+  const maturesAt = concern?.status === 'MATURING' ? concern.maturesAt : null
+  const { refetch: refetchDetail } = detail
+  useEffect(() => {
+    if (!maturesAt) return
+    const wait = Math.max(0, Date.parse(maturesAt) - Date.now()) + 1000
+    const timer = window.setTimeout(() => void refetchDetail(), Math.min(wait, 2 ** 31 - 1))
+    return () => window.clearTimeout(timer)
+  }, [maturesAt, refetchDetail])
+
   const gone = (detail.isError && hasErrorCode(detail.error, CONCERN_NOT_FOUND)) || (concern !== undefined && !concern.mine)
 
   let state: MyConcernDetailState

@@ -54,7 +54,7 @@ export function fetchConcerns(): Promise<ConcernListResponse> {
  * 고민을 쓰고 숙성을 시작한다(201). 제목은 앞뒤 공백을 뺀 1~50자 한 줄(줄바꿈·탭 같은 제어 문자면 400), 내용은 앞뒤 공백을 뺀 1~1000자,
  * 위로 방식은 EMPATHY·EXPERIENCE·ADVICE, 다른 필드가 있으면 400.
  * `Idempotency-Key`(UUID) 필수 — 없거나 형식이 틀리면 400. 같은 키·같은 본문이면 처음 응답을 그대로 돌려주고, 같은 키·다른 본문이면 409.
- * 숙성 시간은 서버 설정(`app.activity.concern-maturing-hours`, 기본 24시간)이라 응답의 maturesAt 을 쓴다.
+ * 숙성 시간은 서버 설정(`app.activity.concern-maturing-minutes`, 기본 10분 — 백엔드 V15)이라 응답의 maturesAt 을 쓴다.
  * 오류: 400 COMMON_INVALID_REQUEST, 409 COMMON_IDEMPOTENCY_CONFLICT·COMMON_STATE_CONFLICT. `POST /api/v1/concerns`.
  */
 export function createConcern(body: CreateConcernRequest, idempotencyKey: string): Promise<CreateConcernResponse> {
