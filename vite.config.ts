@@ -6,6 +6,10 @@ import { fileURLToPath } from 'node:url'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // 앱 빌드 id — 서버 데이터 캐시 저장본(app/queryPersist.ts)의 buster. Vercel 은 커밋 해시, 그 밖에는 빌드 시각
+  define: {
+    __APP_BUILD_ID__: JSON.stringify(process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) || Date.now().toString(36)),
+  },
   // API 는 같은 출처(/api)로 부르고 개발 서버가 백엔드로 넘긴다 — 배포는 vercel.json 의 rewrites 가 같은 일을 한다.
   // 같은 출처여야 iPhone Safari(다른 사이트 쿠키 차단)에서도 로그인 쿠키(Refresh·구글 challenge)가 저장된다
   server: {

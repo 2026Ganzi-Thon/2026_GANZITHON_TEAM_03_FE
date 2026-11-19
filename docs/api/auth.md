@@ -171,6 +171,8 @@ Response `data: AuthSuccess` + `isNewUser` (기존 연결 계정은 `false`·200
 - 구글 정보 제공 동의와 서비스 약관 동의를 화면에서 구분하고, 구글 인증 취소는 프론트에서 안내한다.
 - 일반 가입과 이메일이 같다는 이유로 계정을 자동 연결하지 않는다.
 - 로그인 CSRF·`nonce`·`g_csrf_token` 처리와 ID Token 전달 방식은 프론트·백엔드가 합의해야 한다.
+- 백엔드 구현: 먼저 `POST /api/v1/auth/google/challenges`(본문 없음) → 200 `data: { nonce, expiresIn: 900 }` + challenge 쿠키(`/api/v1/auth/google`, 15분). challenge는 15분·일회용, 성공한 로그인에서만 소비, 발급할 때마다 쿠키가 바뀐다(2026-11-20 5분 → 15분, 백엔드 `AuthSettings.GOOGLE_CHALLENGE_TTL_SECONDS`). 만료·불일치는 401 `AUTH_GOOGLE_CHALLENGE_INVALID`.
+- 프론트는 `expiresIn`에서 1분을 뺀 시간까지 미리 받은 challenge를 다시 쓰고, credential을 받은 뒤(신규 가입 약관 입력 중)에는 새로 받지 않는다(`features/auth/googleIdentity.ts`).
 
 ## 6. 토큰 재발급
 

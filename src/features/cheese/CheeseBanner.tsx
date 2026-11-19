@@ -1,13 +1,18 @@
 import cheeseImage from '@/assets/images/cheese.webp'
 import { Icon } from '@/shared/ui'
-import styles from './CheeseVaultBanner.module.css'
+import styles from './CheeseBanner.module.css'
 
-export interface CheeseVaultBannerProps {
+export interface CheeseBannerProps {
+  title: string
+  caption: string
   onClick?: () => void
 }
 
-/** "내 치즈 보관함" 배너. 보관함 화면은 아직 없어서 누르면 콜백만 부른다. */
-export function CheeseVaultBanner({ onClick }: CheeseVaultBannerProps) {
+/**
+ * 우유와 치즈 아래의 큰 금색 치즈 카드(시안 396:392). 시안 396:293 에서는 "고민 치즈 남기기"(고민 쓰기 입구)다.
+ * 모양·치즈 그림·화살표는 예전 "내 치즈 보관함" 배너(109:1290) 그대로 두고 글자·이동만 쓰는 쪽이 정한다.
+ */
+export function CheeseBanner({ title, caption, onClick }: CheeseBannerProps) {
   return (
     <button type="button" className={styles.banner} onClick={onClick}>
       <span className={styles.bubbleA} aria-hidden="true" />
@@ -16,8 +21,8 @@ export function CheeseVaultBanner({ onClick }: CheeseVaultBannerProps) {
       <span className={styles.bubbleD} aria-hidden="true" />
       <img src={cheeseImage} alt="" width={97} height={97} className={styles.cheese} />
       <span className={styles.text}>
-        <span className={styles.title}>내 치즈 보관함</span>
-        <span className={styles.caption}>내 치즈는 이곳에 보관돼요</span>
+        <span className={styles.title}>{title}</span>
+        <span className={styles.caption}>{caption}</span>
       </span>
       <Icon name="arrow-right-circle" className={styles.arrow} />
     </button>

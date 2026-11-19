@@ -11,3 +11,6 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+/** 앱 빌드 id(vite.config.ts define) — 배포마다 바뀐다 */
+declare const __APP_BUILD_ID__: string

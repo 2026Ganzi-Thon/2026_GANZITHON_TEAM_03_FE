@@ -4,6 +4,11 @@ import type { DateString, Id, IsoDateTime, PageParams, Paged } from './common'
 export interface CareAction {
   careActionId: Id
   name: string
+  /**
+   * 분류(탭) 이름 — 움직이기·마음돌봄·쉬어가기·일상가꾸기, 그 밖은 기타(백엔드 V13 기본값). 2026-11-20 추가.
+   * 옛 응답·캐시에 없을 수 있어 선택으로 둔다(없으면 기타)
+   */
+  category?: string
   description: string | null
   /** 현재 지급량, 0 이상 */
   rewardAmount: number
@@ -60,14 +65,15 @@ export interface WoolWallet {
   updatedAt: IsoDateTime | null
 }
 
-/** EARN 적립 / REVERSE 회수 */
-export type WoolTransactionType = 'EARN' | 'REVERSE'
+/** EARN 돌봄 완료 적립 / REVERSE 완료 취소 회수 / SPEND 섬 꾸미기 구매(백엔드 IslandService) */
+export type WoolTransactionType = 'EARN' | 'REVERSE' | 'SPEND'
 
 export interface WoolTransaction {
   transactionId: Id
-  /** EARN 양수, REVERSE 음수 */
+  /** EARN 양수, REVERSE·SPEND 음수 */
   amount: number
   transactionType: WoolTransactionType
+  /** 돌봄 거래(EARN·REVERSE)의 완료 ID. SPEND 는 null */
   careCompletionId: Id | null
   /** 회수 대상 원거래 ID. EARN은 null */
   reversesTransactionId: Id | null

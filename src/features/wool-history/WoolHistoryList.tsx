@@ -36,12 +36,14 @@ function dayLabel(date: string, today: string) {
 }
 
 /**
- * 거래 이름. 백엔드는 돌봄 완료 적립(EARN)·완료 취소 회수(REVERSE)만 만든다. 행동 이름은 응답에 없어 종류로만 쓴다.
- * 임의 결정(확인 필요): "돌봄 완료"·"돌봄 완료 취소", 모르는 종류는 금액 부호로 "양털 받음"·"양털 사용"
+ * 거래 이름. 백엔드는 돌봄 완료 적립(EARN)·완료 취소 회수(REVERSE)·섬 꾸미기 구매(SPEND)를 만든다.
+ * 행동 이름·산 아이템은 응답에 없어(백엔드 CareService.transactions) 종류로만 쓴다.
+ * 임의 결정(확인 필요): "돌봄 완료"·"돌봄 완료 취소"·"섬 꾸미기 구매", 모르는 종류는 금액 부호로 "양털 받음"·"양털 사용"
  */
 function transactionLabel(item: WoolTransaction) {
   if (item.transactionType === 'EARN') return '돌봄 완료'
   if (item.transactionType === 'REVERSE') return '돌봄 완료 취소'
+  if (item.transactionType === 'SPEND') return '섬 꾸미기 구매'
   return item.amount >= 0 ? '양털 받음' : '양털 사용'
 }
 

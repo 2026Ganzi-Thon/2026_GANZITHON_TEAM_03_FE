@@ -381,7 +381,7 @@ export function SetupRoute() {
       openSession(result.user.profileCompleted, result.user.onboardingCompleted)
       return true
     } catch (error) {
-      // 약관을 입력하는 동안 challenge 유효시간(서버 5분)이 지나면 같은 credential 로는 가입할 수 없다 → 구글 로그인부터 다시
+      // 약관을 입력하는 동안 challenge 유효시간(서버 15분)이 지나면 같은 credential 로는 가입할 수 없다 → 구글 로그인부터 다시
       if (hasErrorCode(error, 'AUTH_GOOGLE_CHALLENGE_INVALID') || hasErrorCode(error, 'AUTH_GOOGLE_TOKEN_INVALID')) {
         fail('구글 인증 시간이 지났어요. 구글로 다시 로그인해 주세요.', { label: '구글로 다시 로그인', onClick: () => navigate('/login') })
         return false

@@ -28,7 +28,7 @@ export const WOOL_BALANCE_INSUFFICIENT = 'WOOL_BALANCE_INSUFFICIENT'
 /** 취소: 내 완료가 아니거나 없음(404) */
 export const CARE_COMPLETION_NOT_FOUND = 'CARE_COMPLETION_NOT_FOUND'
 
-/** 활성 돌봄 행동(displayOrder, id 순). `GET /api/v1/care-actions`. 분류 칸은 없다 */
+/** 활성 돌봄 행동(displayOrder, id 순, 분류 `category` 포함). `GET /api/v1/care-actions` */
 export function fetchCareActions(): Promise<CareActionsResponse> {
   return api.get<CareActionsResponse>('/care-actions')
 }

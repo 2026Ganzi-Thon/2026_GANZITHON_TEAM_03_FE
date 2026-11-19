@@ -40,13 +40,14 @@ Header: `Authorization`, **`Idempotency-Key: {UUID}`** (필수 — 없거나 UUI
 
 | 필드 | 위치 | 타입 | 필수 | 제약 |
 | --- | --- | --- | --- | --- |
+| title | Body | string \| null | 선택 | 앞뒤 공백 제거 후 1~50자(코드 포인트, `TITLE_LIMIT`), 한 줄 — 줄바꿈·탭 등 제어 문자가 있으면 400. **빼거나 null이면** 본문 첫 줄(제어 문자는 공백, 최대 50자, 비면 "제목 없음")로 서버가 채운다(옛 화면 호환, V10이 기존 고민을 채운 규칙과 같음). 2026-11-20 추가 |
 | content | Body | string | 필수 | 앞뒤 공백 제거(`strip`) 후 1~1000자(코드 포인트, 백엔드 `ConcernCreateRequest.CONTENT_LIMIT`). 저장도 공백을 뺀 값 |
 | comfortType | Body | ComfortType | 필수 | EMPATHY / EXPERIENCE / ADVICE |
 
-다른 필드가 있으면 400. 제목 필드는 없다 — 프론트는 "제목\n내용"으로 보내고 첫 줄을 제목으로 보여준다.
+다른 필드가 있으면 400. 프론트는 제목을 늘 따로 보낸다(제목·내용 모두 필수로 받음). 같은 키로 제목만 바꿔 보내도 다른 본문이라 409.
 
 ```json
-{ "content": "취업 준비가 길어지니 자꾸 비교하게 돼요", "comfortType": "EMPATHY" }
+{ "title": "자꾸 남과 비교하게 돼요", "content": "취업 준비가 길어지니 자꾸 비교하게 돼요", "comfortType": "EMPATHY" }
 ```
 
 Response `data`
@@ -84,7 +85,8 @@ Response `data`
 {
   items: {
     concernId: string
-    preview: string        // 본문 앞부분 (길이 미정)
+    title: string          // 고민 제목(2026-11-20 추가)
+    preview: string        // 본문 앞 100자(코드 포인트)
     comfortType: ComfortType
     createdAt: string
   }[]
@@ -98,7 +100,7 @@ Response `data`
 | 401 | AUTH_ACCESS_TOKEN_INVALID / _EXPIRED | 토큰 오류 / 만료 |
 | 500 | COMMON_INTERNAL_ERROR | 서버 오류 |
 
-미결정: 같은 지역 사용자에게만 노출할지, preview 길이, 새로고침을 새 목록으로 볼지.
+미결정: 같은 지역 사용자에게만 노출할지, 새로고침을 새 목록으로 볼지.
 
 ## 3. 고민 상세 조회
 
@@ -111,6 +113,7 @@ Response `data`
 | 필드 | 타입 | NULL | 설명 |
 | --- | --- | --- | --- |
 | concernId | string | N | |
+| title | string | N | 고민 제목(1~50자). V10 이전 고민은 본문 첫 줄로 채워짐 — 이 앱으로 쓴 옛 고민은 본문 첫 줄이 제목과 같아 프론트가 그 줄을 빼고 보여준다 |
 | content | string | N | 고민 전체 본문 |
 | comfortType | ComfortType | N | |
 | createdAt | string | N | |
@@ -123,7 +126,7 @@ Response `data`
 ```json
 {
   "data": {
-    "concernId": "105", "content": "취업 준비가 길어지니 자꾸 비교하게 돼요",
+    "concernId": "105", "title": "자꾸 남과 비교하게 돼요", "content": "취업 준비가 길어지니 자꾸 비교하게 돼요",
     "comfortType": "EMPATHY", "createdAt": "2026-11-08T01:00:00Z",
     "mine": false, "status": "MATURING", "maturesAt": null,
     "replyable": true, "alreadyReplied": false
@@ -188,6 +191,7 @@ Response `data`
 {
   items: {
     concernId: string
+    title: string             // 고민 제목
     preview: string           // 본문 앞 100자(코드 포인트)
     comfortType: ComfortType
     status: ConcernStatus
@@ -314,6 +318,7 @@ Response `data`
 {
   items: {
     concernId: string
+    title: string          // 고민 제목
     preview: string        // 본문 앞 100자(코드 포인트)
     comfortType: ComfortType
     replyCount: number     // 받은 위로 수 (기본 위로 포함)

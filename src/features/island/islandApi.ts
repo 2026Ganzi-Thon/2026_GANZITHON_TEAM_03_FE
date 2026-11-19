@@ -1,14 +1,12 @@
-import { ApiError } from '@/shared/api'
-import { mockIsland } from '@/shared/mock'
-import { fetchWoolWallet } from '@/shared/wool'
+import { api } from '@/shared/api'
 import oliveTree from '@/assets/images/island-items/01-olive-tree.webp'
 import flowerPot from '@/assets/images/island-items/02-flower-pot.webp'
-// import steppingStones from '@/assets/images/island-items/03-stepping-stones.webp'
-// import fence from '@/assets/images/island-items/04-fence.webp'
-// import bench from '@/assets/images/island-items/05-bench.webp'
-// import hammock from '@/assets/images/island-items/06-hammock.webp'
+import steppingStones from '@/assets/images/island-items/03-stepping-stones.webp'
+import fence from '@/assets/images/island-items/04-fence.webp'
+import bench from '@/assets/images/island-items/05-bench.webp'
+import hammock from '@/assets/images/island-items/06-hammock.webp'
 import lantern from '@/assets/images/island-items/07-lantern.webp'
-// import feedingTrough from '@/assets/images/island-items/08-feeding-trough.webp'
+import feedingTrough from '@/assets/images/island-items/08-feeding-trough.webp'
 import cheeseShelf from '@/assets/images/island-items/09-cheese-shelf.webp'
 import mailbox from '@/assets/images/island-items/10-mailbox.webp'
 import rowboat from '@/assets/images/island-items/11-rowboat.webp'
@@ -20,87 +18,71 @@ import cheeseShelfPlaced from '@/assets/images/island-items/placed/09-cheese-she
 import mailboxPlaced from '@/assets/images/island-items/placed/10-mailbox.webp'
 import rowboatPlaced from '@/assets/images/island-items/placed/11-rowboat.webp'
 import rugPlaced from '@/assets/images/island-items/placed/12-rug.webp'
-import type { IslandItem, IslandItemCategory, IslandItemsResponse, PurchaseIslandItemResponse } from './types'
+import type { IslandItem, IslandItemsResponse, PurchaseIslandItemResponse } from './types'
 
-// TODO(API 연결): 섬 꾸미기 API 는 백엔드에 아직 없다. 형태는 프론트 제안(docs/api/island.md)이고, 생기면 아래 두 함수의 본문만
-// 호출로 바꾼다. mock 상수·`@/shared/mock` import·그림 import 는 함께 지운다(그림은 서버 imageUrl·placedImageUrl 로 온다).
-//   fetchIslandItems:   return api.get<IslandItemsResponse>('/island/items')
-//   purchaseIslandItem: return api.post<PurchaseIslandItemResponse>(`/island/items/${itemId}/purchases`, undefined, { idempotencyKey })
-// (api 는 `@/shared/api`. 구매는 양털을 쓰는 쓰기라 `Idempotency-Key` 가 필요하다 — usePurchaseIslandItem 이 구매 시도마다 키를 만든다.
-//  오류는 ApiError code 로 온다: ISLAND_ITEM_NOT_FOUND 404, ISLAND_ITEM_ALREADY_OWNED 409, WOOL_BALANCE_INSUFFICIENT 409 — 모두 제안 코드.)
-//
-// 그 전까지(임의 결정, docs/decisions.md): 아이템 목록은 아래 상수, 보유는 기기의 가짜 DB(`@/shared/mock`, localStorage).
-// 양털 잔액은 서버 값(`GET /wool-wallet`)을 보여준다. 서버 양털을 프론트가 깎을 수 없으므로 구매는 "서버 잔액이 값 이상인지"만 확인하고
-// 차감하지 않는다(구매 확인 모달이 그렇게 안내한다).
+// 섬 꾸미기 API. 응답·오류 코드는 백엔드 IslandController·IslandService(V11__create_island_items.sql) 기준 — docs/api/island.md.
+// 아이템 목록·값·분류·겹침 순서·물에 뜬 자리(floatAt)·보유·잔액은 서버 값을 그대로 쓰고, 그림만 프론트가 채운다.
 
+/** 구매: 없거나 판매 중지된 아이템(404) */
 export const ISLAND_ITEM_NOT_FOUND = 'ISLAND_ITEM_NOT_FOUND'
+/** 구매: 이미 가진 아이템(409) */
 export const ISLAND_ITEM_ALREADY_OWNED = 'ISLAND_ITEM_ALREADY_OWNED'
-/** docs/api/care-wool.md 에 이미 있는 코드를 같이 쓴다 */
+/** 구매: 양털 부족(409) — 지갑이 없어도 이 코드. 양털은 깎이지 않는다 */
 export const WOOL_BALANCE_INSUFFICIENT = 'WOOL_BALANCE_INSUFFICIENT'
 
-function mock(
-  itemId: string,
-  name: string,
-  category: IslandItemCategory,
-  price: number,
-  imageUrl: string,
-  placedImageUrl: string,
-  placedOrder: number,
-  floatAt: IslandItem['floatAt'] = null,
-): IslandItem {
-  return { itemId, name, category, price, imageUrl, placedImageUrl, placedOrder, floatAt, owned: false }
-}
-
-// 아이템 목록(상수). 보유 여부는 가짜 DB(`@/shared/mock`, localStorage 저장)에 있어 새로고침해도 남는다. 이름·값은 시안 카드(109:280~) 그대로 — 그림 파일 번호(01~12)와 같은 순서.
-// 임의 결정(확인 필요): 분류 배정은 이름으로 정함 — 시안·명세에 없음
-// 섬에 놓이는 자리·크기·겹치는 순서(마지막 인자)는 담당자가 배치 도구로 직접 놓은 값이다(2026-11-15). 놓인 그림(placed/*.webp)은
-// 카드 그림을 섬 그림 위 그 자리에 얹어 만든 투명 레이어다(그림자·동굴 안 색·물에 잠긴 부분은 임의로 넣음).
-// 주석 처리한 5종(디딤돌·울타리·벤치·해먹·먹이통)은 자리를 아직 정하지 않아 목록에서 뺐다 — 사용자 요청.
-// 되살릴 때: 자리를 정해 placed/ 에 놓인 그림을 만들고, 위의 카드 그림 import 주석과 함께 푼 뒤 `…Placed` import 를 더한다.
-const mockItems: IslandItem[] = [
-  mock('1', '올리브 나무', 'PLANT', 12, oliveTree, oliveTreePlaced, 2),
-  mock('2', '꽃 화분', 'PLANT', 24, flowerPot, flowerPotPlaced, 7),
-  // mock('3', '디딤돌', 'PATH', 12, steppingStones, steppingStonesPlaced, 0),
-  // mock('4', '울타리', 'PROP', 24, fence, fencePlaced, 0),
-  // mock('5', '벤치', 'FURNITURE', 12, bench, benchPlaced, 0),
-  // mock('6', '해먹', 'FURNITURE', 24, hammock, hammockPlaced, 0),
-  mock('7', '랜턴', 'LIGHT', 12, lantern, lanternPlaced, 11),
-  // mock('8', '먹이통', 'PROP', 24, feedingTrough, feedingTroughPlaced, 0),
-  mock('9', '치즈 선반', 'FURNITURE', 12, cheeseShelf, cheeseShelfPlaced, 5),
-  mock('10', '우편함', 'PROP', 24, mailbox, mailboxPlaced, 8),
-  // 나룻배는 물에 떠 있다 — 흔들림 중심은 놓인 그림에서 배의 한가운데쯤
-  mock('11', '나룻배', 'PROP', 12, rowboat, rowboatPlaced, 12, { x: 65.5, y: 85 }),
-  mock('12', '러그', 'PATH', 24, rug, rugPlaced, 1),
-]
-
-/** 목록 상수에 가짜 DB 의 보유 여부를 합친다 */
-function withOwned(item: IslandItem, ownedIds: string[]): IslandItem {
-  return { ...item, owned: ownedIds.includes(item.itemId) }
-}
-
-/** 아이템 목록과 양털 잔액. `GET /api/v1/island/items` 의 `data` (제안). 지금은 잔액만 서버(`/wool-wallet`), 나머지는 기기 값. */
-export async function fetchIslandItems(): Promise<IslandItemsResponse> {
-  const { balance } = await fetchWoolWallet()
-  const ownedIds = mockIsland.ownedItemIds()
-  return { woolBalance: balance, items: mockItems.map((item) => withOwned(item, ownedIds)) }
+/**
+ * 서버 itemId → 프론트에 있는 그림. 서버는 그림 주소(imageUrl·placedImageUrl)를 아직 null 로 준다(IslandItemResponse).
+ * 카드 그림 번호(01~12)가 서버 itemId 와 같다(V11 시드: 1·2·7·9·10·11·12). 놓인 그림(placed/)은 담당자가 자리를 정한 7종만 있다 —
+ * 나머지(3 디딤돌·4 울타리·5 벤치·6 해먹·8 먹이통)는 서버가 팔기 시작하면 카드는 보이고 섬에는 놓이지 않는다(placedImageUrl null).
+ */
+const LOCAL_IMAGES: Record<string, { imageUrl: string; placedImageUrl: string | null }> = {
+  '1': { imageUrl: oliveTree, placedImageUrl: oliveTreePlaced },
+  '2': { imageUrl: flowerPot, placedImageUrl: flowerPotPlaced },
+  '3': { imageUrl: steppingStones, placedImageUrl: null },
+  '4': { imageUrl: fence, placedImageUrl: null },
+  '5': { imageUrl: bench, placedImageUrl: null },
+  '6': { imageUrl: hammock, placedImageUrl: null },
+  '7': { imageUrl: lantern, placedImageUrl: lanternPlaced },
+  '8': { imageUrl: feedingTrough, placedImageUrl: null },
+  '9': { imageUrl: cheeseShelf, placedImageUrl: cheeseShelfPlaced },
+  '10': { imageUrl: mailbox, placedImageUrl: mailboxPlaced },
+  '11': { imageUrl: rowboat, placedImageUrl: rowboatPlaced },
+  '12': { imageUrl: rug, placedImageUrl: rugPlaced },
 }
 
 /**
- * 아이템을 산다. `POST /api/v1/island/items/{itemId}/purchases` (제안, `Idempotency-Key` 필요).
- * 이미 가졌으면 409 ISLAND_ITEM_ALREADY_OWNED, 양털이 모자라면 409 WOOL_BALANCE_INSUFFICIENT 를 흉내 낸다.
+ * 서버 아이템에 그림을 채운다.
+ * 임의 결정(확인 필요): 서버가 그림 주소를 주면 그걸 우선한다(관리 쪽에서 그림을 바꿀 수 있게). 다만 다른 출처 그림은 CORS 가 없으면
+ * 홈 양이 가구 뒤로 숨는 기준(발 위치)을 잴 수 없어, 그 가구는 양을 가리지 않는다(docs/decisions.md 2026-11-19 홈 섬의 양).
+ */
+function withImages(item: IslandItem): IslandItem {
+  const local = LOCAL_IMAGES[item.itemId]
+  return {
+    ...item,
+    imageUrl: item.imageUrl ?? local?.imageUrl ?? null,
+    placedImageUrl: item.placedImageUrl ?? local?.placedImageUrl ?? null,
+  }
+}
+
+/**
+ * 활성 아이템(표시 순서)과 내 양털 잔액. 지갑이 없으면 잔액 0(지갑을 만들지 않는다). `GET /api/v1/island/items` 의 `data`.
+ */
+export async function fetchIslandItems(): Promise<IslandItemsResponse> {
+  const data = await api.get<IslandItemsResponse>('/island/items')
+  return { woolBalance: data.woolBalance, items: data.items.map(withImages) }
+}
+
+/**
+ * 아이템을 산다(201). 양털을 값만큼 쓰고(양털 내역에 SPEND) 보유로 바꾼다. 본문 없음(보내면 400).
+ * `Idempotency-Key`(UUID) 필수 — 같은 키 재요청은 처음 응답을 그대로, 같은 키·다른 아이템은 409 COMMON_IDEMPOTENCY_CONFLICT.
+ * 오류: 404 ISLAND_ITEM_NOT_FOUND, 409 ISLAND_ITEM_ALREADY_OWNED·WOOL_BALANCE_INSUFFICIENT·COMMON_STATE_CONFLICT, 400 COMMON_INVALID_REQUEST.
+ * `POST /api/v1/island/items/{itemId}/purchases`.
  */
 export async function purchaseIslandItem(itemId: string, idempotencyKey: string): Promise<PurchaseIslandItemResponse> {
-  void idempotencyKey // 섬 꾸미기 API 가 없어 키를 쓰지 않는다 — 실제 호출에서 헤더로 보낸다
-  const item = mockItems.find((candidate) => candidate.itemId === itemId)
-  if (!item) throw new ApiError(404, { code: ISLAND_ITEM_NOT_FOUND, message: '없는 아이템이에요.' })
-  if (mockIsland.ownedItemIds().includes(itemId)) {
-    throw new ApiError(409, { code: ISLAND_ITEM_ALREADY_OWNED, message: '이미 가진 아이템이에요.' })
-  }
-  // 임의 결정(확인 필요): 서버 잔액이 값 이상인지만 확인하고 깎지 않는다 — 서버에 양털을 쓰는 API 가 없다
-  const { balance } = await fetchWoolWallet()
-  if (balance < item.price) {
-    throw new ApiError(409, { code: WOOL_BALANCE_INSUFFICIENT, message: '양털이 모자라요.' })
-  }
-  mockIsland.addOwnedItem(itemId)
-  return { item: { ...item, owned: true }, woolBalance: balance }
+  const data = await api.post<PurchaseIslandItemResponse>(
+    `/island/items/${encodeURIComponent(itemId)}/purchases`,
+    undefined,
+    { idempotencyKey },
+  )
+  return { woolBalance: data.woolBalance, item: withImages(data.item) }
 }
