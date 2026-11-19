@@ -4,6 +4,7 @@ import {
   CaveHeader,
   CaveOpenModal,
   CaveScene,
+  RestDimmer,
   RestTimer,
   useCancelRestSession,
   useCurrentRestSession,
@@ -114,9 +115,14 @@ export default function CaveSessionPage({ onEnded, onNoSession, onOpenGuide, onO
   // 쉬는 동안 화면이 꺼지지 않게 — 꺼지면 센서 값이 오지 않아 휴대폰을 든 것을 알 수 없다
   useWakeLock(running)
 
+  // 휴대폰을 눕혀 둔 동안은 화면을 거의 검게 덮는다(RestDimmer) — 들면 걷힌다
+  const [lyingFlat, setLyingFlat] = useState(false)
+  const dimmed = running && lyingFlat && !confirming
+
   // 쉬는 동안 휴대폰을 들면 "동굴 문을 열까요?"를 저절로 띄우고, 다시 눕히면 닫고 계속 쉰다.
   // 들었다는 것만으로 끝내지 않는다(명세: 확인창 뒤 중도 종료). 센서가 없으면 아무 일도 없다(버튼으로만 연다)
   useFlatSensor(running, (sensor) => {
+    setLyingFlat(sensor === 'flat')
     if (sensor === 'tilted' && !confirming) {
       reset()
       setLifted(true)
@@ -150,7 +156,8 @@ export default function CaveSessionPage({ onEnded, onNoSession, onOpenGuide, onO
           <CaveScene closed={!ended} decorations={decorations} />
         </div>
 
-        <div className={styles.timer}>
+        {/* 눕혀 어두워진 동안에도 남은 시간 알약만 덮개 위로 올려 은은하게 보이게 한다 */}
+        <div className={`${styles.timer} ${dimmed ? styles.timerDimmed : ''}`}>
           <RestTimer remainingSeconds={running ? remaining : ended ? 0 : undefined} />
         </div>
 
@@ -169,6 +176,8 @@ export default function CaveSessionPage({ onEnded, onNoSession, onOpenGuide, onO
           </Button>
         </div>
       </div>
+
+      <RestDimmer active={dimmed} />
 
       <CaveOpenModal
         open={confirming && running}
