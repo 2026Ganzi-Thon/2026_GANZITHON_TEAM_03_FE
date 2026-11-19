@@ -1,0 +1,29 @@
+/* 탭바가 없는 화면 — 폭·여백·safe-area 는 내 고민 상세(MyConcernDetailPage)와 같다 */
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: env(safe-area-inset-top) 0 calc(var(--space-6) + env(safe-area-inset-bottom));
+  max-width: var(--app-max-width);
+  margin: 0 auto;
+  overflow-x: hidden;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--page-padding-x);
+}
+
+/* 터치 영역(44px)만큼 왼쪽으로 빼서 화살표가 시안 위치(왼쪽에서 24px)에 오게 한다 — 고민 상세와 같음 */
+.back {
+  align-self: flex-start;
+  margin: -12px 0 var(--space-2) -8px;
+}
+
+/* 고민 상세 제목(ConcernReader)과 같은 24px SemiBold */
+.title {
+  font-size: var(--font-size-h5);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-h5);
+}

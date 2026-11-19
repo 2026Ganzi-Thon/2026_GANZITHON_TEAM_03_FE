@@ -1,0 +1,104 @@
+import { useRef } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { hasErrorCode, newIdempotencyKey } from '@/shared/api'
+import { COMMON_IDEMPOTENCY_CONFLICT, COMMON_INVALID_REQUEST, createConcern } from './cheeseApi'
+import { cheeseKeys } from './cheeseQueries'
+import type { ComfortType, ConcernDetail, CreateConcernResponse, MyConcernListResponse } from './types'
+
+export type CreateConcernState =
+  | { status: 'idle' }
+  | { status: 'submitting' }
+  | { status: 'success'; concern: CreateConcernResponse }
+  /** 서버가 내용을 거절함(400 — 길이·위로 방식). 화면에서 먼저 막아서 보통은 오지 않는다 */
+  | { status: 'invalid' }
+  | { status: 'error' }
+
+interface CreateConcernInput {
+  content: string
+  comfortType: ComfortType
+}
+
+/** 서버 미리보기와 같은 규칙: 앞 100자(코드 포인트) */
+const toPreview = (content: string) => Array.from(content).slice(0, 100).join('')
+
+/**
+ * 고민을 쓰고 숙성을 시작한다. `Idempotency-Key` 는 같은 내용으로 다시 보내는 동안 같은 키를 쓴다 —
+ * 응답을 못 받은 실패(네트워크·시간 초과·5xx·잠금 충돌 COMMON_STATE_CONFLICT)는 서버에 저장됐을 수 있어서, 같은 키로 보내면 서버가 처음 응답을 돌려준다(중복 작성 없음).
+ * 내용을 고치면 새 키(같은 키·다른 본문은 409). 성공·키 충돌(409 COMMON_IDEMPOTENCY_CONFLICT)이면 키를 버린다.
+ * 성공하면 새 고민을 내 고민 목록과 상세 캐시에 바로 넣는다(보관함·상세가 스켈레톤 없이 보이게). 홈 요약은 app/queryClient.ts 공통 규칙이 다시 받는다.
+ */
+export function useCreateConcern() {
+  const queryClient = useQueryClient()
+  const keyRef = useRef<{ fingerprint: string; key: string } | null>(null)
+
+  const takeKey = (input: CreateConcernInput) => {
+    const fingerprint = JSON.stringify([input.content, input.comfortType])
+    if (keyRef.current?.fingerprint !== fingerprint) keyRef.current = { fingerprint, key: newIdempotencyKey() }
+    return keyRef.current.key
+  }
+
+  const mutation = useMutation({
+    mutationFn: (input: CreateConcernInput) => createConcern(input, takeKey(input)),
+    onSuccess: (created, input) => {
+      keyRef.current = null
+      const detail: ConcernDetail = {
+        concernId: created.concernId,
+        content: input.content,
+        comfortType: input.comfortType,
+        createdAt: created.createdAt,
+        mine: true,
+        status: created.status,
+        maturesAt: created.maturesAt,
+        replyable: false,
+        alreadyReplied: false,
+      }
+      queryClient.setQueryData(cheeseKeys.concern(created.concernId), detail)
+      queryClient.setQueryData(cheeseKeys.myConcerns(), (old?: MyConcernListResponse) =>
+        old && old.items.every((item) => item.concernId !== created.concernId)
+          ? {
+              ...old,
+              items: [
+                {
+                  concernId: created.concernId,
+                  preview: toPreview(input.content),
+                  comfortType: input.comfortType,
+                  status: created.status,
+                  maturesAt: created.maturesAt,
+                  openedAt: null,
+                  createdAt: created.createdAt,
+                },
+                ...old.items,
+              ],
+            }
+          : old,
+      )
+      void queryClient.invalidateQueries({ queryKey: cheeseKeys.myConcerns() })
+    },
+    onError: (error) => {
+      if (hasErrorCode(error, COMMON_IDEMPOTENCY_CONFLICT)) keyRef.current = null
+    },
+  })
+
+  const state: CreateConcernState =
+    mutation.status === 'pending'
+      ? { status: 'submitting' }
+      : mutation.status === 'success'
+        ? { status: 'success', concern: mutation.data }
+        : mutation.status === 'error'
+          ? hasErrorCode(mutation.error, COMMON_INVALID_REQUEST)
+            ? { status: 'invalid' }
+            : { status: 'error' }
+          : { status: 'idle' }
+
+  /** 보내고 만든 고민을 돌려준다. 보내는 중이면 무시하고, 실패하면 null(내용은 `state` 로 본다). */
+  const submit = async (input: CreateConcernInput): Promise<CreateConcernResponse | null> => {
+    if (mutation.isPending) return null
+    try {
+      return await mutation.mutateAsync({ content: input.content.trim(), comfortType: input.comfortType })
+    } catch {
+      return null
+    }
+  }
+
+  return { state, submit }
+}

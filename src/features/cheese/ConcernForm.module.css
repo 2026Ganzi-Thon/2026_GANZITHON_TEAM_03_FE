@@ -1,0 +1,61 @@
+/* 구역 사이는 양 먹이주기 작성 화면보다 좁게(긴 입력이 화면 안에 들어오게) */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  margin-top: var(--space-2);
+}
+
+.comfort {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* 공통 Field 라벨과 같은 값 */
+.label {
+  padding: 1px 6px 1px 0;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-small);
+  letter-spacing: -0.35px;
+}
+
+/* 감정 칩(EmotionPicker)과 같은 간격 */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+/* 내용이 길어져도 입력창 크기는 그대로(안에서 스크롤) — 아래 안내·버튼이 움직이지 않게 */
+.body textarea {
+  height: 200px;
+  resize: none;
+}
+
+.guide {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-light);
+  line-height: var(--line-height-small);
+  color: var(--color-text-muted);
+}
+
+/* 실패 안내 자리: 비어 있어도 한 줄 높이를 잡아 둔다 */
+.notice {
+  min-height: calc(var(--font-size-small) * var(--line-height-small));
+  margin: calc(-1 * var(--space-4)) 0 calc(-1 * var(--space-4));
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+  color: var(--color-error);
+}
+
+/* 위로 남기기 버튼과 같은 크기, 오른쪽 */
+.submit {
+  align-self: flex-end;
+  min-width: 124px;
+  height: 38px;
+}

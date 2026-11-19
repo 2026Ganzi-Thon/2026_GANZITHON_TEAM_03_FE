@@ -36,12 +36,14 @@ type Reply = {
 
 `POST /api/v1/concerns` · 201
 
-Header: `Authorization`, **`Idempotency-Key: {UUID}`** (필수, 제안). 같은 작성 동작을 재전송할 때는 같은 키, 새 작성은 새 키.
+Header: `Authorization`, **`Idempotency-Key: {UUID}`** (필수 — 없거나 UUID 형식이 아니면 400). 같은 작성 동작을 재전송할 때는 같은 키, 새 작성은 새 키. 같은 키·같은 본문이면 24시간 동안 처음 응답(201)을 그대로 돌려준다(백엔드 `Idempotency`).
 
 | 필드 | 위치 | 타입 | 필수 | 제약 |
 | --- | --- | --- | --- | --- |
-| content | Body | string | 필수 | 앞뒤 공백 제거 후 1자 이상. 최대 길이 미정 |
+| content | Body | string | 필수 | 앞뒤 공백 제거(`strip`) 후 1~1000자(코드 포인트, 백엔드 `ConcernCreateRequest.CONTENT_LIMIT`). 저장도 공백을 뺀 값 |
 | comfortType | Body | ComfortType | 필수 | EMPATHY / EXPERIENCE / ADVICE |
+
+다른 필드가 있으면 400. 제목 필드는 없다 — 프론트는 "제목\n내용"으로 보내고 첫 줄을 제목으로 보여준다.
 
 ```json
 { "content": "취업 준비가 길어지니 자꾸 비교하게 돼요", "comfortType": "EMPATHY" }
@@ -53,18 +55,19 @@ Response `data`
 | --- | --- | --- |
 | concernId | string | |
 | status | `"MATURING"` | 항상 MATURING |
-| maturesAt | string | 숙성 종료 시각 (서버가 작성 시점에 결정) |
+| maturesAt | string | 숙성 종료 시각 = 작성 시각 + 서버 설정 `app.activity.concern-maturing-hours`(기본 24시간) |
 | createdAt | string | |
 
 | HTTP | 코드 | 의미 |
 | --- | --- | --- |
 | 201 | - | 생성 및 숙성 시작 |
-| 400 | COMMON_INVALID_REQUEST | 본문 누락·공백·길이 초과, 정의되지 않은 위로 방식, 키 형식 오류 |
+| 400 | COMMON_INVALID_REQUEST | 본문 누락·공백·1000자 초과, 정의되지 않은 위로 방식, 모르는 필드, 키 없음·형식 오류 |
 | 401 | AUTH_ACCESS_TOKEN_INVALID / _EXPIRED | 토큰 오류 / 만료 |
-| 409 | COMMON_IDEMPOTENCY_CONFLICT | 같은 키로 다른 요청, 또는 아직 처리 중 |
+| 409 | COMMON_IDEMPOTENCY_CONFLICT | 같은 키로 다른 본문 (같은 사용자 요청은 행 잠금으로 줄을 세워 "처리 중" 충돌은 없음) |
+| 409 | COMMON_STATE_CONFLICT | 잠금을 얻지 못함(동시 요청) — 같은 키로 다시 보내면 된다 |
 | 500 | COMMON_INTERNAL_ERROR | 서버 오류 |
 
-미결정: 숙성 시간, 본문 최대 길이, 욕설·비방 검열, 동시 숙성 개수 제한, Idempotency-Key 적용 여부. 공개 안내(C02-1)와 연타 방지는 클라이언트가 처리한다.
+미결정: 욕설·비방 검열(서버 없음, 프론트가 제출 때 검사), 동시 숙성 개수 제한(없음). 공개 안내(C02-1)와 연타 방지는 클라이언트가 처리한다.
 
 ## 2. 위로할 고민 목록 조회
 
@@ -177,7 +180,7 @@ Response `data`: `{ replyId: string, concernId: string, createdAt: string }`
 | 필드 | 위치 | 타입 | 필수 | 제약 |
 | --- | --- | --- | --- | --- |
 | page | Query | integer | 선택 | 0 이상, 기본 0 (제안) |
-| size | Query | integer | 선택 | 1~50, 기본 20 (제안) |
+| size | Query | integer | 선택 | 1~100, 기본 20 (백엔드 `ActivityApi.page`) |
 
 Response `data`
 
@@ -185,7 +188,7 @@ Response `data`
 {
   items: {
     concernId: string
-    preview: string
+    preview: string           // 본문 앞 100자(코드 포인트)
     comfortType: ComfortType
     status: ConcernStatus
     maturesAt: string
@@ -205,7 +208,7 @@ Response `data`
 | 401 | AUTH_ACCESS_TOKEN_INVALID / _EXPIRED | 토큰 오류 / 만료 |
 | 500 | COMMON_INTERNAL_ERROR | 서버 오류 |
 
-메모: 개봉 전에 결과를 알 수 없도록 위로 개수는 응답에 넣지 않는다. 숙성 중 남은 시간은 `maturesAt`으로 화면에서 계산한다. 미결정: 보관한 치즈(SAVED)도 이 목록에 보여줄지, 페이지·커서 방식.
+메모: 개봉 전에 결과를 알 수 없도록 위로 개수는 응답에 넣지 않는다. 숙성 중 남은 시간은 `maturesAt`으로 화면에서 계산한다. 보관한 치즈(SAVED)도 이 목록에 들어온다(백엔드는 내 고민 전체를 준다). 프론트 치즈 보관함의 "내 고민" 탭이 이 API, "보관한 치즈" 탭이 10번.
 
 ## 6. 치즈 개봉
 
@@ -263,7 +266,7 @@ Response `data`: "치즈 개봉"과 같은 형식 `{ concernId, status: 'OPENED'
 
 개봉한 내 치즈를 보관함에 넣는다. 이미 보관했으면 `savedAt`을 바꾸지 않고 200. 개봉 전 치즈에는 보관 버튼을 보이지 않는다.
 
-- Request: Path `concernId`, 본문 없음
+- Request: Path `concernId`, 본문 없음(본문이 있으면 400)
 - Response `data`: `{ concernId: string, status: 'SAVED', savedAt: string }`
 
 | HTTP | 코드 | 의미 |
@@ -283,8 +286,8 @@ Response `data`: "치즈 개봉"과 같은 형식 `{ concernId, status: 'OPENED'
 
 보관함에서 치즈를 뺀다. 고민과 위로는 지우지 않고 개봉(OPENED) 상태로 돌아간다. 이미 보관 상태가 아니어도 200. 완전히 지우려면 "고민 및 치즈 삭제"를 쓴다. 화면 문구로 보관 취소와 삭제를 구분해 안내한다.
 
-- Request: Path `concernId`, 본문 없음
-- Response `data`: `{ concernId: string, status: 'OPENED', savedAt: null }`
+- Request: Path `concernId`, 본문 없음(본문이 있으면 400)
+- Response `data`: `{ concernId: string, status: ConcernStatus, savedAt: null }` — status 는 서버가 다시 계산한 값. 개봉한 치즈면 `OPENED`, 개봉 전 고민에 부르면 `MATURING`·`MATURED`
 
 | HTTP | 코드 | 의미 |
 | --- | --- | --- |
@@ -303,7 +306,7 @@ Response `data`: "치즈 개봉"과 같은 형식 `{ concernId, status: 'OPENED'
 | 필드 | 위치 | 타입 | 필수 | 제약 |
 | --- | --- | --- | --- | --- |
 | page | Query | integer | 선택 | 0 이상, 기본 0 (제안) |
-| size | Query | integer | 선택 | 1~50, 기본 20 (제안) |
+| size | Query | integer | 선택 | 1~100, 기본 20 (백엔드 `ActivityApi.page`) |
 
 Response `data`
 
@@ -311,7 +314,7 @@ Response `data`
 {
   items: {
     concernId: string
-    preview: string
+    preview: string        // 본문 앞 100자(코드 포인트)
     comfortType: ComfortType
     replyCount: number     // 받은 위로 수 (기본 위로 포함)
     savedAt: string
@@ -335,7 +338,7 @@ Response `data`
 
 **내** 고민을 삭제한다. 숙성 중·개봉·보관 상태 모두 같은 API이고 달린 위로도 함께 삭제된다. 확인창을 띄우고, 다른 사용자가 남긴 위로도 함께 사라진다고 안내한다. 숙성 중 삭제된 뒤 다른 사용자가 위로를 보내면 "위로 답장 작성"에서 404를 받는다.
 
-- Request: Path `concernId` (본인 고민만), 본문 없음
+- Request: Path `concernId` (본인 고민만), 본문 없음(본문이 있으면 400)
 - Response: 본문 없음 (`data`도 없음)
 
 | HTTP | 코드 | 의미 |
@@ -346,7 +349,7 @@ Response `data`
 | 404 | CONCERN_NOT_FOUND | 없거나 내 고민이 아님 (이미 삭제된 경우 포함, 타인 고민도 404로 존재를 숨김) |
 | 500 | COMMON_INTERNAL_ERROR | 서버 오류 |
 
-미결정: 실제 삭제 vs 숨김 처리(현재 ERD는 실제 삭제).
+실제 삭제(`DELETE FROM concerns`). 프론트는 404도 "이미 지움"으로 보고 성공 처리한다.
 
 ## 이 도메인 전용 오류 코드 요약
 
@@ -359,3 +362,4 @@ Response `data`
 | REPLY_OWN_CONCERN_FORBIDDEN | 403 | 위로 작성 |
 | REPLY_ALREADY_EXISTS | 409 | 위로 작성 |
 | COMMON_IDEMPOTENCY_CONFLICT | 409 | 고민 작성 |
+| COMMON_STATE_CONFLICT | 409 | 고민 작성(잠금 충돌) |
