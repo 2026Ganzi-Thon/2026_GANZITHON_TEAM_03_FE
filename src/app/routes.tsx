@@ -18,6 +18,7 @@ import OnboardingPage from '@/pages/OnboardingPage'
 import SettingsPage from '@/pages/SettingsPage'
 import SplashPage from '@/pages/SplashPage'
 import VerifyEmailPage from '@/pages/VerifyEmailPage'
+import WoolCollectionPage from '@/pages/WoolCollectionPage'
 import { useWoolBalance } from '@/shared/wool'
 import {
   getResendEmail,
@@ -376,17 +377,18 @@ export function AppShell() {
   return <Outlet context={{ cheeseList, setCheeseList, vaultPage, setVaultPage } satisfies AppShellContext} />
 }
 
-const TAB_PATHS: Record<string, string> = { home: '/', sheep: '/emotion', cheese: '/cheese', cave: '/cave' }
+const TAB_PATHS: Record<string, string> = { home: '/', sheep: '/emotion', cheese: '/cheese', cloud: '/wool', cave: '/cave' }
 
 function tabOf(pathname: string) {
   if (pathname === '/emotion') return 'sheep'
+  if (pathname === '/wool') return 'cloud'
   // 임의 결정(확인 필요): 치즈 보관함도 "고민치즈" 탭 — 시안(290:636)은 "홈"이 선택돼 있지만 템플릿 복사로 봄
   if (pathname === '/cheese' || pathname === '/cheese/vault') return 'cheese'
   if (pathname === '/cave') return 'cave'
   return 'home'
 }
 
-/** 탭바가 있는 화면(홈·양 먹이주기·우유와 치즈 목록·치즈 보관함·동굴 문 닫기). cloud 탭은 이동할 화면이 없어 동작 없음. */
+/** 탭바가 있는 화면(홈·양 먹이주기·우유와 치즈 목록·치즈 보관함·양털 모으기·동굴 문 닫기). */
 export function TabLayout() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -460,6 +462,11 @@ export function EmotionRoute() {
       onOpenRecord={(id) => navigate(`/emotion/records/${encodeURIComponent(id)}`)}
     />
   )
+}
+
+export function WoolCollectionRoute() {
+  const woolCount = useWoolBalance()
+  return <WoolCollectionPage woolCount={woolCount} />
 }
 
 export function EmotionWriteRoute() {
