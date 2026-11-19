@@ -1,0 +1,76 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: emptyEnter 420ms cubic-bezier(0.33, 1, 0.68, 1) both;
+}
+
+/* 그림 뒤 둥근 바탕(섬 화면의 카드 바탕색). 그림 아래가 바탕 아래쪽에 살짝 걸치게 둔다 */
+.art {
+  position: relative;
+  display: flex;
+  width: 168px;
+  height: 168px;
+  align-items: flex-end;
+  justify-content: center;
+  margin-bottom: 20px;
+  border-radius: 50%;
+  background: var(--color-surface);
+}
+
+.image {
+  width: 148px;
+  height: auto;
+  margin-bottom: 14px;
+  user-select: none;
+  animation: emptyBreathe 3.6s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+
+.title {
+  color: var(--color-black-2);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  letter-spacing: -0.4px;
+}
+
+.description {
+  max-width: 260px;
+  margin-top: 4px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-light);
+  line-height: var(--line-height-small);
+  word-break: keep-all;
+}
+
+.action {
+  margin-top: 20px;
+}
+
+@keyframes emptyEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes emptyBreathe {
+  50% {
+    transform: translateY(-3px) scale(1.01);
+  }
+}
+
+/* 화면 전환 중에는 반복 움직임을 멈춘다(iPhone 전환 끊김 방지, IslandScene 과 같은 방식) */
+:global(:root:active-view-transition) .image {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root,
+  .image {
+    animation: none;
+  }
+}

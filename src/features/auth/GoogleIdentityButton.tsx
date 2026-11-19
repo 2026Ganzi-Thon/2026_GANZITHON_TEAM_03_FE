@@ -1,72 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { createGoogleLoginChallenge } from './googleAuth'
+import { discardChallenge, getChallenge, loadGoogleIdentityScript } from './googleIdentity'
 import styles from './GoogleIdentityButton.module.css'
-
-interface GoogleCredentialResponse {
-  credential?: string
-}
-
-interface GoogleButtonOptions {
-  theme: 'outline'
-  size: 'large'
-  text: 'continue_with'
-  shape: 'rectangular'
-  logo_alignment: 'left'
-  width: number
-  locale: 'ko'
-}
-
-interface GoogleIdentityApi {
-  initialize(options: {
-    client_id: string
-    nonce: string
-    callback: (response: GoogleCredentialResponse) => void
-    ux_mode: 'popup'
-  }): void
-  renderButton(element: HTMLElement, options: GoogleButtonOptions): void
-}
-
-declare global {
-  interface Window {
-    google?: { accounts: { id: GoogleIdentityApi } }
-  }
-}
-
-let scriptPromise: Promise<void> | undefined
-
-function loadGoogleIdentityScript() {
-  if (window.google?.accounts.id) return Promise.resolve()
-  if (scriptPromise) return scriptPromise
-
-  scriptPromise = new Promise<void>((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>('#google-identity-services')
-    const script = existing ?? document.createElement('script')
-
-    const handleLoad = () => {
-      if (window.google?.accounts.id) resolve()
-      else reject(new Error('Google 로그인 스크립트를 불러오지 못했어요.'))
-    }
-    const handleError = () => {
-      script.remove()
-      reject(new Error('Google 로그인 스크립트를 불러오지 못했어요.'))
-    }
-
-    script.addEventListener('load', handleLoad, { once: true })
-    script.addEventListener('error', handleError, { once: true })
-    if (!existing) {
-      script.id = 'google-identity-services'
-      script.src = 'https://accounts.google.com/gsi/client'
-      script.async = true
-      script.defer = true
-      document.head.append(script)
-    }
-  }).catch((error: unknown) => {
-    scriptPromise = undefined
-    throw error
-  })
-
-  return scriptPromise
-}
 
 interface GoogleIdentityButtonProps {
   clientId: string
@@ -78,6 +12,7 @@ export function GoogleIdentityButton({ clientId, onCredential, disabled = false 
   const containerRef = useRef<HTMLDivElement>(null)
   const credentialHandler = useRef(onCredential)
   const [error, setError] = useState('')
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
     credentialHandler.current = onCredential
@@ -89,45 +24,52 @@ export function GoogleIdentityButton({ clientId, onCredential, disabled = false 
     const container = containerRef.current
     if (!container) return
 
-    setError('')
-    void Promise.all([loadGoogleIdentityScript(), createGoogleLoginChallenge()])
-      .then(([, challenge]) => {
-        if (!active || !containerRef.current) return
-        const google = window.google?.accounts.id
-        if (!google) throw new Error('Google 로그인 스크립트를 불러오지 못했어요.')
+    const renderButton = () => {
+      const google = window.google?.accounts.id
+      const width = Math.floor(container.clientWidth)
+      if (!active || !google || width < 1) return
+      container.replaceChildren()
+      google.renderButton(container, {
+        theme: 'outline',
+        size: 'large',
+        text: 'continue_with',
+        shape: 'rectangular',
+        logo_alignment: 'left',
+        width,
+        locale: 'ko',
+      })
+    }
 
-        google.initialize({
-          client_id: clientId,
-          nonce: challenge.nonce,
-          ux_mode: 'popup',
-          callback: ({ credential }) => {
-            if (credential) credentialHandler.current(credential)
-            else setError('Google 인증 정보를 받지 못했어요. 다시 시도해 주세요.')
-          },
-        })
-
-        const renderButton = () => {
-          const width = Math.floor(container.clientWidth)
-          if (!active || width < 1) return
-          container.replaceChildren()
-          google.renderButton(container, {
-            theme: 'outline',
-            size: 'large',
-            text: 'continue_with',
-            shape: 'rectangular',
-            logo_alignment: 'left',
-            width,
-            locale: 'ko',
-          })
-        }
-
+    // challenge 를 받아 GIS 를 (다시) 초기화한다. 로그인 한 번마다 새 nonce 가 필요해서, 인증 정보를 받으면 바로 다음 것을 준비한다
+    const prepare = async () => {
+      const [, challenge] = await Promise.all([loadGoogleIdentityScript(), getChallenge()])
+      if (!active) return
+      const google = window.google?.accounts.id
+      if (!google) throw new Error('Google 로그인 스크립트를 불러오지 못했어요.')
+      google.initialize({
+        client_id: clientId,
+        nonce: challenge.nonce,
+        ux_mode: 'popup',
+        callback: ({ credential }) => {
+          discardChallenge()
+          if (credential) credentialHandler.current(credential)
+          else setError('Google 인증 정보를 받지 못했어요. 다시 시도해 주세요.')
+          // 이번 로그인이 실패해 다시 누를 때를 위해 다음 nonce 로 다시 준비(버튼은 그대로 둔다)
+          void prepare().catch(() => {})
+        },
+      })
+      if (!resizeObserver) {
         renderButton()
         resizeObserver = new ResizeObserver(renderButton)
         resizeObserver.observe(container)
-      })
-      .catch((reason: unknown) => {
-        if (active) setError(reason instanceof Error ? reason.message : 'Google 로그인을 준비하지 못했어요.')
-      })
+        setReady(true)
+      }
+    }
+
+    setError('')
+    prepare().catch((reason: unknown) => {
+      if (active) setError(reason instanceof Error ? reason.message : 'Google 로그인을 준비하지 못했어요.')
+    })
 
     return () => {
       active = false
@@ -138,13 +80,17 @@ export function GoogleIdentityButton({ clientId, onCredential, disabled = false 
 
   return (
     <div className={styles.wrapper}>
-      <div
-        ref={containerRef}
-        className={styles.button}
-        aria-label="Google로 계속하기"
-        aria-disabled={disabled}
-        data-disabled={disabled || undefined}
-      />
+      <div className={styles.slot}>
+        {/* 버튼이 그려지기 전 같은 크기의 자리 — 늦게 떠도 아래가 밀리지 않는다 */}
+        {!ready && !error && <div className={styles.placeholder} aria-hidden="true" />}
+        <div
+          ref={containerRef}
+          className={styles.button}
+          aria-label="Google로 계속하기"
+          aria-disabled={disabled}
+          data-disabled={disabled || undefined}
+        />
+      </div>
       {error && <p className={styles.error} role="alert">{error}</p>}
     </div>
   )
