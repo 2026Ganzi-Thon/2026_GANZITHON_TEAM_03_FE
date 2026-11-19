@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import { Navigate, Outlet, ScrollRestoration, useLocation, useNavigate, useOutletContext, useParams } from 'react-router'
 import AuthPage from '@/pages/AuthPage'
@@ -17,9 +17,24 @@ import MyConcernDetailPage from '@/pages/MyConcernDetailPage'
 import OnboardingPage from '@/pages/OnboardingPage'
 import SettingsPage from '@/pages/SettingsPage'
 import SplashPage from '@/pages/SplashPage'
+import VerifyEmailPage from '@/pages/VerifyEmailPage'
 import { useWoolBalance } from '@/shared/wool'
-import { isGoogleSignupConsentRequired, signInWithEmail, signInWithGoogle } from '@/features/auth'
+import {
+  getResendEmail,
+  getSignupDraft,
+  isGoogleSignupConsentRequired,
+  isSignupDraftExpired,
+  loginErrorMessage,
+  markSignedUp,
+  signInWithEmail,
+  signInWithGoogle,
+  signUpWithEmail,
+  signupErrorMessage,
+  signupFailureMessages,
+  signupFailureOf,
+} from '@/features/auth'
 import { fetchNicknameAvailability } from '@/features/account'
+import { getAccessToken } from '@/shared/api'
 import type { InitialSetupValues } from '@/pages/InitialSetupPage'
 import AppTabBar from './AppTabBar'
 import { markOnboardingSeen } from './entry'
@@ -73,8 +88,16 @@ export function OnboardingRoute() {
   )
 }
 
+/** 회원가입 첫 화면(/signup)으로 올 때의 state — 인증 메일 다시 받기에서 이메일·안내를 채운다 */
+interface SignupRouteState {
+  email?: string
+  notice?: string
+}
+
 function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {
   const navigate = useNavigate()
+  const location = useLocation()
+  const signupState = (mode === 'signup' ? location.state : null) as SignupRouteState | null
   const [googleLoading, setGoogleLoading] = useState(false)
   const [googleError, setGoogleError] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
@@ -106,11 +129,6 @@ function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {
 
   const handleContinue = async ({ email, password }: { email: string; password: string }) => {
     setAuthError('')
-    if (mode === 'signup') {
-      navigate('/setup')
-      return
-    }
-
     setAuthLoading(true)
     try {
       const result = await signInWithEmail(email, password)
@@ -121,7 +139,7 @@ function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {
         navigate('/', { replace: true })
       }
     } catch (error) {
-      setAuthError(error instanceof Error ? error.message : '로그인하지 못했어요. 다시 시도해주세요.')
+      setAuthError(loginErrorMessage(error))
     } finally {
       setAuthLoading(false)
     }
@@ -129,7 +147,11 @@ function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {
 
   return (
     <AuthPage
+      // 다시 받기로 들어올 때마다 이메일 입력을 새로 채운다
+      key={location.key}
       mode={mode}
+      initialEmail={signupState?.email}
+      signupNotice={signupState?.notice}
       onBack={() => navigate(mode === 'login' ? '/onboarding' : '/login')}
       onSwitchMode={() => navigate(mode === 'login' ? '/signup' : '/login')}
       onGoogleCredential={handleGoogleCredential}
@@ -150,31 +172,168 @@ export function SignupRoute() {
   return <AuthRoute mode="signup" />
 }
 
+/** 다시 받으러 회원가입 첫 화면으로 — 알고 있는 이메일을 채워서 */
+function resendState(notice: string): SignupRouteState {
+  return { email: getResendEmail() || undefined, notice }
+}
+
+/**
+ * 메일 링크(백엔드 FRONTEND_ORIGIN/verify-email#token=…). 토큰을 읽어 두고 주소창에서 바로 지운 뒤 확인 API 를 부른다.
+ * 확인되면 비밀번호를 받고 초기 설정(약관·닉네임)으로. 비밀번호·가입 증명은 메모리(features/auth signupDraft)에만 둔다.
+ */
+export function VerifyEmailRoute() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [token] = useState(() => new URLSearchParams(location.hash.slice(1)).get('token'))
+
+  useEffect(() => {
+    // 토큰이 기록·화면 공유·새로고침에 남지 않게 주소에서 지운다(replace)
+    if (location.hash) navigate({ pathname: location.pathname, search: location.search }, { replace: true })
+  }, [location.hash, location.pathname, location.search, navigate])
+
+  return (
+    <VerifyEmailPage
+      token={token}
+      onBack={() => navigate('/signup')}
+      onLogin={() => navigate('/login')}
+      onResend={(reason) =>
+        navigate('/signup', {
+          state: resendState(
+            reason === 'expired'
+              ? '인증 링크가 만료됐어요. 인증 메일을 다시 받아주세요.'
+              : reason === 'used'
+                ? '이미 사용한 인증 링크예요. 인증 메일을 다시 받아주세요.'
+                : '인증 메일을 다시 받아주세요.',
+          ),
+        })
+      }
+      onNext={() => navigate('/setup', { state: { emailSignup: true } satisfies SetupRouteState })}
+    />
+  )
+}
+
+interface SetupRouteState {
+  /** 구글 신규 가입 — 약관 동의 뒤 같은 credential 로 다시 요청 */
+  googleCredential?: string
+  requiresConsent?: boolean
+  /** 이메일 가입 — 비밀번호까지 받은 상태(메모리 signupDraft). 약관 동의와 함께 가입 → 초기 프로필 */
+  emailSignup?: boolean
+}
+
+type SubmissionAction = { label: string; onClick: () => void }
+
 export function SetupRoute() {
   const navigate = useNavigate()
   const location = useLocation()
-  const [googleError, setGoogleError] = useState('')
-  const routeState = location.state as { googleCredential?: string; requiresConsent?: boolean } | null
+  const session = useSession()
+  const [submissionError, setSubmissionError] = useState('')
+  const [submissionAction, setSubmissionAction] = useState<SubmissionAction | undefined>()
+  const [signingUp, setSigningUp] = useState(false)
+  // 구글 가입은 됐는데 초기 설정 저장이 실패했을 때 다시 제출해도 가입(credential 재사용)을 또 부르지 않게
+  const googleSignedUp = useRef(false)
+  const routeState = location.state as SetupRouteState | null
+  const draft = routeState?.emailSignup ? getSignupDraft() : null
+
+  // 이메일 가입 중 값은 메모리에만 있어 새로고침하면 사라진다 — 이미 가입했으면(쿠키로 복원) 보통 초기 설정, 아니면 다시 받기로
+  if (routeState?.emailSignup && !draft) {
+    if (session.status === 'restoring') return null
+    if (session.status !== 'needsSetup') {
+      return <Navigate to="/signup" replace state={resendState('가입 정보가 사라졌어요. 인증 메일을 다시 받아주세요.')} />
+    }
+  }
+
+  const fail = (message: string, action?: SubmissionAction) => {
+    setSubmissionError(message)
+    setSubmissionAction(action ? () => action : undefined)
+  }
+
+  const resendAction: SubmissionAction = {
+    label: '인증 메일 다시 받기',
+    onClick: () => navigate('/signup', { state: resendState('인증 메일을 다시 받아주세요.') }),
+  }
+
+  const signUpWithDraft = async (marketingAgreed: boolean) => {
+    const current = getSignupDraft()
+    if (!current) {
+      fail('가입 정보가 사라졌어요. 인증 메일을 다시 받아주세요.', resendAction)
+      return false
+    }
+    if (current.signedUp) return true
+    if (!current.password) {
+      fail('비밀번호를 먼저 정해주세요.', { label: '비밀번호 정하기', onClick: () => navigate('/verify-email') })
+      return false
+    }
+    // 가입 증명(10분)이 지난 것을 알면 서버에 묻지 않고 바로 안내한다
+    if (isSignupDraftExpired(current)) {
+      fail(signupFailureMessages.verification, resendAction)
+      return false
+    }
+    try {
+      const result = await signUpWithEmail({
+        email: current.email,
+        password: current.password,
+        signupVerificationToken: current.signupVerificationToken,
+        consent: { termsAgreed: true, privacyAgreed: true, marketingAgreed },
+      })
+      markSignedUp()
+      openSession(result.user.profileCompleted)
+      return true
+    } catch (error) {
+      const failure = signupFailureOf(error)
+      fail(
+        signupErrorMessage(error),
+        failure === 'verification'
+          ? resendAction
+          : failure === 'duplicated'
+            ? { label: '로그인', onClick: () => navigate('/login') }
+            : failure === 'password'
+              ? { label: '비밀번호 다시 정하기', onClick: () => navigate('/verify-email') }
+              : undefined,
+      )
+      return false
+    }
+  }
+
+  const signUpWithGoogleCredential = async (credential: string, marketingAgreed: boolean) => {
+    if (googleSignedUp.current) return true
+    try {
+      const result = await signInWithGoogle(credential, { termsAgreed: true, privacyAgreed: true, marketingAgreed })
+      googleSignedUp.current = true
+      openSession(result.user.profileCompleted)
+      return true
+    } catch (error) {
+      fail(error instanceof Error ? error.message : 'Google 회원가입을 완료하지 못했어요.')
+      return false
+    }
+  }
+
   return (
     <InitialSetupPage
-      onBack={() => navigate('/signup')}
+      onBack={() => navigate(draft && !draft.signedUp ? '/verify-email' : '/signup')}
       onLogin={() => navigate('/login')}
-      onCheckNickname={async (nickname) => (await fetchNicknameAvailability(nickname)).available}
-      requiresConsent={routeState?.requiresConsent ?? true}
-      submissionError={googleError}
+      // 닉네임 중복 확인은 토큰이 필요하다. 가입 전(이메일 가입·구글 신규 가입의 약관 동의 전)에는 확인을 미루고
+      // 회원가입을 누를 때 초기 프로필 저장(409 USER_NICKNAME_DUPLICATED)으로 확인한다 — PR #17 의 401 실패 수정
+      onCheckNickname={async (nickname) =>
+        getAccessToken() ? (await fetchNicknameAvailability(nickname)).available : null
+      }
+      // 이메일 가입을 마친 뒤 새로고침했으면(가입 중 값 없음) 약관은 가입 때 이미 저장됨
+      requiresConsent={draft ? true : routeState?.emailSignup ? false : (routeState?.requiresConsent ?? true)}
+      submissionError={submissionError}
+      submissionAction={submissionAction}
+      isSubmitting={signingUp}
       onBeforeComplete={async (values: InitialSetupValues) => {
-        if (!routeState?.googleCredential || !routeState.requiresConsent) return true
-        setGoogleError('')
+        const credential = routeState?.googleCredential
+        const needsGoogleSignup = Boolean(credential && routeState?.requiresConsent)
+        if (!draft && !needsGoogleSignup) return true
+        setSubmissionError('')
+        setSubmissionAction(undefined)
+        setSigningUp(true)
         try {
-          await signInWithGoogle(routeState.googleCredential, {
-            termsAgreed: true,
-            privacyAgreed: true,
-            marketingAgreed: values.consents.marketing,
-          })
-          return true
-        } catch (error) {
-          setGoogleError(error instanceof Error ? error.message : 'Google 회원가입을 완료하지 못했어요.')
-          return false
+          return draft
+            ? await signUpWithDraft(values.consents.marketing)
+            : await signUpWithGoogleCredential(credential!, values.consents.marketing)
+        } finally {
+          setSigningUp(false)
         }
       }}
       onComplete={() => {
