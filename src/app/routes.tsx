@@ -11,11 +11,13 @@ import ConcernWritePage from '@/pages/ConcernWritePage'
 import EmotionPage from '@/pages/EmotionPage'
 import EmotionRecordPage from '@/pages/EmotionRecordPage'
 import EmotionWritePage from '@/pages/EmotionWritePage'
+import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
 import HomePage from '@/pages/HomePage'
 import InitialSetupPage from '@/pages/InitialSetupPage'
 import IslandDecoratePage from '@/pages/IslandDecoratePage'
 import MyConcernDetailPage from '@/pages/MyConcernDetailPage'
 import OnboardingPage from '@/pages/OnboardingPage'
+import ResetPasswordPage from '@/pages/ResetPasswordPage'
 import SettingsPage from '@/pages/SettingsPage'
 import SplashPage from '@/pages/SplashPage'
 import VerifyEmailPage from '@/pages/VerifyEmailPage'
@@ -41,8 +43,8 @@ import type { CheeseTab } from '@/features/cheese'
 import { getAccessToken } from '@/shared/api'
 import type { InitialSetupValues } from '@/pages/InitialSetupPage'
 import AppTabBar from './AppTabBar'
-import { markOnboardingSeen } from './entry'
-import { logout, openSession, useSession } from './session'
+import { hasSeenOnboarding, markOnboardingSeen } from './entry'
+import { closeSessionAfterPasswordReset, finishOnboarding, getSession, logout, openSession, useSession } from './session'
 
 // 라우트 요소: 페이지의 콜백 props 를 useNavigate·useParams 로 경로에 연결한다(페이지는 react-router 를 모른다).
 // 끝난 화면(스플래시 종료·온보딩 완료·로그인 완료·저장·삭제·위로 완료)에서의 이동은 replace — 브라우저 뒤로가기가 끝난 화면으로 돌아가지 않게.
@@ -74,7 +76,8 @@ export function SplashRoute() {
     if (!done || session.status === 'restoring') return
     if (session.status === 'ready') navigate('/', { replace: true })
     else if (session.status === 'needsSetup') navigate('/setup', { replace: true, state: { requiresConsent: false } })
-    else navigate('/onboarding', { replace: true })
+    // 이 기기에서 온보딩을 본 적이 있으면(로그인 전에 봤거나 서버에 완료로 저장된 계정으로 로그인했던 기기) 로그인으로
+    else navigate(hasSeenOnboarding() ? '/login' : '/onboarding', { replace: true })
   }, [done, session.status, navigate])
   return <SplashPage onComplete={() => setDone(true)} />
 }
@@ -84,6 +87,14 @@ export function OnboardingRoute() {
   return (
     <OnboardingPage
       onComplete={() => {
+        // 완료·건너뛰기 모두 완료로 본다. 로그인돼 있으면(로그인 뒤 처음 보는 계정) 서버에도 저장하고 앱 화면으로,
+        // 로그인 전이면 이 기기에만 적어 두고 로그인 뒤에 서버에 저장한다(session.ts openSession)
+        const status = getSession().status
+        if (status === 'ready' || status === 'needsSetup') {
+          finishOnboarding()
+          navigate('/', { replace: true })
+          return
+        }
         markOnboardingSeen()
         // 임의 결정(확인 필요): 온보딩도 끝난 화면으로 보고 replace. 로그인의 뒤로 버튼은 그대로 /onboarding 으로 간다
         navigate('/login', { replace: true })
@@ -92,7 +103,7 @@ export function OnboardingRoute() {
   )
 }
 
-/** 회원가입 첫 화면(/signup)으로 올 때의 state — 인증 메일 다시 받기에서 이메일·안내를 채운다 */
+/** 회원가입 첫 화면(/signup)·로그인·비밀번호 찾기로 올 때의 state — 이메일·안내를 채운다 */
 interface SignupRouteState {
   email?: string
   notice?: string
@@ -101,7 +112,8 @@ interface SignupRouteState {
 function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const signupState = (mode === 'signup' ? location.state : null) as SignupRouteState | null
+  const routeState = location.state as SignupRouteState | null
+  const signupState = mode === 'signup' ? routeState : null
   const [googleLoading, setGoogleLoading] = useState(false)
   const [googleError, setGoogleError] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
@@ -112,7 +124,7 @@ function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {
     setGoogleError('')
     try {
       const result = await signInWithGoogle(credential)
-      openSession(result.user.profileCompleted)
+      openSession(result.user.profileCompleted, result.user.onboardingCompleted)
       if (result.isNewUser) {
         navigate('/setup', { state: { googleCredential: credential, requiresConsent: false } })
       } else if (!result.user.profileCompleted) {
@@ -136,7 +148,7 @@ function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {
     setAuthLoading(true)
     try {
       const result = await signInWithEmail(email, password)
-      openSession(result.user.profileCompleted)
+      openSession(result.user.profileCompleted, result.user.onboardingCompleted)
       if (!result.user.profileCompleted) {
         navigate('/setup', { state: { requiresConsent: false } })
       } else {
@@ -156,6 +168,8 @@ function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {
       mode={mode}
       initialEmail={signupState?.email}
       signupNotice={signupState?.notice}
+      loginNotice={mode === 'login' ? routeState?.notice : undefined}
+      onForgotPassword={(email) => navigate('/forgot-password', { state: { email: email || undefined } satisfies SignupRouteState })}
       onBack={() => navigate(mode === 'login' ? '/onboarding' : '/login')}
       onSwitchMode={() => navigate(mode === 'login' ? '/signup' : '/login')}
       onGoogleCredential={handleGoogleCredential}
@@ -212,6 +226,63 @@ export function VerifyEmailRoute() {
         })
       }
       onNext={() => navigate('/setup', { state: { emailSignup: true } satisfies SetupRouteState })}
+    />
+  )
+}
+
+/** 비밀번호 찾기 — 재설정 메일 요청. 로그인 화면의 "비밀번호 찾기"·재설정 링크 실패의 "다시 받기"로 온다 */
+export function ForgotPasswordRoute() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const routeState = location.state as SignupRouteState | null
+  return (
+    <ForgotPasswordPage
+      key={location.key}
+      initialEmail={routeState?.email}
+      notice={routeState?.notice}
+      onBack={() => (location.key === 'default' ? navigate('/login', { replace: true }) : navigate(-1))}
+      onLogin={() => navigate('/login')}
+    />
+  )
+}
+
+/**
+ * 비밀번호 재설정 메일 링크(백엔드 PASSWORD_RESET_FRONTEND_URL, 기본 FRONTEND_ORIGIN/reset-password#token=…).
+ * 토큰은 읽자마자 주소창에서 지우고 메모리(state)에만 둔다. 바꾸면 이 기기 세션도 닫고(서버가 모든 세션을 끊음) 로그인 화면으로.
+ */
+export function ResetPasswordRoute() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [token] = useState(() => new URLSearchParams(location.hash.slice(1)).get('token'))
+
+  useEffect(() => {
+    if (location.hash) navigate({ pathname: location.pathname, search: location.search }, { replace: true })
+  }, [location.hash, location.pathname, location.search, navigate])
+
+  return (
+    <ResetPasswordPage
+      token={token}
+      onBack={() => navigate('/login')}
+      onLogin={() => navigate('/login')}
+      onRequestAgain={(reason) =>
+        navigate('/forgot-password', {
+          state: {
+            notice:
+              reason === 'expired'
+                ? '재설정 링크가 만료됐어요. 재설정 메일을 다시 받아주세요.'
+                : reason === 'used'
+                  ? '이미 사용한 재설정 링크예요. 재설정 메일을 다시 받아주세요.'
+                  : '재설정 메일을 다시 받아주세요.',
+          } satisfies SignupRouteState,
+        })
+      }
+      onDone={() => {
+        closeSessionAfterPasswordReset()
+        navigate('/login', {
+          replace: true,
+          state: { notice: '비밀번호를 바꿨어요. 새 비밀번호로 로그인해주세요.' } satisfies SignupRouteState,
+        })
+      }}
     />
   )
 }
@@ -280,7 +351,7 @@ export function SetupRoute() {
         consent: { termsAgreed: true, privacyAgreed: true, marketingAgreed },
       })
       markSignedUp()
-      openSession(result.user.profileCompleted)
+      openSession(result.user.profileCompleted, result.user.onboardingCompleted)
       return true
     } catch (error) {
       const failure = signupFailureOf(error)
@@ -303,7 +374,7 @@ export function SetupRoute() {
     try {
       const result = await signInWithGoogle(credential, { termsAgreed: true, privacyAgreed: true, marketingAgreed })
       googleSignedUp.current = true
-      openSession(result.user.profileCompleted)
+      openSession(result.user.profileCompleted, result.user.onboardingCompleted)
       return true
     } catch (error) {
       fail(error instanceof Error ? error.message : 'Google 회원가입을 완료하지 못했어요.')
@@ -381,6 +452,8 @@ export function AppShell() {
   if (session.status === 'restoring') return null
   if (session.status === 'signedOut') return <Navigate to={session.reason === 'initial' ? '/splash' : '/login'} replace />
   if (session.status === 'needsSetup') return <Navigate to="/setup" replace state={{ requiresConsent: false }} />
+  // 로그인했지만 이 계정이 온보딩을 본 적이 없고 이 기기에서도 안 봤으면 먼저 온보딩(session.ts "온보딩 완료")
+  if (session.needsOnboarding) return <Navigate to="/onboarding" replace />
   return (
     <Outlet context={{ cheeseList, setCheeseList, vaultPage, setVaultPage, vaultTab, setVaultTab } satisfies AppShellContext} />
   )

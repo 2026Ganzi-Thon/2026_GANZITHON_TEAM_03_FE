@@ -224,10 +224,10 @@ Response `data: { message: string }` 예: "재설정 가능한 계정이면 안�
 | 202 | - | 접수 |
 | 400 | COMMON_INVALID_REQUEST | 요청 형식 오류 |
 | 429 | AUTH_RATE_LIMITED | 발송 요청 제한 |
-| 503 | AUTH_MAIL_UNAVAILABLE | 발송 접수 시스템 사용 불가 |
+| 503 | AUTH_MAIL_UNAVAILABLE | SMTP·발신 주소·링크 주소(`PASSWORD_RESET_FRONTEND_URL`) 설정 없음, 발송 대기열 가득 참 |
 | 500 | COMMON_INTERNAL_ERROR | 서버 오류 |
 
-메모: 소셜(구글) 전용 계정에는 메일이 가지 않는다(가입 안내가 아니라 같은 문구만 보임). 미결정: 링크 30분 만료, 재발송 60초, 제한 횟수.
+메모(백엔드 `PasswordResetController`·`PasswordResetService` 기준, develop 6493ad3): 소셜(구글) 전용 계정·이메일 미인증 계정에는 메일이 가지 않는다(같은 202 문구만 보임). 링크 30분 만료, 같은 이메일 재요청 60초, 같은 IP 분당 30회(인증 메일과 합산, `EMAIL_VERIFICATION_IP_MAX_PER_MINUTE`). 메일 링크는 `{PASSWORD_RESET_FRONTEND_URL}#token={43자}` — 기본값 `{FRONTEND_ORIGIN}/reset-password`, 프론트 경로 `/reset-password`. 발송은 접수 뒤 서버 메모리 대기열에서 하므로 서버가 재시작되면 접수된 요청이 사라진다. 배포 서버는 2026-11-19 현재 503(SMTP 미설정).
 
 ## 9. 비밀번호 재설정
 
@@ -235,7 +235,7 @@ Response `data: { message: string }` 예: "재설정 가능한 계정이면 안�
 
 메일 링크의 토큰으로 일반 로그인 비밀번호를 바꾼다.
 
-Body: `{ "token": string, "newPassword": string }` (`newPassword`는 회원가입과 같은 정책, 15~64자 제안)
+Body: `{ "token": string, "newPassword": string }` (`token`은 메일 링크의 43자, `newPassword`는 회원가입과 같은 정책: 8~64자, 영문 대문자·숫자·특수문자 각 1개 이상)
 
 Response: 본문 없음
 
@@ -243,13 +243,13 @@ Response: 본문 없음
 | --- | --- | --- |
 | 204 | - | 성공 |
 | 400 | COMMON_INVALID_REQUEST | 요청 형식 오류 |
-| 400 | AUTH_PASSWORD_POLICY_VIOLATION | 새 비밀번호 정책 불충족 |
+| 400 | AUTH_PASSWORD_POLICY_VIOLATION | 새 비밀번호 정책 불충족 (토큰은 쓰지 않은 채 롤백 — 고쳐서 다시 보낼 수 있음) |
 | 400 | AUTH_PASSWORD_RESET_INVALID | 토큰 위조·목적 불일치 |
 | 410 | AUTH_PASSWORD_RESET_EXPIRED | 토큰 만료 |
 | 409 | AUTH_PASSWORD_RESET_USED | 이미 사용·폐기된 토큰 |
 | 500 | COMMON_INTERNAL_ERROR | 서버 오류 |
 
-메모: 새 비밀번호 확인값은 UI에서만 비교한다. 재설정 링크 화면은 토큰이 외부로 새지 않게 `Referrer-Policy`를 쓰고 URL에서 토큰을 지운다. 성공해도 **자동 로그인은 하지 않고 로그인 화면으로 이동**한다. 같은 회원의 모든 Refresh 세션이 폐기된다(제안).
+메모: 새 비밀번호 확인값은 UI에서만 비교한다. 토큰은 주소의 fragment(`#token=`)라 서버·Referer 로 가지 않고, 프론트가 읽자마자 주소창에서 지운다. 성공해도 **자동 로그인은 하지 않고 로그인 화면으로 이동**한다. 같은 회원의 모든 Refresh 세션과 다른 재설정 링크가 폐기된다(확정). 확인용 API 가 따로 없어 링크가 살아 있는지는 저장할 때 안다.
 
 ## 이 도메인 전용 오류 코드 요약
 

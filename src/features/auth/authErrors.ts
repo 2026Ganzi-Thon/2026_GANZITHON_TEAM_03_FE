@@ -63,3 +63,35 @@ export function signupErrorMessage(error: unknown) {
   const failure = signupFailureOf(error)
   return failure === 'error' ? fallback(error, '회원가입을 완료하지 못했어요. 잠시 후 다시 시도해주세요.') : signupFailureMessages[failure]
 }
+
+/** 비밀번호 재설정 메일 요청 `POST /auth/password-resets` */
+export function passwordResetMailErrorMessage(error: unknown) {
+  if (isApiError(error)) {
+    if (error.code === 'AUTH_RATE_LIMITED') return '잠시 후 다시 보내주세요. 같은 이메일로는 1분에 한 번 보낼 수 있어요.'
+    // 배포 서버 SMTP 가 아직 설정되지 않아 지금은 이 안내가 나온다
+    if (error.code === 'AUTH_MAIL_UNAVAILABLE') return '지금은 재설정 메일을 보낼 수 없어요. 잠시 후 다시 시도해주세요.'
+    if (error.code === 'COMMON_INVALID_REQUEST') return '이메일 형식을 확인해주세요.'
+  }
+  return fallback(error, '재설정 메일을 보내지 못했어요. 잠시 후 다시 시도해주세요.')
+}
+
+/** 새 비밀번호 저장 `PATCH /auth/password-resets` 실패 종류. 링크 문제(expired·used·invalid)는 메일을 다시 받아야 한다 */
+export type PasswordResetFailure = 'expired' | 'used' | 'invalid' | 'password' | 'error'
+
+export function passwordResetFailureOf(error: unknown): PasswordResetFailure {
+  if (isApiError(error)) {
+    if (error.code === 'AUTH_PASSWORD_RESET_EXPIRED') return 'expired'
+    if (error.code === 'AUTH_PASSWORD_RESET_USED') return 'used'
+    if (error.code === 'AUTH_PASSWORD_RESET_INVALID') return 'invalid'
+    if (error.code === 'AUTH_PASSWORD_POLICY_VIOLATION') return 'password'
+    // @Valid 오류(빈 토큰·1024자 넘는 비밀번호) — 토큰 쪽이면 링크 문제로 본다
+    if (error.code === 'COMMON_INVALID_REQUEST') {
+      return error.fieldErrors.some((field) => field.field === 'newPassword') ? 'password' : 'invalid'
+    }
+  }
+  return 'error'
+}
+
+export function passwordResetErrorMessage(error: unknown) {
+  return fallback(error, '비밀번호를 바꾸지 못했어요. 잠시 후 다시 시도해주세요.')
+}

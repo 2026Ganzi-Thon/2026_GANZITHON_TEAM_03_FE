@@ -1,8 +1,10 @@
 import { useSyncExternalStore } from 'react'
-import { myInfoQueryOptions } from '@/features/account'
+import { accountKeys, completeOnboarding, myInfoQueryOptions } from '@/features/account'
+import type { MyInfo } from '@/features/account'
 import { signOut as requestSignOut } from '@/features/auth'
 import { hasErrorCode, isApiError, restoreSession, setAccessToken, setAuthLostHandler } from '@/shared/api'
 import { woolBalanceQueryOptions } from '@/shared/wool'
+import { hasSeenOnboarding, markOnboardingSeen } from './entry'
 import { queryClient } from './queryClient'
 
 // 로그인 세션 — 앱 화면에 들어갈 수 있는지를 "Access Token 이 있는지(로그인)"와 "초기 설정을 마쳤는지"로 본다.
@@ -12,7 +14,7 @@ import { queryClient } from './queryClient'
 // - signedOut: 로그인 안 됨. reason 이 'initial'(앱을 열었는데 세션 없음)이면 시작 흐름(스플래시)부터,
 //              'lost'(재발급 실패 등으로 풀림)·'logout'(계정 바꾸기)이면 로그인 화면으로.
 // - needsSetup: 로그인은 됐지만 초기 설정(닉네임) 전 — 초기 설정 화면으로.
-// - ready: 앱 화면에 들어갈 수 있다.
+// - ready: 앱 화면에 들어갈 수 있다. needsOnboarding 이면 먼저 온보딩을 보여준다(아래 "온보딩 완료").
 
 export type SignedOutReason = 'initial' | 'lost' | 'logout'
 
@@ -20,7 +22,7 @@ export type SessionState =
   | { status: 'restoring' }
   | { status: 'signedOut'; reason: SignedOutReason }
   | { status: 'needsSetup' }
-  | { status: 'ready' }
+  | { status: 'ready'; needsOnboarding: boolean }
 
 let state: SessionState = { status: 'restoring' }
 const listeners = new Set<() => void>()
@@ -51,9 +53,61 @@ function prefetchAppData() {
   void queryClient.prefetchQuery(woolBalanceQueryOptions())
 }
 
-/** 로그인(또는 복원)한 뒤 초기 설정 여부에 따라 세션을 연다. */
-export function openSession(profileCompleted: boolean) {
-  setState(profileCompleted ? { status: 'ready' } : { status: 'needsSetup' })
+// ── 온보딩 완료 ──────────────────────────────────────────
+// 온보딩은 보통 로그인 전에 본다(스플래시 → 온보딩 → 로그인). 이 기기에서 봤는지는 localStorage(./entry.ts),
+// 계정이 봤는지는 서버(`onboardingCompleted`, `PATCH /users/me/onboarding`). 로그인·복원할 때 둘을 맞춘다:
+// - 서버가 완료 → 이 기기에도 본 것으로 적는다(다음에 스플래시 뒤 온보딩을 건너뛰고 로그인으로)
+// - 서버는 미완료인데 이 기기에서 봤음(로그인 전에 봄) → 서버에 완료를 저장(뒤에서, 기다리지 않음). 실패하면 다음 로그인·복원 때 다시
+// - 둘 다 아님(로그인 화면으로 바로 들어옴·새 기기에서 처음 로그인) → 앱 화면 대신 온보딩을 먼저 보여준다(AppShell)
+// 건너뛰기도 완료로 본다(docs/api/account.md 추천).
+
+/** 서버가 알려 준 온보딩 완료 여부. 모르면 undefined(내 정보를 못 받음 등 — 다시 띄우지 않는다) */
+let serverOnboardingCompleted: boolean | undefined
+let onboardingSaving: Promise<void> | null = null
+
+function saveOnboardingCompleted() {
+  onboardingSaving ??= completeOnboarding()
+    .then((result) => {
+      serverOnboardingCompleted = result.onboardingCompleted
+      queryClient.setQueryData<MyInfo>(accountKeys.me(), (old) => (old ? { ...old, onboardingCompleted: true } : old))
+    })
+    .catch(() => {
+      // 다음 로그인·복원 때 다시 저장한다(이 기기에는 본 기록이 남아 있다)
+    })
+    .finally(() => {
+      onboardingSaving = null
+    })
+}
+
+/** 로그인·복원 때 서버 값과 이 기기 기록을 맞추고, 온보딩을 먼저 보여줘야 하는지 돌려준다 */
+function reconcileOnboarding(): boolean {
+  if (serverOnboardingCompleted !== false) {
+    if (serverOnboardingCompleted) markOnboardingSeen()
+    return false
+  }
+  if (hasSeenOnboarding()) {
+    saveOnboardingCompleted()
+    return false
+  }
+  return true
+}
+
+/** 로그인한 채로 온보딩을 끝내거나 건너뛰었을 때 — 이 기기·서버에 저장하고 앱 화면을 연다 */
+export function finishOnboarding() {
+  markOnboardingSeen()
+  if (state.status === 'restoring' || state.status === 'signedOut') return
+  if (serverOnboardingCompleted !== true) saveOnboardingCompleted()
+  if (state.status === 'ready' && state.needsOnboarding) setState({ status: 'ready', needsOnboarding: false })
+}
+
+/**
+ * 로그인(또는 복원)한 뒤 초기 설정 여부에 따라 세션을 연다.
+ * onboardingCompleted 는 로그인·가입 응답이나 내 정보의 값. 넘기지 않으면 이전에 받은 값을 그대로 쓴다(초기 설정 완료 등).
+ */
+export function openSession(profileCompleted: boolean, onboardingCompleted?: boolean) {
+  if (onboardingCompleted !== undefined) serverOnboardingCompleted = onboardingCompleted
+  const needsOnboarding = reconcileOnboarding()
+  setState(profileCompleted ? { status: 'ready', needsOnboarding } : { status: 'needsSetup' })
   if (profileCompleted) prefetchAppData()
 }
 
@@ -63,9 +117,22 @@ export function openSession(profileCompleted: boolean) {
  */
 function closeSession(reason: SignedOutReason) {
   setAccessToken(null)
+  serverOnboardingCompleted = undefined
   if (state.status === 'signedOut') return
   setState({ status: 'signedOut', reason })
   window.setTimeout(() => queryClient.clear(), 0)
+}
+
+/**
+ * 비밀번호를 재설정한 뒤: 서버가 이 회원의 로그인 세션(Refresh)을 모두 끊었으므로 이 기기의 세션도 닫는다.
+ * 로그인돼 있지 않았으면 아무 일도 하지 않는다.
+ */
+export function closeSessionAfterPasswordReset() {
+  if (state.status === 'restoring') {
+    setAccessToken(null)
+    return
+  }
+  if (state.status !== 'signedOut') closeSession('logout')
 }
 
 /** "계정 바꾸기": 서버 로그아웃(쿠키 지움) 뒤 세션을 닫는다. 서버 호출이 실패해도 이 기기에서는 로그아웃한다. */
@@ -104,7 +171,7 @@ export function startSessionRestore() {
     }
     try {
       const me = await queryClient.fetchQuery(myInfoQueryOptions())
-      if (stillRestoring()) openSession(me.profileCompleted)
+      if (stillRestoring()) openSession(me.profileCompleted, me.onboardingCompleted)
     } catch (error) {
       if (!stillRestoring()) return
       // 토큰이 거절됐거나 회원이 없어졌으면 로그인 안 된 것으로

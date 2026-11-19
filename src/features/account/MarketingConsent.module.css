@@ -1,0 +1,93 @@
+/*
+ * 설정 "알림 설정" 안의 마케팅 수신 토글 + 약관 동의 내역. 시안 없음 — 야간 알림 줄(50px, SemiBold 14)과 같은 모양,
+ * 내역은 12px 흐린 글자 세 줄. 불러오는 중·실패·빈 내역 모두 같은 높이라 화면이 흔들리지 않는다.
+ */
+.root {
+  display: flex;
+  flex-direction: column;
+}
+
+.toggle {
+  display: flex;
+  min-height: 50px;
+  justify-content: space-between;
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.status {
+  min-height: 18px;
+  color: var(--color-primary);
+  font-size: var(--font-size-caption);
+  line-height: 18px;
+  text-align: right;
+}
+
+.statusError {
+  color: var(--color-error);
+}
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+.historyTitle {
+  color: var(--color-black-1);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: 18px;
+}
+
+/* 세 줄(18px × 3 + 간격 2 × 2) */
+.list,
+.historyError {
+  min-height: 58px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+  line-height: 18px;
+}
+
+.row dd {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.historyError {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+  line-height: 18px;
+}
+
+.skeleton {
+  width: 96px;
+  height: 12px;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-border-subtle);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
