@@ -1,14 +1,16 @@
 import type { ComfortType } from './types'
 
 /**
- * 임의 결정(확인 필요): API 에 고민 제목 필드가 없어서(백엔드 요청 대상) 본문 첫 줄을 제목 자리에 보여준다.
- * 제목 필드가 생기면 이 함수를 지우고 응답의 title 을 쓴다.
+ * 보여줄 본문(또는 목록 미리보기). 제목 필드가 생기기 전(2026-11-20 이전)에 이 앱으로 쓴 고민은 본문이 "제목\n내용"이고
+ * 서버가 그 첫 줄을 제목으로 채웠다(V10) — 본문 첫 줄이 제목과 똑같으면 그 줄을 빼서 제목이 두 번 보이지 않게 한다.
+ * 임의 결정(확인 필요): 새 고민도 내용 첫 줄을 제목과 똑같이 쓰면 그 줄이 빠져 보인다(드묾)
  */
-export function splitConcernText(text: string): { title: string; body: string } {
+export function concernBody(title: string, text: string): string {
   const trimmed = text.trim()
   const lineBreak = trimmed.search(/\r?\n/)
-  if (lineBreak === -1) return { title: trimmed, body: '' }
-  return { title: trimmed.slice(0, lineBreak).trim(), body: trimmed.slice(lineBreak).trim() }
+  const firstLine = (lineBreak === -1 ? trimmed : trimmed.slice(0, lineBreak)).trim()
+  if (firstLine !== title.trim()) return trimmed
+  return lineBreak === -1 ? '' : trimmed.slice(lineBreak).trim()
 }
 
 /** 목록 카드용 본문 미리보기: 줄바꿈을 공백으로 이어서 줄 수 제한(3줄)이 글자 수에 맞게 걸리게 한다. */

@@ -1,5 +1,5 @@
 import { Badge } from '@/shared/ui'
-import { COMFORT_TYPE_LABELS, formatConcernDate, splitConcernText } from './concernText'
+import { COMFORT_TYPE_LABELS, concernBody, formatConcernDate } from './concernText'
 import type { ConcernDetail } from './types'
 import styles from './ConcernReader.module.css'
 
@@ -10,7 +10,7 @@ export interface ConcernReaderProps {
   authorLabel?: string
 }
 
-/** 고민 상세의 읽는 영역: 제목(본문 첫 줄), 위로 방식 배지, "익명의 폴리 · 날짜"(작성자 글자는 바꿀 수 있음), 본문(줄바꿈 유지). */
+/** 고민 상세의 읽는 영역: 제목, 위로 방식 배지, "익명의 폴리 · 날짜"(작성자 글자는 바꿀 수 있음), 본문(줄바꿈 유지). */
 export function ConcernReader({ concern, authorLabel = '익명의 폴리' }: ConcernReaderProps) {
   if (!concern) {
     return (
@@ -27,7 +27,8 @@ export function ConcernReader({ concern, authorLabel = '익명의 폴리' }: Con
     )
   }
 
-  const { title, body } = splitConcernText(concern.content)
+  const { title } = concern
+  const body = concernBody(title, concern.content)
 
   return (
     <article className={styles.root}>
