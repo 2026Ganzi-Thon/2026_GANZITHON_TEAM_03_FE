@@ -47,10 +47,10 @@ async function copyText(text: string): Promise<boolean> {
 }
 
 /**
- * 앱 설치 안내(공용 Modal). 앱 아이콘·제목·한 줄 설명을 가운데 정렬하고, iOS 는 아이콘 + 짧은 한 줄 3단계, 버튼은 가로 꽉.
- * 임의 결정(확인 필요): 제목 "폴리의 섬을 앱으로 설치해 보세요", 설명 "홈 화면에서 바로 열 수 있어요." /
- * "{Safari|기본 브라우저}에서 열어야 설치할 수 있어요.", iOS 단계 "공유 누르기 → 홈 화면에 추가 고르기 → 추가 누르기",
- * 버튼 "다음에"·"설치하기"·"알겠어요"·"주소 복사"·"브라우저로 열기" — 시안 없음, 사용자 요청으로 문구를 짧게(2026-11-19)
+ * 앱 설치 안내(공용 Modal). 시안이 없어 동굴 문 열기·섬 구매 확인과 같은 톤으로 만들었다.
+ * 임의 결정(확인 필요): 제목 "폴리의 섬을 앱으로 설치해 보세요", 설명 "홈 화면에서 바로 열 수 있어요.",
+ * iOS "공유 누르기 → 홈 화면에 추가 고르기 → 추가 누르기", 인앱 "{Safari|기본 브라우저}에서 열어야 설치할 수 있어요.",
+ * 버튼 "다음에"·"설치하기"·"알겠어요"·"주소 복사"·"브라우저로 열기" — 시안 없음, 문구는 사용자 요청으로 짧게(2026-11-19)
  */
 export function InstallPromptModal({
   open,
@@ -70,43 +70,45 @@ export function InstallPromptModal({
 
   const title = (
     <span className={styles.heading}>
-      <img className={styles.appIcon} src="/pwa-192x192.png" alt="" width={56} height={56} />
+      <img className={styles.appIcon} src="/pwa-192x192.png" alt="" width={48} height={48} />
       <span>폴리의 섬을 앱으로 설치해 보세요</span>
     </span>
   )
 
-  // 버튼은 가로를 꽉 채워 가운데 정렬(두 개면 반씩)
-  const footer = (
-    <div className={styles.actions}>
-      {variant === 'prompt' ? (
-        <>
-          <Button variant="outline" onClick={onClose}>
-            다음에
+  const footer =
+    variant === 'prompt' ? (
+      <>
+        <Button variant="outline" size="sm" onClick={onClose}>
+          다음에
+        </Button>
+        <Button size="sm" onClick={onInstall}>
+          설치하기
+        </Button>
+      </>
+    ) : variant === 'ios' ? (
+      <Button size="sm" onClick={onClose}>
+        알겠어요
+      </Button>
+    ) : (
+      <>
+        <Button variant="outline" size="sm" onClick={onClose}>
+          다음에
+        </Button>
+        {externalUrl ? (
+          <Button size="sm" onClick={onOpenExternal}>
+            브라우저로 열기
           </Button>
-          <Button onClick={onInstall}>설치하기</Button>
-        </>
-      ) : variant === 'ios' ? (
-        <Button onClick={onClose}>알겠어요</Button>
-      ) : (
-        <>
-          <Button variant="outline" onClick={onClose}>
-            다음에
+        ) : (
+          <Button size="sm" onClick={handleCopy}>
+            {copied === 'done' ? '복사했어요' : '주소 복사'}
           </Button>
-          {externalUrl ? (
-            <Button onClick={onOpenExternal}>브라우저로 열기</Button>
-          ) : (
-            <Button onClick={handleCopy}>{copied === 'done' ? '복사했어요' : '주소 복사'}</Button>
-          )}
-        </>
-      )}
-    </div>
-  )
+        )}
+      </>
+    )
 
   return (
     <Modal open={open} onClose={onClose} title={title} footer={footer}>
-      <p className={styles.lead}>
-        {variant === 'openInBrowser' ? `${browserName}에서 열어야 설치할 수 있어요.` : '홈 화면에서 바로 열 수 있어요.'}
-      </p>
+      <p>{variant === 'openInBrowser' ? `${browserName}에서 열어야 설치할 수 있어요.` : '홈 화면에서 바로 열 수 있어요.'}</p>
       {variant === 'ios' && (
         <ol className={styles.steps}>
           <li>
