@@ -22,6 +22,10 @@ interface CareCollectionProps {
   woolCount: number | undefined
   /** "내 양털" 알약을 눌렀을 때 — 양털 내역으로 */
   onOpenWoolHistory?: () => void
+  /** 오른쪽 위 `!` — 사용법 안내 열기 */
+  onOpenGuide?: () => void
+  /** 사용법 안내 중 — 실제 목록 대신 이 예시로 그린다(화살표가 늘 같은 자리를 가리키게) */
+  guide?: { actions: CareAction[]; recommendedId: string }
 }
 
 /** 시안 한 탭의 행 수. 목록 자리를 이만큼 늘 잡아 두어 로딩·탭 전환에 버튼이 오르내리지 않는다 */
@@ -57,21 +61,25 @@ function pickRecommendation(actions: CareAction[], doneIds: Set<string>, actionD
   return candidates[day % candidates.length]
 }
 
-export function CareCollection({ woolCount, onOpenWoolHistory }: CareCollectionProps) {
+export function CareCollection({ woolCount, onOpenWoolHistory, onOpenGuide, guide }: CareCollectionProps) {
   const actionsQuery = useCareActions()
   const todayQuery = useTodayCareCompletions()
   const complete = useCompleteCareAction()
   const cancel = useCancelCareCompletion()
 
   /** 사용자가 고른 탭(null 이면 추천 행동의 탭) */
-  const [pickedCategory, setPickedCategory] = useState<CareCategoryId | null>(null)
+  const [userCategory, setPickedCategory] = useState<CareCategoryId | null>(null)
   /** 사용자가 고른 행동(null 이면 지금 탭의 첫 미완료 행동) */
-  const [pickedId, setPickedId] = useState<string | null>(null)
+  const [userPickedId, setPickedId] = useState<string | null>(null)
   /** 돌봄을 시작한 행동 — 시안(290:491)처럼 그 행동 하나만 남긴다 */
-  const [startedId, setStartedId] = useState<string | null>(null)
+  const [userStartedId, setStartedId] = useState<string | null>(null)
 
-  const actions = actionsQuery.data
-  const today = todayQuery.data
+  const actions = guide ? guide.actions : actionsQuery.data
+  const today = guide ? { actionDate: '2026-01-01', items: [] as CareCompletion[] } : todayQuery.data
+  // 안내 중에는 사용자가 고른 탭·행동·시작 상태를 쓰지 않는다
+  const pickedCategory = guide ? null : userCategory
+  const pickedId = guide ? null : userPickedId
+  const startedId = guide ? null : userStartedId
   const loading = actions === undefined || today === undefined
   const loadFailed = !loading ? false : actionsQuery.isError || todayQuery.isError
 
@@ -80,7 +88,11 @@ export function CareCollection({ woolCount, onOpenWoolHistory }: CareCollectionP
   const doneIds = new Set(completionByAction.keys())
 
   const groups = groupCareActions(actions ?? [])
-  const recommended = actions && today ? pickRecommendation(actions, doneIds, today.actionDate) : null
+  const recommended = guide
+    ? (guide.actions.find((action) => action.careActionId === guide.recommendedId) ?? null)
+    : actions && today
+      ? pickRecommendation(actions, doneIds, today.actionDate)
+      : null
   const categories = loading ? SKELETON_CATEGORIES : groups.categories
   const autoCategory: CareCategoryId =
     (recommended && categoryOf(recommended)) ??
@@ -170,7 +182,7 @@ export function CareCollection({ woolCount, onOpenWoolHistory }: CareCollectionP
             <button type="button" className={styles.woolButton} aria-label="양털 내역 보기" onClick={onOpenWoolHistory}>
               <WoolCounter count={woolCount} loading={woolCount === undefined} />
             </button>
-            <IconButton icon="alert-circle" aria-label="양털 모으기 안내" />
+            <IconButton icon="alert-circle" aria-label="양털 모으기 안내" onClick={onOpenGuide} />
           </>
         }
       />
@@ -188,6 +200,7 @@ export function CareCollection({ woolCount, onOpenWoolHistory }: CareCollectionP
 
           <button
             className={styles.recommendation}
+            data-guide="recommend"
             type="button"
             disabled={!recommended || focused}
             onClick={() => recommended && chooseAction(recommended)}
@@ -209,7 +222,7 @@ export function CareCollection({ woolCount, onOpenWoolHistory }: CareCollectionP
               <span>{started.name}</span>
             </div>
           ) : (
-            <>
+            <div data-guide="categories">
               <div className={styles.categories} role="tablist" aria-label="돌봄 행동 분류">
                   {categories.map((item) => (
                     <button
@@ -271,10 +284,11 @@ export function CareCollection({ woolCount, onOpenWoolHistory }: CareCollectionP
                   </div>
                 )}
               </div>
-            </>
+            </div>
           )}
 
           <Button
+            data-guide="start"
             className={focused ? styles.submitFocused : styles.submit}
             variant="primary"
             size="lg"
