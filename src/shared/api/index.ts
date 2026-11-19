@@ -8,4 +8,4 @@ export {
   hasErrorCode,
   isApiError,
 } from './ApiError'
-export { getAccessToken, setAccessToken, setAuthLostHandler } from './token'
+export { getAccessToken, getAccessTokenSubject, setAccessToken, setAuthLostHandler } from './token'
