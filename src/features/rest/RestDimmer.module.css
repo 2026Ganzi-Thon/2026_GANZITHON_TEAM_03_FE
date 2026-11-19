@@ -1,7 +1,13 @@
 /* 임의 결정(확인 필요): 눕혀 둔 동안 화면 전체 돌문이 위에서 떨어져 닫히고 검정 88%로 어두워짐 — 시안 없음. 돌결은 동굴 닫힌 그림의 문에서 따옴 */
 .root {
+  /* 앱 화면 폭(--app-max-width)만 덮는다 — PC 처럼 넓은 화면에서 양옆까지 덮지 않게 */
   position: fixed;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100%;
+  max-width: var(--app-max-width);
+  translate: -50% 0;
   z-index: 50;
   overflow: hidden;
   pointer-events: none;
