@@ -19,6 +19,10 @@ export interface AuthPageProps {
   initialEmail?: string
   /** 회원가입: 위에 띄울 안내(링크 만료 등으로 다시 받으러 왔을 때) */
   signupNotice?: string
+  /** 로그인: 위에 띄울 안내(비밀번호를 바꾼 뒤 등) */
+  loginNotice?: string
+  /** 로그인: 비밀번호 찾기 — 입력해 둔 이메일을 넘긴다 */
+  onForgotPassword?: (email: string) => void
 }
 
 export default function AuthPage(props: AuthPageProps) {
@@ -67,8 +71,9 @@ export default function AuthPage(props: AuthPageProps) {
   )
 }
 
-function LoginForm({ onContinue, authLoading, authError }: AuthPageProps) {
+function LoginForm({ onContinue, authLoading, authError, loginNotice, onForgotPassword }: AuthPageProps) {
   const [remember, setRemember] = useState(false)
+  const [email, setEmail] = useState('')
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -78,6 +83,11 @@ function LoginForm({ onContinue, authLoading, authError }: AuthPageProps) {
 
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
+      {loginNotice && (
+        <p className={styles.noticeOk} role="status">
+          {loginNotice}
+        </p>
+      )}
       <TextField
         className={styles.email}
         label="이메일"
@@ -85,6 +95,8 @@ function LoginForm({ onContinue, authLoading, authError }: AuthPageProps) {
         name="email"
         autoComplete="email"
         placeholder="이메일을 입력해주세요"
+        value={email}
+        onChange={(event) => setEmail(event.currentTarget.value)}
         required
       />
       <TextField
@@ -99,14 +111,22 @@ function LoginForm({ onContinue, authLoading, authError }: AuthPageProps) {
         required
       />
       {/* 임의 결정(확인 필요): 로그인 유지는 서버 Refresh 쿠키(14일)로 항상 유지돼 체크 여부를 보내지 않음(PR #17 그대로) */}
-      <Checkbox
-        className={styles.remember}
-        shape="round"
-        checked={remember}
-        onChange={(event) => setRemember(event.currentTarget.checked)}
-      >
-        로그인 유지하기
-      </Checkbox>
+      <div className={styles.rememberRow}>
+        <Checkbox
+          className={styles.remember}
+          shape="round"
+          checked={remember}
+          onChange={(event) => setRemember(event.currentTarget.checked)}
+        >
+          로그인 유지하기
+        </Checkbox>
+        {/* 시안 0-4 옆에 놓인 "비밀번호 찾기" 글자(49:139) — 프레임 밖에 떠 있어 자리는 임의 결정(확인 필요): 로그인 유지하기 줄 오른쪽 */}
+        {onForgotPassword && (
+          <button type="button" className={styles.forgot} onClick={() => onForgotPassword(email.trim())}>
+            비밀번호 찾기
+          </button>
+        )}
+      </div>
 
       <div className={styles.spacerBottom} aria-hidden="true" />
 

@@ -9,11 +9,13 @@ import {
   EmotionRecordRoute,
   EmotionRoute,
   EmotionWriteRoute,
+  ForgotPasswordRoute,
   HomeRoute,
   IslandDecorateRoute,
   LoginRoute,
   MyConcernDetailRoute,
   OnboardingRoute,
+  ResetPasswordRoute,
   RootLayout,
   SettingsRoute,
   SetupRoute,
@@ -36,6 +38,9 @@ export const router = createBrowserRouter([
       { path: 'signup', element: <SignupRoute /> },
       // 메일 인증 링크(백엔드 FRONTEND_ORIGIN/verify-email#token=…) — 가입 전이라 가드 밖
       { path: 'verify-email', element: <VerifyEmailRoute /> },
+      // 비밀번호 찾기·재설정 메일 링크(백엔드 PASSWORD_RESET_FRONTEND_URL 기본값 FRONTEND_ORIGIN/reset-password#token=…) — 가드 밖
+      { path: 'forgot-password', element: <ForgotPasswordRoute /> },
+      { path: 'reset-password', element: <ResetPasswordRoute /> },
       { path: 'setup', element: <SetupRoute /> },
       // 앱 화면 — 시작 흐름 통과 전이면 /splash 로
       {
