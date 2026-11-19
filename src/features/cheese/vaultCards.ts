@@ -3,6 +3,7 @@ import type { ConcernStatus, MyConcernItem, SavedConcernItem } from './types'
 /** 치즈 보관함 카드 한 장에 필요한 값. 내 고민·보관한 치즈 두 목록을 같은 카드로 그린다. */
 export interface VaultCardItem {
   concernId: string
+  title: string
   preview: string
   /** "더보기" 오른쪽의 작은 상태 글자 */
   label: string
@@ -25,6 +26,7 @@ const STATUS_LABELS: Record<ConcernStatus, string> = {
 export function toMyVaultCards(items: MyConcernItem[]): VaultCardItem[] {
   const cards = items.map((item) => ({
     concernId: item.concernId,
+    title: item.title,
     preview: item.preview,
     label: STATUS_LABELS[item.status],
     highlight: item.status === 'MATURED',
@@ -36,6 +38,7 @@ export function toMyVaultCards(items: MyConcernItem[]): VaultCardItem[] {
 export function toSavedVaultCards(items: SavedConcernItem[]): VaultCardItem[] {
   return items.map((item) => ({
     concernId: item.concernId,
+    title: item.title,
     preview: item.preview,
     label: `위로 ${item.replyCount}개`,
     highlight: false,

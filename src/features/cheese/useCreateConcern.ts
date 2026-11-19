@@ -9,11 +9,12 @@ export type CreateConcernState =
   | { status: 'idle' }
   | { status: 'submitting' }
   | { status: 'success'; concern: CreateConcernResponse }
-  /** 서버가 내용을 거절함(400 — 길이·위로 방식). 화면에서 먼저 막아서 보통은 오지 않는다 */
+  /** 서버가 내용을 거절함(400 — 제목·내용 길이, 제목의 줄바꿈·제어 문자, 위로 방식). 화면에서 먼저 막아서 보통은 오지 않는다 */
   | { status: 'invalid' }
   | { status: 'error' }
 
 interface CreateConcernInput {
+  title: string
   content: string
   comfortType: ComfortType
 }
@@ -24,7 +25,7 @@ const toPreview = (content: string) => Array.from(content).slice(0, 100).join(''
 /**
  * 고민을 쓰고 숙성을 시작한다. `Idempotency-Key` 는 같은 내용으로 다시 보내는 동안 같은 키를 쓴다 —
  * 응답을 못 받은 실패(네트워크·시간 초과·5xx·잠금 충돌 COMMON_STATE_CONFLICT)는 서버에 저장됐을 수 있어서, 같은 키로 보내면 서버가 처음 응답을 돌려준다(중복 작성 없음).
- * 내용을 고치면 새 키(같은 키·다른 본문은 409). 성공했거나 서버가 처리하지 않은 게 확실한 실패(키 충돌 409 등 4xx)면 키를 버린다.
+ * 제목·내용·위로 방식을 고치면 새 키(같은 키·다른 본문은 409). 성공했거나 서버가 처리하지 않은 게 확실한 실패(키 충돌 409 등 4xx)면 키를 버린다.
  * 성공하면 새 고민을 내 고민 목록과 상세 캐시에 바로 넣는다(보관함·상세가 스켈레톤 없이 보이게). 홈 요약은 app/queryClient.ts 공통 규칙이 다시 받는다.
  */
 export function useCreateConcern() {
@@ -32,7 +33,7 @@ export function useCreateConcern() {
   const keyRef = useRef<{ fingerprint: string; key: string } | null>(null)
 
   const takeKey = (input: CreateConcernInput) => {
-    const fingerprint = JSON.stringify([input.content, input.comfortType])
+    const fingerprint = JSON.stringify([input.title, input.content, input.comfortType])
     if (keyRef.current?.fingerprint !== fingerprint) keyRef.current = { fingerprint, key: newIdempotencyKey() }
     return keyRef.current.key
   }
@@ -43,6 +44,7 @@ export function useCreateConcern() {
       keyRef.current = null
       const detail: ConcernDetail = {
         concernId: created.concernId,
+        title: input.title,
         content: input.content,
         comfortType: input.comfortType,
         createdAt: created.createdAt,
@@ -60,6 +62,7 @@ export function useCreateConcern() {
               items: [
                 {
                   concernId: created.concernId,
+                  title: input.title,
                   preview: toPreview(input.content),
                   comfortType: input.comfortType,
                   status: created.status,
@@ -95,7 +98,11 @@ export function useCreateConcern() {
   const submit = async (input: CreateConcernInput): Promise<CreateConcernResponse | null> => {
     if (mutation.isPending) return null
     try {
-      return await mutation.mutateAsync({ content: input.content.trim(), comfortType: input.comfortType })
+      return await mutation.mutateAsync({
+        title: input.title.trim(),
+        content: input.content.trim(),
+        comfortType: input.comfortType,
+      })
     } catch {
       return null
     }

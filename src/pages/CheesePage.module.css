@@ -10,10 +10,24 @@
 }
 
 .intro {
-  margin: 0 var(--page-padding-x) var(--space-2);
+  margin: 0 var(--page-padding-x);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-light);
   line-height: var(--line-height-small);
+}
+
+/* 시안 396:293: 소개 문구 바로 아래 "고민 목록"(16px) + 오른쪽 보관함 버튼(43px), 목록은 버튼 아래 6px(시안 y 174 → 180) */
+.listHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 var(--page-padding-x) 6px;
+}
+
+.listTitle {
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
 }
 
 /* 빈 목록·오류: 카드 3개 자리(386px)를 그대로 차지해서 아래 버튼·배너가 안 움직인다 */
@@ -38,7 +52,7 @@
 
 .actions {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   margin-top: var(--space-2);
   padding: 0 var(--page-padding-x);
 }
@@ -48,7 +62,7 @@
   height: 38px;
 }
 
-.vault {
+.banner {
   margin-top: 26px;
   padding: 0 var(--page-padding-x);
 }

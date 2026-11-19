@@ -1,0 +1,28 @@
+/* 시안 396:282: 153×43, 테두리 #cda663(--color-accent), 모서리 8, 그림 39 + 간격 4 + 15px SemiBold 금색 */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  width: 153px;
+  height: 43px;
+  /* 시안은 내용 묶음이 가운데에서 왼쪽으로 4.5px */
+  padding: 0 9px 0 0;
+  overflow: hidden;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  box-shadow: var(--shadow-card);
+  color: var(--color-accent);
+  font-size: 15px;
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  white-space: nowrap;
+}
+
+.cheese {
+  flex: none;
+  width: 39px;
+  height: 39px;
+  object-fit: cover;
+}

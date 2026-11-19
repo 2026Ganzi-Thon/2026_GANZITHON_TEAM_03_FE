@@ -15,8 +15,13 @@ export interface Reply {
   createdAt: IsoDateTime
 }
 
-/** 고민 작성. Idempotency-Key 헤더가 필요하다(백엔드 필수, 없으면 400). content 는 앞뒤 공백을 뺀 1~1000자 */
+/**
+ * 고민 작성. Idempotency-Key 헤더가 필요하다(백엔드 필수, 없으면 400).
+ * title 은 앞뒤 공백을 뺀 1~50자 한 줄(줄바꿈·제어 문자면 400), content 는 앞뒤 공백을 뺀 1~1000자(코드 포인트).
+ * 백엔드는 title 이 없으면 본문 첫 줄로 채우지만(옛 화면 호환) 프론트는 늘 보낸다.
+ */
 export interface CreateConcernRequest {
+  title: string
   content: string
   comfortType: ComfortType
 }
@@ -31,6 +36,8 @@ export interface CreateConcernResponse {
 /** 위로할 고민 목록의 카드 (다른 사용자의 숙성 중 고민, 작성자 정보 없음) */
 export interface ConcernCard {
   concernId: Id
+  /** 고민 제목(1~50자, 한 줄). V10 이전 고민은 본문 첫 줄(비면 "제목 없음")로 채워져 있다 */
+  title: string
   preview: string
   comfortType: ComfortType
   createdAt: IsoDateTime
@@ -45,6 +52,8 @@ export interface ConcernListResponse {
 /** 고민 상세 조회 응답의 data. 받은 위로는 포함하지 않는다. */
 export interface ConcernDetail {
   concernId: Id
+  /** 고민 제목(1~50자, 한 줄). V10 이전 고민은 본문 첫 줄(비면 "제목 없음")로 채워져 있다 */
+  title: string
   content: string
   comfortType: ComfortType
   createdAt: IsoDateTime
@@ -74,6 +83,8 @@ export type MyConcernListParams = PageParams
 
 export interface MyConcernItem {
   concernId: Id
+  /** 고민 제목(1~50자, 한 줄). V10 이전 고민은 본문 첫 줄(비면 "제목 없음")로 채워져 있다 */
+  title: string
   preview: string
   comfortType: ComfortType
   status: ConcernStatus
@@ -115,6 +126,8 @@ export type SavedConcernListParams = PageParams
 
 export interface SavedConcernItem {
   concernId: Id
+  /** 고민 제목(1~50자, 한 줄). V10 이전 고민은 본문 첫 줄(비면 "제목 없음")로 채워져 있다 */
+  title: string
   preview: string
   comfortType: ComfortType
   /** 받은 위로 수 (기본 위로 포함) */

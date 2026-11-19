@@ -1,6 +1,7 @@
 export { CheeseHeader } from './CheeseHeader'
 export { MilkCarousel } from './MilkCarousel'
-export { CheeseVaultBanner } from './CheeseVaultBanner'
+export { CheeseBanner } from './CheeseBanner'
+export { CheeseVaultButton } from './CheeseVaultButton'
 export { VaultCarousel } from './VaultCarousel'
 export { ConcernReader } from './ConcernReader'
 export { ReceivedReplies } from './ReceivedReplies'

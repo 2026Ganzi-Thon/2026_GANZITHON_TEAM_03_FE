@@ -39,7 +39,9 @@ type EmotionRecord = {
 | 401 | AUTH_ACCESS_TOKEN_INVALID / AUTH_ACCESS_TOKEN_EXPIRED | 토큰 오류 / 만료 |
 | 500 | COMMON_INTERNAL_ERROR | 서버 오류 |
 
-미결정: 실제 감정 코드·이름·순서·활성 목록은 기획 담당자와 확정.
+기본 데이터(백엔드 V12, 2026-11-20): 표시 순서대로 `JOY` 기쁨 · `SADNESS` 슬픔 · `REGRET` 아쉬움 · `FEAR` 두려움 · `TIRED` 지침 · `ANXIETY` 불안 · `CALM` 평온, 모두 활성. ID는 DB가 발급하므로 프론트는 응답의 `emotionId`를 쓴다(code·순서를 가정하지 않음). 같은 code·이름으로 수동 등록한 감정은 그대로 둔다.
+
+미결정: 감정 목록을 바꿀 때의 기획 합의(지금은 위 7개).
 
 ## 2. 감정 기록 작성 및 먹이 주기
 

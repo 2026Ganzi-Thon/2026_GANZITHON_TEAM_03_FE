@@ -7,6 +7,8 @@ export type GoogleSignupConsent = SignupConsent
 
 export interface GoogleLoginChallenge {
   nonce: string
+  /** challenge 유효시간(초). 백엔드 AuthSettings.GOOGLE_CHALLENGE_TTL_SECONDS — 2026-11-20 300 → 900(15분) */
+  expiresIn: number
 }
 
 /** GIS를 초기화하기 전에 서버가 발급하는 일회용 nonce와 challenge 쿠키를 받는다. */
