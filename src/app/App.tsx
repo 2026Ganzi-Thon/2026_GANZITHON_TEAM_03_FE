@@ -1,5 +1,6 @@
 import { useEffect, useSyncExternalStore } from 'react'
 import { RouterProvider } from 'react-router'
+import { preloadGoogleSignIn } from '@/features/auth'
 import { preloadCheeseAssets } from '@/features/cheese'
 import { preloadEmotionAssets } from '@/features/emotion'
 import { preloadHomeAssets } from '@/features/home'
@@ -38,6 +39,10 @@ export default function App() {
   }, [])
 
   const session = useSession()
+  // 로그인 안 된 게 확인되면(스플래시·온보딩이 도는 동안) 구글 버튼에 필요한 스크립트와 challenge 를 미리 받는다 — 로그인 화면에서 버튼이 바로 뜨게
+  useEffect(() => {
+    if (session.status === 'signedOut') preloadGoogleSignIn()
+  }, [session.status])
   const pathname = useSyncExternalStore(subscribeLocation, getPathname)
   // 세션 복원 중에는 곧 스플래시로 옮겨 갈 수 있어 기다린다
   const installPromptReady = session.status !== 'restoring' && !NO_INSTALL_PROMPT_PATHS.includes(pathname)
