@@ -1,4 +1,4 @@
-import { ApiError } from '@/shared/api'
+import { ApiError, api } from '@/shared/api'
 import { mockDb, mockDelay } from '@/shared/mock'
 import { isValidNickname, normalizeNickname } from './nickname'
 import type { MyInfo, NicknameAvailabilityResponse, Profile, UpdateProfileRequest } from './types'
@@ -90,11 +90,9 @@ export async function updateMyInfo(body: UpdateProfileRequest): Promise<Profile>
   return toProfile()
 }
 
-// TODO(API 연결): return api.get<NicknameAvailabilityResponse>('/users/nickname-availability', { query: { nickname } })
 /** 닉네임 중복 확인 `GET /api/v1/users/nickname-availability`. 형식 오류는 400, 내 현재 닉네임은 available. 예약이 아니다. */
-export async function fetchNicknameAvailability(nickname: string): Promise<NicknameAvailabilityResponse> {
-  await mockDelay()
-  if (!isValidNickname(nickname)) throw invalid('닉네임 형식이 올바르지 않아요.')
-  const normalized = normalizeNickname(nickname)
-  return { nickname: normalized, available: !isTaken(normalized) }
+export function fetchNicknameAvailability(nickname: string): Promise<NicknameAvailabilityResponse> {
+  return api.get<NicknameAvailabilityResponse>('/users/nickname-availability', {
+    query: { nickname },
+  })
 }

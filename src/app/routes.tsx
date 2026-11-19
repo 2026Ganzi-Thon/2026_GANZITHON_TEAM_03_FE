@@ -19,7 +19,7 @@ import SettingsPage from '@/pages/SettingsPage'
 import SplashPage from '@/pages/SplashPage'
 import { useWoolBalance } from '@/shared/wool'
 import { isGoogleSignupConsentRequired, signInWithEmail, signInWithGoogle } from '@/features/auth'
-import { checkNicknameAvailability } from '@/features/account'
+import { fetchNicknameAvailability } from '@/features/account'
 import type { InitialSetupValues } from '@/pages/InitialSetupPage'
 import AppTabBar from './AppTabBar'
 import { hasPassedEntry, markEntryPassed, markOnboardingSeen } from './entry'
@@ -150,7 +150,7 @@ export function SetupRoute() {
     <InitialSetupPage
       onBack={() => navigate('/signup')}
       onLogin={() => navigate('/login')}
-      onCheckNickname={async (nickname) => (await checkNicknameAvailability(nickname)).available}
+      onCheckNickname={async (nickname) => (await fetchNicknameAvailability(nickname)).available}
       requiresConsent={routeState?.requiresConsent ?? true}
       submissionError={googleError}
       onBeforeComplete={async (values: InitialSetupValues) => {

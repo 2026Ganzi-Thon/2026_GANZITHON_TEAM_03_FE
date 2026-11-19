@@ -33,6 +33,7 @@ export default function AuthPage({
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (isSignup) return
     const form = new FormData(event.currentTarget)
     onContinue({ email: String(form.get('email') ?? '').trim(), password: String(form.get('password') ?? '') })
   }
@@ -98,8 +99,9 @@ export default function AuthPage({
 
         <div className={styles.spacerBottom} aria-hidden="true" />
 
+        {isSignup && <p className={styles.signupNotice} role="status">이메일 인증 회원가입은 준비 중이에요. Google로 가입해 주세요.</p>}
         {authError && <p className={styles.googleError} role="alert">{authError}</p>}
-        <Button className={styles.submit} variant="primary" size="lg" fullWidth type="submit" disabled={authLoading}>
+        <Button className={styles.submit} variant="primary" size="lg" fullWidth type="submit" disabled={authLoading || isSignup}>
           {isSignup ? '회원가입' : '로그인'}
         </Button>
       </form>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createGoogleLoginChallenge } from './googleAuth'
 import styles from './GoogleIdentityButton.module.css'
 
 interface GoogleCredentialResponse {
@@ -18,6 +19,7 @@ interface GoogleButtonOptions {
 interface GoogleIdentityApi {
   initialize(options: {
     client_id: string
+    nonce: string
     callback: (response: GoogleCredentialResponse) => void
     ux_mode: 'popup'
   }): void
@@ -88,14 +90,15 @@ export function GoogleIdentityButton({ clientId, onCredential, disabled = false 
     if (!container) return
 
     setError('')
-    void loadGoogleIdentityScript()
-      .then(() => {
+    void Promise.all([loadGoogleIdentityScript(), createGoogleLoginChallenge()])
+      .then(([, challenge]) => {
         if (!active || !containerRef.current) return
         const google = window.google?.accounts.id
         if (!google) throw new Error('Google 로그인 스크립트를 불러오지 못했어요.')
 
         google.initialize({
           client_id: clientId,
+          nonce: challenge.nonce,
           ux_mode: 'popup',
           callback: ({ credential }) => {
             if (credential) credentialHandler.current(credential)

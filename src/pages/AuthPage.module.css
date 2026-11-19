@@ -109,6 +109,13 @@
   color: var(--color-error);
 }
 
+.signupNotice {
+  margin-top: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-small);
+}
+
 .divider {
   flex: none;
   margin: 29px 0 20.5px;
