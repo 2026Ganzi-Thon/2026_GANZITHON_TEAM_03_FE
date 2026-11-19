@@ -14,12 +14,13 @@ export interface ApiResponse<T> {
   data: T
 }
 
+/** 백엔드 global/api/ApiError.FieldError 기준 — 명세 초안의 `reason`이 아니라 `message` */
 export interface FieldError {
   field: string
-  reason: string
+  message: string
 }
 
-/** 오류 응답 (제안). 프론트는 문구가 아니라 HTTP 상태와 code로 분기한다. */
+/** 오류 응답(백엔드 global/api/ApiError). 프론트는 문구가 아니라 HTTP 상태와 code로 분기한다. */
 export interface ApiErrorBody {
   code: string
   message: string

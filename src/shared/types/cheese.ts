@@ -69,7 +69,7 @@ export interface CreateReplyResponse {
   createdAt: IsoDateTime
 }
 
-/** 내 치즈 목록 쿼리 (size 기본 20, 1~50) */
+/** 내 치즈 목록 쿼리 (size 기본 20, 백엔드 상한 100) */
 export type MyConcernListParams = PageParams
 
 export interface MyConcernItem {
@@ -109,7 +109,7 @@ export interface UnsaveConcernResponse {
   savedAt: null
 }
 
-/** 치즈 보관함 목록 쿼리 (size 기본 20, 1~50) */
+/** 치즈 보관함 목록 쿼리 (size 기본 20, 백엔드 상한 100) */
 export type SavedConcernListParams = PageParams
 
 export interface SavedConcernItem {

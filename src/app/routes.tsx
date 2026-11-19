@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import { Navigate, Outlet, ScrollRestoration, useLocation, useNavigate, useOutletContext, useParams } from 'react-router'
 import AuthPage from '@/pages/AuthPage'
@@ -17,9 +17,29 @@ import MyConcernDetailPage from '@/pages/MyConcernDetailPage'
 import OnboardingPage from '@/pages/OnboardingPage'
 import SettingsPage from '@/pages/SettingsPage'
 import SplashPage from '@/pages/SplashPage'
+import VerifyEmailPage from '@/pages/VerifyEmailPage'
+import WoolCollectionPage from '@/pages/WoolCollectionPage'
 import { useWoolBalance } from '@/shared/wool'
+import {
+  getResendEmail,
+  getSignupDraft,
+  isGoogleSignupConsentRequired,
+  isSignupDraftExpired,
+  loginErrorMessage,
+  markSignedUp,
+  signInWithEmail,
+  signInWithGoogle,
+  signUpWithEmail,
+  signupErrorMessage,
+  signupFailureMessages,
+  signupFailureOf,
+} from '@/features/auth'
+import { fetchNicknameAvailability } from '@/features/account'
+import { getAccessToken } from '@/shared/api'
+import type { InitialSetupValues } from '@/pages/InitialSetupPage'
 import AppTabBar from './AppTabBar'
-import { hasPassedEntry, hasSeenOnboarding, markEntryPassed, markOnboardingSeen } from './entry'
+import { markOnboardingSeen } from './entry'
+import { logout, openSession, useSession } from './session'
 
 // 라우트 요소: 페이지의 콜백 props 를 useNavigate·useParams 로 경로에 연결한다(페이지는 react-router 를 모른다).
 // 끝난 화면(스플래시 종료·온보딩 완료·로그인 완료·저장·삭제·위로 완료)에서의 이동은 replace — 브라우저 뒤로가기가 끝난 화면으로 돌아가지 않게.
@@ -39,13 +59,21 @@ export function RootLayout() {
 
 // ── 시작 흐름 ────────────────────────────────────────────
 
+/**
+ * 스플래시가 끝나면 로그인 세션(./session.ts)에 따라: 앱 화면 / 초기 설정 / 온보딩.
+ * 쿠키로 복원하는 중이면 끝날 때까지 스플래시 마지막 화면(사라진 뒤의 배경)에서 기다린다.
+ */
 export function SplashRoute() {
   const navigate = useNavigate()
-  return (
-    <SplashPage
-      onComplete={() => navigate(hasSeenOnboarding() ? '/login' : '/onboarding', { replace: true })}
-    />
-  )
+  const session = useSession()
+  const [done, setDone] = useState(false)
+  useEffect(() => {
+    if (!done || session.status === 'restoring') return
+    if (session.status === 'ready') navigate('/', { replace: true })
+    else if (session.status === 'needsSetup') navigate('/setup', { replace: true, state: { requiresConsent: false } })
+    else navigate('/onboarding', { replace: true })
+  }, [done, session.status, navigate])
+  return <SplashPage onComplete={() => setDone(true)} />
 }
 
 export function OnboardingRoute() {
@@ -61,41 +89,256 @@ export function OnboardingRoute() {
   )
 }
 
-export function LoginRoute() {
+/** 회원가입 첫 화면(/signup)으로 올 때의 state — 인증 메일 다시 받기에서 이메일·안내를 채운다 */
+interface SignupRouteState {
+  email?: string
+  notice?: string
+}
+
+function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {
   const navigate = useNavigate()
+  const location = useLocation()
+  const signupState = (mode === 'signup' ? location.state : null) as SignupRouteState | null
+  const [googleLoading, setGoogleLoading] = useState(false)
+  const [googleError, setGoogleError] = useState('')
+  const [authLoading, setAuthLoading] = useState(false)
+  const [authError, setAuthError] = useState('')
+
+  const handleGoogleCredential = async (credential: string) => {
+    setGoogleLoading(true)
+    setGoogleError('')
+    try {
+      const result = await signInWithGoogle(credential)
+      openSession(result.user.profileCompleted)
+      if (result.isNewUser) {
+        navigate('/setup', { state: { googleCredential: credential, requiresConsent: false } })
+      } else if (!result.user.profileCompleted) {
+        navigate('/setup', { state: { requiresConsent: false } })
+      } else {
+        navigate('/', { replace: true })
+      }
+    } catch (error) {
+      if (isGoogleSignupConsentRequired(error)) {
+        navigate('/setup', { state: { googleCredential: credential, requiresConsent: true } })
+      } else {
+        setGoogleError(error instanceof Error ? error.message : 'Google 로그인을 완료하지 못했어요.')
+      }
+    } finally {
+      setGoogleLoading(false)
+    }
+  }
+
+  const handleContinue = async ({ email, password }: { email: string; password: string }) => {
+    setAuthError('')
+    setAuthLoading(true)
+    try {
+      const result = await signInWithEmail(email, password)
+      openSession(result.user.profileCompleted)
+      if (!result.user.profileCompleted) {
+        navigate('/setup', { state: { requiresConsent: false } })
+      } else {
+        navigate('/', { replace: true })
+      }
+    } catch (error) {
+      setAuthError(loginErrorMessage(error))
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
   return (
     <AuthPage
-      mode="login"
-      onBack={() => navigate('/onboarding')}
-      onSwitchMode={() => navigate('/signup')}
-      onContinue={() => {
-        markEntryPassed()
-        navigate('/', { replace: true })
-      }}
+      // 다시 받기로 들어올 때마다 이메일 입력을 새로 채운다
+      key={location.key}
+      mode={mode}
+      initialEmail={signupState?.email}
+      signupNotice={signupState?.notice}
+      onBack={() => navigate(mode === 'login' ? '/onboarding' : '/login')}
+      onSwitchMode={() => navigate(mode === 'login' ? '/signup' : '/login')}
+      onGoogleCredential={handleGoogleCredential}
+      googleLoading={googleLoading}
+      googleError={googleError}
+      authLoading={authLoading}
+      authError={authError}
+      onContinue={handleContinue}
     />
   )
+}
+
+export function LoginRoute() {
+  return <AuthRoute mode="login" />
 }
 
 export function SignupRoute() {
+  return <AuthRoute mode="signup" />
+}
+
+/** 다시 받으러 회원가입 첫 화면으로 — 알고 있는 이메일을 채워서 */
+function resendState(notice: string): SignupRouteState {
+  return { email: getResendEmail() || undefined, notice }
+}
+
+/**
+ * 메일 링크(백엔드 FRONTEND_ORIGIN/verify-email#token=…). 토큰을 읽어 두고 주소창에서 바로 지운 뒤 확인 API 를 부른다.
+ * 확인되면 비밀번호를 받고 초기 설정(약관·닉네임)으로. 비밀번호·가입 증명은 메모리(features/auth signupDraft)에만 둔다.
+ */
+export function VerifyEmailRoute() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const [token] = useState(() => new URLSearchParams(location.hash.slice(1)).get('token'))
+
+  useEffect(() => {
+    // 토큰이 기록·화면 공유·새로고침에 남지 않게 주소에서 지운다(replace)
+    if (location.hash) navigate({ pathname: location.pathname, search: location.search }, { replace: true })
+  }, [location.hash, location.pathname, location.search, navigate])
+
   return (
-    <AuthPage
-      mode="signup"
-      onBack={() => navigate('/login')}
-      onSwitchMode={() => navigate('/login')}
-      onContinue={() => navigate('/setup')}
+    <VerifyEmailPage
+      token={token}
+      onBack={() => navigate('/signup')}
+      onLogin={() => navigate('/login')}
+      onResend={(reason) =>
+        navigate('/signup', {
+          state: resendState(
+            reason === 'expired'
+              ? '인증 링크가 만료됐어요. 인증 메일을 다시 받아주세요.'
+              : reason === 'used'
+                ? '이미 사용한 인증 링크예요. 인증 메일을 다시 받아주세요.'
+                : '인증 메일을 다시 받아주세요.',
+          ),
+        })
+      }
+      onNext={() => navigate('/setup', { state: { emailSignup: true } satisfies SetupRouteState })}
     />
   )
 }
 
+interface SetupRouteState {
+  /** 구글 신규 가입 — 약관 동의 뒤 같은 credential 로 다시 요청 */
+  googleCredential?: string
+  requiresConsent?: boolean
+  /** 이메일 가입 — 비밀번호까지 받은 상태(메모리 signupDraft). 약관 동의와 함께 가입 → 초기 프로필 */
+  emailSignup?: boolean
+}
+
+type SubmissionAction = { label: string; onClick: () => void }
+
 export function SetupRoute() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const session = useSession()
+  const [submissionError, setSubmissionError] = useState('')
+  const [submissionAction, setSubmissionAction] = useState<SubmissionAction | undefined>()
+  const [signingUp, setSigningUp] = useState(false)
+  // 구글 가입은 됐는데 초기 설정 저장이 실패했을 때 다시 제출해도 가입(credential 재사용)을 또 부르지 않게
+  const googleSignedUp = useRef(false)
+  const routeState = location.state as SetupRouteState | null
+  const draft = routeState?.emailSignup ? getSignupDraft() : null
+
+  // 이메일 가입 중 값은 메모리에만 있어 새로고침하면 사라진다 — 이미 가입했으면(쿠키로 복원) 보통 초기 설정, 아니면 다시 받기로
+  if (routeState?.emailSignup && !draft) {
+    if (session.status === 'restoring') return null
+    if (session.status !== 'needsSetup') {
+      return <Navigate to="/signup" replace state={resendState('가입 정보가 사라졌어요. 인증 메일을 다시 받아주세요.')} />
+    }
+  }
+
+  const fail = (message: string, action?: SubmissionAction) => {
+    setSubmissionError(message)
+    setSubmissionAction(action ? () => action : undefined)
+  }
+
+  const resendAction: SubmissionAction = {
+    label: '인증 메일 다시 받기',
+    onClick: () => navigate('/signup', { state: resendState('인증 메일을 다시 받아주세요.') }),
+  }
+
+  const signUpWithDraft = async (marketingAgreed: boolean) => {
+    const current = getSignupDraft()
+    if (!current) {
+      fail('가입 정보가 사라졌어요. 인증 메일을 다시 받아주세요.', resendAction)
+      return false
+    }
+    if (current.signedUp) return true
+    if (!current.password) {
+      fail('비밀번호를 먼저 정해주세요.', { label: '비밀번호 정하기', onClick: () => navigate('/verify-email') })
+      return false
+    }
+    // 가입 증명(10분)이 지난 것을 알면 서버에 묻지 않고 바로 안내한다
+    if (isSignupDraftExpired(current)) {
+      fail(signupFailureMessages.verification, resendAction)
+      return false
+    }
+    try {
+      const result = await signUpWithEmail({
+        email: current.email,
+        password: current.password,
+        signupVerificationToken: current.signupVerificationToken,
+        consent: { termsAgreed: true, privacyAgreed: true, marketingAgreed },
+      })
+      markSignedUp()
+      openSession(result.user.profileCompleted)
+      return true
+    } catch (error) {
+      const failure = signupFailureOf(error)
+      fail(
+        signupErrorMessage(error),
+        failure === 'verification'
+          ? resendAction
+          : failure === 'duplicated'
+            ? { label: '로그인', onClick: () => navigate('/login') }
+            : failure === 'password'
+              ? { label: '비밀번호 다시 정하기', onClick: () => navigate('/verify-email') }
+              : undefined,
+      )
+      return false
+    }
+  }
+
+  const signUpWithGoogleCredential = async (credential: string, marketingAgreed: boolean) => {
+    if (googleSignedUp.current) return true
+    try {
+      const result = await signInWithGoogle(credential, { termsAgreed: true, privacyAgreed: true, marketingAgreed })
+      googleSignedUp.current = true
+      openSession(result.user.profileCompleted)
+      return true
+    } catch (error) {
+      fail(error instanceof Error ? error.message : 'Google 회원가입을 완료하지 못했어요.')
+      return false
+    }
+  }
+
   return (
     <InitialSetupPage
-      onBack={() => navigate('/signup')}
+      onBack={() => navigate(draft && !draft.signedUp ? '/verify-email' : '/signup')}
       onLogin={() => navigate('/login')}
+      // 닉네임 중복 확인은 토큰이 필요하다. 가입 전(이메일 가입·구글 신규 가입의 약관 동의 전)에는 확인을 미루고
+      // 회원가입을 누를 때 초기 프로필 저장(409 USER_NICKNAME_DUPLICATED)으로 확인한다 — PR #17 의 401 실패 수정
+      onCheckNickname={async (nickname) =>
+        getAccessToken() ? (await fetchNicknameAvailability(nickname)).available : null
+      }
+      // 이메일 가입을 마친 뒤 새로고침했으면(가입 중 값 없음) 약관은 가입 때 이미 저장됨
+      requiresConsent={draft ? true : routeState?.emailSignup ? false : (routeState?.requiresConsent ?? true)}
+      submissionError={submissionError}
+      submissionAction={submissionAction}
+      isSubmitting={signingUp}
+      onBeforeComplete={async (values: InitialSetupValues) => {
+        const credential = routeState?.googleCredential
+        const needsGoogleSignup = Boolean(credential && routeState?.requiresConsent)
+        if (!draft && !needsGoogleSignup) return true
+        setSubmissionError('')
+        setSubmissionAction(undefined)
+        setSigningUp(true)
+        try {
+          return draft
+            ? await signUpWithDraft(values.consents.marketing)
+            : await signUpWithGoogleCredential(credential!, values.consents.marketing)
+        } finally {
+          setSigningUp(false)
+        }
+      }}
       onComplete={() => {
-        markEntryPassed()
+        openSession(true)
         navigate('/', { replace: true })
       }}
     />
@@ -118,28 +361,34 @@ interface AppShellContext {
 }
 
 /**
- * 앱 화면 공통 부모: 시작 흐름 가드 + 우유와 치즈 목록·치즈 보관함 상태.
+ * 앱 화면 공통 부모: 로그인 세션 가드 + 우유와 치즈 목록·치즈 보관함 상태.
+ * 세션(./session.ts): 복원 중이면 아무것도 그리지 않고 기다림(배경색만, 보통 수백 ms), 로그인 안 됨이면 앱을 막 연 경우 스플래시부터·
+ * 로그인이 풀렸거나 로그아웃했으면 로그인 화면으로, 초기 설정 전이면 초기 설정으로.
  * 목록의 현재 페이지·선택은 상세(/cheese/:concernId)에 다녀와도 유지돼야 해서(docs/api/common.md 고민 목록 규칙)
  * 목록·상세를 함께 감싸는 여기서 들고 있는다. 다른 탭에 다녀와도 유지 — 라우터 전 App.tsx 와 같은 동작.
  */
 export function AppShell() {
   const [cheeseList, setCheeseList] = useState<CheeseListState>({ page: 0, selectedId: null })
   const [vaultPage, setVaultPage] = useState(0)
-  if (!hasPassedEntry()) return <Navigate to="/splash" replace />
+  const session = useSession()
+  if (session.status === 'restoring') return null
+  if (session.status === 'signedOut') return <Navigate to={session.reason === 'initial' ? '/splash' : '/login'} replace />
+  if (session.status === 'needsSetup') return <Navigate to="/setup" replace state={{ requiresConsent: false }} />
   return <Outlet context={{ cheeseList, setCheeseList, vaultPage, setVaultPage } satisfies AppShellContext} />
 }
 
-const TAB_PATHS: Record<string, string> = { home: '/', sheep: '/emotion', cheese: '/cheese', cave: '/cave' }
+const TAB_PATHS: Record<string, string> = { home: '/', sheep: '/emotion', cheese: '/cheese', cloud: '/wool', cave: '/cave' }
 
 function tabOf(pathname: string) {
   if (pathname === '/emotion') return 'sheep'
+  if (pathname === '/wool') return 'cloud'
   // 임의 결정(확인 필요): 치즈 보관함도 "고민치즈" 탭 — 시안(290:636)은 "홈"이 선택돼 있지만 템플릿 복사로 봄
   if (pathname === '/cheese' || pathname === '/cheese/vault') return 'cheese'
   if (pathname === '/cave') return 'cave'
   return 'home'
 }
 
-/** 탭바가 있는 화면(홈·양 먹이주기·우유와 치즈 목록·치즈 보관함·동굴 문 닫기). cloud 탭은 이동할 화면이 없어 동작 없음. */
+/** 탭바가 있는 화면(홈·양 먹이주기·우유와 치즈 목록·치즈 보관함·양털 모으기·동굴 문 닫기). */
 export function TabLayout() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -190,7 +439,7 @@ export function IslandDecorateRoute() {
  * 설정 — 탭바 없음(시안 290:891). 홈·섬 꾸미기 머리의 설정 아이콘으로 들어온다.
  * 임의 결정(확인 필요): 뒤로가기는 브라우저 기록으로 들어온 화면에 돌아가고, 주소로 바로 열어 기록이 없으면 홈으로(replace).
  * 저장하지 않은 변경은 확인 없이 버린다.
- * 임의 결정(확인 필요): "계정 바꾸기"(Google로 계속하기)는 실제 구글 로그인이 생기기 전까지 로그인 화면으로 보낸다(push — 뒤로가기로 설정에 돌아옴).
+ * "계정 바꾸기"(Google로 계속하기)는 로그아웃(`POST /auth/logout`) 뒤 로그인 화면으로 — 세션이 닫히면 AppShell 이 /login 으로 replace 한다.
  */
 export function SettingsRoute() {
   const navigate = useNavigate()
@@ -198,7 +447,7 @@ export function SettingsRoute() {
   return (
     <SettingsPage
       onBack={() => (location.key === 'default' ? navigate('/', { replace: true }) : navigate(-1))}
-      onSwitchAccount={() => navigate('/login')}
+      onSwitchAccount={() => logout()}
     />
   )
 }
@@ -213,6 +462,11 @@ export function EmotionRoute() {
       onOpenRecord={(id) => navigate(`/emotion/records/${encodeURIComponent(id)}`)}
     />
   )
+}
+
+export function WoolCollectionRoute() {
+  const woolCount = useWoolBalance()
+  return <WoolCollectionPage woolCount={woolCount} />
 }
 
 export function EmotionWriteRoute() {

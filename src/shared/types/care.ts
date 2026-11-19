@@ -1,4 +1,4 @@
-// 자기 돌봄·양털 API 타입 - docs/api/care-wool.md 기준
+// 자기 돌봄·양털 API 타입 - 백엔드 CareController·CareService 기준(초안 docs/api/care-wool.md)
 import type { DateString, Id, IsoDateTime, PageParams, Paged } from './common'
 
 export interface CareAction {
@@ -35,7 +35,7 @@ export interface TodayCareCompletionsResponse {
   items: CareCompletion[]
 }
 
-/** 돌봄 행동 완료 응답의 data. Idempotency-Key 헤더가 필요하다(제안). */
+/** 돌봄 행동 완료 응답의 data. Idempotency-Key 헤더 필수(백엔드 CareController) */
 export interface CompleteCareActionResponse {
   completion: CareCompletion
   /** 반영 직후 지갑 잔액 */
@@ -60,7 +60,7 @@ export interface WoolWallet {
   updatedAt: IsoDateTime | null
 }
 
-/** EARN 적립 / REVERSE 회수 (제안) */
+/** EARN 적립 / REVERSE 회수 */
 export type WoolTransactionType = 'EARN' | 'REVERSE'
 
 export interface WoolTransaction {

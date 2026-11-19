@@ -50,6 +50,15 @@
   letter-spacing: -0.375px;
 }
 
+.consentNotice,
+.formError {
+  flex: none;
+  margin-top: var(--space-3);
+  color: var(--color-error);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-small);
+}
+
 .form {
   display: flex;
   min-height: 0;
@@ -222,4 +231,12 @@
 .footer button {
   color: var(--color-primary);
   font-weight: var(--font-weight-semibold);
+}
+
+/* 제출 오류 뒤에 붙는 이어갈 동작(인증 메일 다시 받기·로그인 등) */
+.errorAction {
+  margin-left: var(--space-2);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: underline;
 }

@@ -1,5 +1,6 @@
 import { ApiError } from '@/shared/api'
-import { mockDb, mockDelay } from '@/shared/mock'
+import { mockIsland } from '@/shared/mock'
+import { fetchWoolWallet } from '@/shared/wool'
 import oliveTree from '@/assets/images/island-items/01-olive-tree.webp'
 import flowerPot from '@/assets/images/island-items/02-flower-pot.webp'
 // import steppingStones from '@/assets/images/island-items/03-stepping-stones.webp'
@@ -21,13 +22,16 @@ import rowboatPlaced from '@/assets/images/island-items/placed/11-rowboat.webp'
 import rugPlaced from '@/assets/images/island-items/placed/12-rug.webp'
 import type { IslandItem, IslandItemCategory, IslandItemsResponse, PurchaseIslandItemResponse } from './types'
 
-// TODO(API 연결): 섬 꾸미기 API 는 아직 없다. 형태는 프론트 제안(docs/api/island.md)이고, 확정되면 아래 두 함수의 본문만
+// TODO(API 연결): 섬 꾸미기 API 는 백엔드에 아직 없다. 형태는 프론트 제안(docs/api/island.md)이고, 생기면 아래 두 함수의 본문만
 // 호출로 바꾼다. mock 상수·`@/shared/mock` import·그림 import 는 함께 지운다(그림은 서버 imageUrl·placedImageUrl 로 온다).
 //   fetchIslandItems:   return api.get<IslandItemsResponse>('/island/items')
 //   purchaseIslandItem: return api.post<PurchaseIslandItemResponse>(`/island/items/${itemId}/purchases`, undefined, { idempotencyKey })
-// (api 는 `@/shared/api`. 구매는 양털을 쓰는 쓰기라 `Idempotency-Key` 가 필요하다 — 같은 구매를 다시 보낼 때 같은 키를 쓰도록
-//  usePurchaseIslandItem 이 한 번의 구매 시도마다 `newIdempotencyKey()` 로 키를 만들어 넘긴다. 오류는 ApiError code 로 온다:
-//  ISLAND_ITEM_NOT_FOUND 404, ISLAND_ITEM_ALREADY_OWNED 409, WOOL_BALANCE_INSUFFICIENT 409 — 모두 제안 코드.)
+// (api 는 `@/shared/api`. 구매는 양털을 쓰는 쓰기라 `Idempotency-Key` 가 필요하다 — usePurchaseIslandItem 이 구매 시도마다 키를 만든다.
+//  오류는 ApiError code 로 온다: ISLAND_ITEM_NOT_FOUND 404, ISLAND_ITEM_ALREADY_OWNED 409, WOOL_BALANCE_INSUFFICIENT 409 — 모두 제안 코드.)
+//
+// 그 전까지(임의 결정, docs/decisions.md): 아이템 목록은 아래 상수, 보유는 기기의 가짜 DB(`@/shared/mock`, localStorage).
+// 양털 잔액은 서버 값(`GET /wool-wallet`)을 보여준다. 서버 양털을 프론트가 깎을 수 없으므로 구매는 "서버 잔액이 값 이상인지"만 확인하고
+// 차감하지 않는다(구매 확인 모달이 그렇게 안내한다).
 
 export const ISLAND_ITEM_NOT_FOUND = 'ISLAND_ITEM_NOT_FOUND'
 export const ISLAND_ITEM_ALREADY_OWNED = 'ISLAND_ITEM_ALREADY_OWNED'
@@ -47,7 +51,7 @@ function mock(
   return { itemId, name, category, price, imageUrl, placedImageUrl, placedOrder, floatAt, owned: false }
 }
 
-// 아이템 목록(상수). 보유 여부와 양털은 가짜 DB(`@/shared/mock`, localStorage 저장)에 있어 새로고침해도 남는다. 이름·값은 시안 카드(109:280~) 그대로 — 그림 파일 번호(01~12)와 같은 순서.
+// 아이템 목록(상수). 보유 여부는 가짜 DB(`@/shared/mock`, localStorage 저장)에 있어 새로고침해도 남는다. 이름·값은 시안 카드(109:280~) 그대로 — 그림 파일 번호(01~12)와 같은 순서.
 // 임의 결정(확인 필요): 분류 배정은 이름으로 정함 — 시안·명세에 없음
 // 섬에 놓이는 자리·크기·겹치는 순서(마지막 인자)는 담당자가 배치 도구로 직접 놓은 값이다(2026-11-15). 놓인 그림(placed/*.webp)은
 // 카드 그림을 섬 그림 위 그 자리에 얹어 만든 투명 레이어다(그림자·동굴 안 색·물에 잠긴 부분은 임의로 넣음).
@@ -74,11 +78,11 @@ function withOwned(item: IslandItem, ownedIds: string[]): IslandItem {
   return { ...item, owned: ownedIds.includes(item.itemId) }
 }
 
-/** 아이템 목록과 양털 잔액. `GET /api/v1/island/items` 의 `data` (제안). */
+/** 아이템 목록과 양털 잔액. `GET /api/v1/island/items` 의 `data` (제안). 지금은 잔액만 서버(`/wool-wallet`), 나머지는 기기 값. */
 export async function fetchIslandItems(): Promise<IslandItemsResponse> {
-  await mockDelay()
-  const ownedIds = mockDb.island.ownedItemIds()
-  return { woolBalance: mockDb.wool.balance().balance, items: mockItems.map((item) => withOwned(item, ownedIds)) }
+  const { balance } = await fetchWoolWallet()
+  const ownedIds = mockIsland.ownedItemIds()
+  return { woolBalance: balance, items: mockItems.map((item) => withOwned(item, ownedIds)) }
 }
 
 /**
@@ -86,15 +90,17 @@ export async function fetchIslandItems(): Promise<IslandItemsResponse> {
  * 이미 가졌으면 409 ISLAND_ITEM_ALREADY_OWNED, 양털이 모자라면 409 WOOL_BALANCE_INSUFFICIENT 를 흉내 낸다.
  */
 export async function purchaseIslandItem(itemId: string, idempotencyKey: string): Promise<PurchaseIslandItemResponse> {
-  void idempotencyKey // mock 은 키를 쓰지 않는다 — 실제 호출에서 헤더로 보낸다
-  await mockDelay()
+  void idempotencyKey // 섬 꾸미기 API 가 없어 키를 쓰지 않는다 — 실제 호출에서 헤더로 보낸다
   const item = mockItems.find((candidate) => candidate.itemId === itemId)
   if (!item) throw new ApiError(404, { code: ISLAND_ITEM_NOT_FOUND, message: '없는 아이템이에요.' })
-  if (mockDb.island.ownedItemIds().includes(itemId)) {
+  if (mockIsland.ownedItemIds().includes(itemId)) {
     throw new ApiError(409, { code: ISLAND_ITEM_ALREADY_OWNED, message: '이미 가진 아이템이에요.' })
   }
-  // 양털은 가짜 DB 하나에서 깎는다 — 모자라면 409 WOOL_BALANCE_INSUFFICIENT(ApiError)를 던진다. 홈·다른 화면도 같은 잔액을 본다
-  const woolBalance = mockDb.wool.spend(item.price)
-  mockDb.island.addOwnedItem(itemId)
-  return { item: { ...item, owned: true }, woolBalance }
+  // 임의 결정(확인 필요): 서버 잔액이 값 이상인지만 확인하고 깎지 않는다 — 서버에 양털을 쓰는 API 가 없다
+  const { balance } = await fetchWoolWallet()
+  if (balance < item.price) {
+    throw new ApiError(409, { code: WOOL_BALANCE_INSUFFICIENT, message: '양털이 모자라요.' })
+  }
+  mockIsland.addOwnedItem(itemId)
+  return { item: { ...item, owned: true }, woolBalance: balance }
 }

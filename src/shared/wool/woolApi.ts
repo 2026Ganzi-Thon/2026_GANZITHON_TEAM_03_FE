@@ -1,9 +1,7 @@
-import { mockDb, mockDelay } from '@/shared/mock'
+import { api } from '@/shared/api'
 import type { WoolWallet } from '@/shared/types'
 
-// TODO(API 연결): 본문만 `return api.get<WoolWallet>('/wool-wallet')` 로 바꾸고 `@/shared/mock` import 를 지운다.
-/** 내 양털 잔액. `GET /api/v1/wool-wallet` 의 `data`. 지금은 가짜 DB 값(홈 요약의 woolBalance 와 같은 값). */
-export async function fetchWoolWallet(): Promise<WoolWallet> {
-  await mockDelay()
-  return mockDb.wool.balance()
+/** 내 양털 잔액. `GET /api/v1/wool-wallet` 의 `data`. 지갑이 없으면 balance 0, updatedAt null(홈 요약의 woolBalance 와 같은 값). */
+export function fetchWoolWallet(): Promise<WoolWallet> {
+  return api.get<WoolWallet>('/wool-wallet')
 }

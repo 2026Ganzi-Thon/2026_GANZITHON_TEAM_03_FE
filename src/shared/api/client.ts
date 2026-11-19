@@ -31,6 +31,8 @@ export interface RequestOptions {
   signal?: AbortSignal
   /** false면 Access Token을 붙이지 않고 만료 재발급도 하지 않는다. (회원가입·로그인 등) 기본 true */
   auth?: boolean
+  /** 특정 흐름에서 쿠키(예: Google 로그인 challenge)를 명시적으로 주고받는다. */
+  withCredentials?: boolean
   /**
    * `Idempotency-Key` 헤더. true면 새 UUID를 만들고, 문자열이면 그 값을 쓴다.
    * 같은 동작을 재시도할 때는 직전에 쓴 키를 그대로 넘긴다. (고민 작성, 돌봄 완료·취소, 휴식 시작)
@@ -86,7 +88,13 @@ http.interceptors.response.use(undefined, async (error: unknown) => {
     apiError.status === 401 &&
     apiError.code === 'AUTH_ACCESS_TOKEN_EXPIRED'
 
-  if (!expired) throw apiError
+  if (!expired) {
+    // 토큰을 붙인 요청이 토큰 오류(없음·위조·재발급 뒤에도 만료)로 거절되면 로그인이 풀린 것이다 — 앱에 알린다(로그인 화면으로)
+    if (config !== undefined && !config.skipAuth && apiError.status === 401 && apiError.code.startsWith('AUTH_ACCESS_TOKEN_')) {
+      notifyAuthLost()
+    }
+    throw apiError
+  }
 
   await refreshAccessToken()
   config.retried = true // 원래 요청은 최대 한 번만 다시 보낸다.
@@ -151,6 +159,7 @@ async function request<T>(config: AxiosRequestConfig, options: RequestOptions = 
     params: options.query,
     signal: options.signal,
     skipAuth: options.auth === false,
+    ...(options.withCredentials !== undefined && { withCredentials: options.withCredentials }),
   })
 
   if (response.status === 204) return undefined as T

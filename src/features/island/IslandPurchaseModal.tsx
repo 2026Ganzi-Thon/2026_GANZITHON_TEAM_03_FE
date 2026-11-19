@@ -20,7 +20,7 @@ function objectParticle(word: string): string {
 
 /**
  * 구매 확인(공용 Modal). 양털이 모자라면 몇 개 더 필요한지 알리고 `구매`를 막는다. 사는 동안은 두 버튼 모두 막는다.
- * 임의 결정(확인 필요): 문구("…을 양털 N개로 살까요?", "구매하면 양털이 N개 남아요", "양털이 N개 더 필요해요", 실패 문구) — 시안 없음
+ * 임의 결정(확인 필요): 문구("…을 양털 N개로 살까요?", "지금은 시험 운영 중이라 사도 양털이 줄지 않아요", "양털이 N개 더 필요해요", 실패 문구) — 시안 없음
  */
 export function IslandPurchaseModal({ item, woolBalance, state, onConfirm, onClose }: IslandPurchaseModalProps) {
   const purchasing = state.status === 'purchasing'
@@ -38,7 +38,8 @@ export function IslandPurchaseModal({ item, woolBalance, state, onConfirm, onClo
         ? `양털이 ${shortage}개 더 필요해요.`
         : state.status === 'error'
           ? '구매하지 못했어요. 잠시 후 다시 시도해 주세요.'
-          : `구매하면 양털이 ${woolBalance - item.price}개 남아요.`
+          : // 임의 결정(확인 필요): 섬 꾸미기 API 가 없어 서버 양털을 깎지 못한다 — "N개 남아요" 대신 줄지 않는다고 알린다
+            '지금은 시험 운영 중이라 사도 양털이 줄지 않아요.'
 
   return (
     <Modal

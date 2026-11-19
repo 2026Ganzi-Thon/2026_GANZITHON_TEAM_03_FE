@@ -1,5 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+// 인앱 브라우저 탈출·설치 이벤트 받기도 라우터보다 먼저(app/installSetup.ts)
+import '@/app/installSetup'
 // `?reset` 처리는 라우터가 첫 주소를 읽기 전에 해야 해서 가장 먼저 불러온다
 import '@/app/resetDemo'
 import '@/app/global.css'
