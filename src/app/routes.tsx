@@ -537,6 +537,7 @@ export function SettingsRoute() {
     <SettingsPage
       onBack={() => (location.key === 'default' ? navigate('/', { replace: true }) : navigate(-1))}
       onSwitchAccount={() => logout()}
+      onLogout={logout}
     />
   )
 }
