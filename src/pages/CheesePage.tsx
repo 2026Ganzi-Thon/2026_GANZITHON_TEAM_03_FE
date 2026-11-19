@@ -13,12 +13,14 @@ export interface CheesePageProps {
   onSelect: (concernId: string | null) => void
   /** 고민 상세로 — "위로 남기기" 버튼과 카드의 "…더보기" */
   onOpenConcern: (concernId: string) => void
+  /** "고민 남기기" — 고민 쓰기로 */
+  onWrite?: () => void
   /** "내 치즈 보관함" 배너 */
   onOpenVault?: () => void
   onOpenGuide?: () => void
 }
 
-/** "우유와 치즈": 이웃 폴리의 고민(우유병)을 3개씩 넘겨 보고 하나를 골라 위로하러 간다. */
+/** "우유와 치즈": 이웃 폴리의 고민(우유병)을 3개씩 넘겨 보고 하나를 골라 위로하러 간다. 내 고민은 "고민 남기기"로 쓴다. */
 export default function CheesePage({
   woolCount,
   page,
@@ -26,6 +28,7 @@ export default function CheesePage({
   selectedId,
   onSelect,
   onOpenConcern,
+  onWrite,
   onOpenVault,
   onOpenGuide,
 }: CheesePageProps) {
@@ -68,6 +71,10 @@ export default function CheesePage({
       )}
 
       <div className={styles.actions}>
+        {/* 임의 결정(확인 필요): 고민 쓰기 진입 — 시안에 없어 "위로 남기기"와 같은 줄 왼쪽에 테두리 버튼으로 둔다(줄 높이 그대로) */}
+        <Button variant="outline" onClick={onWrite}>
+          고민 남기기
+        </Button>
         <Button disabled={!selected} onClick={() => selected && onOpenConcern(selected)}>
           위로 남기기
         </Button>

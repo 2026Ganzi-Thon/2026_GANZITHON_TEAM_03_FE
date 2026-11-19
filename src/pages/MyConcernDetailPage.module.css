@@ -36,3 +36,46 @@
   align-items: flex-start;
   gap: var(--space-2);
 }
+
+/* 위로 아래 버튼 줄 — 위로 목록과 24px(감정 기록 상세의 삭제 버튼과 같은 간격) */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+}
+
+.actionRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.delete {
+  min-width: 72px;
+}
+
+.save {
+  min-width: 124px;
+}
+
+.actionHint,
+.actionError {
+  min-height: calc(var(--font-size-small) * var(--line-height-small));
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-light);
+  line-height: var(--line-height-small);
+  color: var(--color-text-muted);
+  text-align: right;
+}
+
+.actionError {
+  font-weight: var(--font-weight-regular);
+  color: var(--color-error);
+}
+
+.deleteError {
+  min-height: 1lh;
+  margin-top: var(--space-1);
+  color: var(--color-error);
+}
