@@ -42,6 +42,8 @@ export interface InitialProfileRequest {
   regionCode?: string | null
 }
 
+export type InitialProfileResponse = Profile
+
 export interface NicknameAvailabilityParams {
   nickname: string
 }

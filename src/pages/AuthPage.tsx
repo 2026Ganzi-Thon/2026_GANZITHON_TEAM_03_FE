@@ -1,23 +1,41 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { BackButton, Button, Checkbox, TextField } from '@/shared/ui'
-import googleLogo from '@/assets/images/google-original.png'
+import { GoogleIdentityButton } from '@/features/auth'
 import styles from './AuthPage.module.css'
 
 export interface AuthPageProps {
   mode: 'login' | 'signup'
   onBack: () => void
   onSwitchMode: () => void
-  onContinue: () => void
+  onContinue: (values: { email: string; password: string }) => void | Promise<void>
+  onGoogleCredential: (credential: string) => void
+  googleLoading: boolean
+  googleError: string
+  authLoading: boolean
+  authError: string
 }
 
-export default function AuthPage({ mode, onBack, onSwitchMode, onContinue }: AuthPageProps) {
+export default function AuthPage({
+  mode,
+  onBack,
+  onSwitchMode,
+  onContinue,
+  onGoogleCredential,
+  googleLoading,
+  googleError,
+  authLoading,
+  authError,
+}: AuthPageProps) {
   const [remember, setRemember] = useState(false)
   const isSignup = mode === 'signup'
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim()
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    onContinue()
+    if (isSignup) return
+    const form = new FormData(event.currentTarget)
+    onContinue({ email: String(form.get('email') ?? '').trim(), password: String(form.get('password') ?? '') })
   }
 
   return (
@@ -34,14 +52,22 @@ export default function AuthPage({ mode, onBack, onSwitchMode, onContinue }: Aut
       {/* 위·아래 두 빈칸이 화면 높이에 따라 늘고 준다(시안 852 기준 95 : 147) */}
       <div className={styles.spacerTop} aria-hidden="true" />
 
-      <button type="button" className={styles.google}>
-        <img className={styles.googleMark} src={googleLogo} alt="" aria-hidden="true" />
-        <span>Google로 계속하기</span>
-      </button>
+      <div className={styles.googleArea} aria-busy={googleLoading}>
+        {googleClientId ? (
+          <GoogleIdentityButton
+            clientId={googleClientId}
+            onCredential={onGoogleCredential}
+            disabled={googleLoading}
+          />
+        ) : (
+          <p className={styles.googleError} role="status">Google Client ID 설정이 필요해요.</p>
+        )}
+        {googleLoading && <p className={styles.googleLoading} role="status">Google 로그인 중...</p>}
+        {googleError && <p className={styles.googleError} role="alert">{googleError}</p>}
+      </div>
       <p className={styles.divider}>또는</p>
 
-      {/* TODO(임시): 로그인 API 연결 전까지 로그인은 입력 검사를 건너뛰어 빈 폼으로도 홈에 들어갈 수 있다(noValidate). 연결 시 제거 */}
-      <form className={styles.form} onSubmit={handleSubmit} noValidate={!isSignup}>
+      <form className={styles.form} onSubmit={handleSubmit}>
         <TextField
           className={styles.email}
           label="이메일"
@@ -59,7 +85,7 @@ export default function AuthPage({ mode, onBack, onSwitchMode, onContinue }: Aut
           autoComplete={isSignup ? 'new-password' : 'current-password'}
           placeholder="비밀번호를 입력해주세요"
           hint="8자 이상, 대문자 포함, 숫자 포함, 특수문자 포함"
-          minLength={8}
+          minLength={isSignup ? 8 : undefined}
           required
         />
         <Checkbox
@@ -73,7 +99,9 @@ export default function AuthPage({ mode, onBack, onSwitchMode, onContinue }: Aut
 
         <div className={styles.spacerBottom} aria-hidden="true" />
 
-        <Button className={styles.submit} variant="primary" size="lg" fullWidth type="submit">
+        {isSignup && <p className={styles.signupNotice} role="status">이메일 인증 회원가입은 준비 중이에요. Google로 가입해 주세요.</p>}
+        {authError && <p className={styles.googleError} role="alert">{authError}</p>}
+        <Button className={styles.submit} variant="primary" size="lg" fullWidth type="submit" disabled={authLoading || isSignup}>
           {isSignup ? '회원가입' : '로그인'}
         </Button>
       </form>

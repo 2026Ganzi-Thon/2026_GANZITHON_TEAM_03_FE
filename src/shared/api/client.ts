@@ -31,6 +31,8 @@ export interface RequestOptions {
   signal?: AbortSignal
   /** false면 Access Token을 붙이지 않고 만료 재발급도 하지 않는다. (회원가입·로그인 등) 기본 true */
   auth?: boolean
+  /** 특정 흐름에서 쿠키(예: Google 로그인 challenge)를 명시적으로 주고받는다. */
+  withCredentials?: boolean
   /**
    * `Idempotency-Key` 헤더. true면 새 UUID를 만들고, 문자열이면 그 값을 쓴다.
    * 같은 동작을 재시도할 때는 직전에 쓴 키를 그대로 넘긴다. (고민 작성, 돌봄 완료·취소, 휴식 시작)
@@ -151,6 +153,7 @@ async function request<T>(config: AxiosRequestConfig, options: RequestOptions = 
     params: options.query,
     signal: options.signal,
     skipAuth: options.auth === false,
+    ...(options.withCredentials !== undefined && { withCredentials: options.withCredentials }),
   })
 
   if (response.status === 204) return undefined as T

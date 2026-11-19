@@ -18,8 +18,11 @@ import OnboardingPage from '@/pages/OnboardingPage'
 import SettingsPage from '@/pages/SettingsPage'
 import SplashPage from '@/pages/SplashPage'
 import { useWoolBalance } from '@/shared/wool'
+import { isGoogleSignupConsentRequired, signInWithEmail, signInWithGoogle } from '@/features/auth'
+import { fetchNicknameAvailability } from '@/features/account'
+import type { InitialSetupValues } from '@/pages/InitialSetupPage'
 import AppTabBar from './AppTabBar'
-import { hasPassedEntry, hasSeenOnboarding, markEntryPassed, markOnboardingSeen } from './entry'
+import { hasPassedEntry, markEntryPassed, markOnboardingSeen } from './entry'
 
 // 라우트 요소: 페이지의 콜백 props 를 useNavigate·useParams 로 경로에 연결한다(페이지는 react-router 를 모른다).
 // 끝난 화면(스플래시 종료·온보딩 완료·로그인 완료·저장·삭제·위로 완료)에서의 이동은 replace — 브라우저 뒤로가기가 끝난 화면으로 돌아가지 않게.
@@ -43,7 +46,7 @@ export function SplashRoute() {
   const navigate = useNavigate()
   return (
     <SplashPage
-      onComplete={() => navigate(hasSeenOnboarding() ? '/login' : '/onboarding', { replace: true })}
+      onComplete={() => navigate('/onboarding', { replace: true })}
     />
   )
 }
@@ -61,39 +64,110 @@ export function OnboardingRoute() {
   )
 }
 
-export function LoginRoute() {
+function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {
   const navigate = useNavigate()
-  return (
-    <AuthPage
-      mode="login"
-      onBack={() => navigate('/onboarding')}
-      onSwitchMode={() => navigate('/signup')}
-      onContinue={() => {
+  const [googleLoading, setGoogleLoading] = useState(false)
+  const [googleError, setGoogleError] = useState('')
+  const [authLoading, setAuthLoading] = useState(false)
+  const [authError, setAuthError] = useState('')
+
+  const handleGoogleCredential = async (credential: string) => {
+    setGoogleLoading(true)
+    setGoogleError('')
+    try {
+      const result = await signInWithGoogle(credential)
+      if (result.isNewUser) {
+        navigate('/setup', { state: { googleCredential: credential, requiresConsent: false } })
+      } else if (!result.user.profileCompleted) {
+        navigate('/setup', { state: { requiresConsent: false } })
+      } else {
         markEntryPassed()
         navigate('/', { replace: true })
-      }}
+      }
+    } catch (error) {
+      if (isGoogleSignupConsentRequired(error)) {
+        navigate('/setup', { state: { googleCredential: credential, requiresConsent: true } })
+      } else {
+        setGoogleError(error instanceof Error ? error.message : 'Google 로그인을 완료하지 못했어요.')
+      }
+    } finally {
+      setGoogleLoading(false)
+    }
+  }
+
+  const handleContinue = async ({ email, password }: { email: string; password: string }) => {
+    setAuthError('')
+    if (mode === 'signup') {
+      navigate('/setup')
+      return
+    }
+
+    setAuthLoading(true)
+    try {
+      const result = await signInWithEmail(email, password)
+      if (!result.user.profileCompleted) {
+        navigate('/setup', { state: { requiresConsent: false } })
+      } else {
+        markEntryPassed()
+        navigate('/', { replace: true })
+      }
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : '로그인하지 못했어요. 다시 시도해주세요.')
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  return (
+    <AuthPage
+      mode={mode}
+      onBack={() => navigate(mode === 'login' ? '/onboarding' : '/login')}
+      onSwitchMode={() => navigate(mode === 'login' ? '/signup' : '/login')}
+      onGoogleCredential={handleGoogleCredential}
+      googleLoading={googleLoading}
+      googleError={googleError}
+      authLoading={authLoading}
+      authError={authError}
+      onContinue={handleContinue}
     />
   )
 }
 
+export function LoginRoute() {
+  return <AuthRoute mode="login" />
+}
+
 export function SignupRoute() {
-  const navigate = useNavigate()
-  return (
-    <AuthPage
-      mode="signup"
-      onBack={() => navigate('/login')}
-      onSwitchMode={() => navigate('/login')}
-      onContinue={() => navigate('/setup')}
-    />
-  )
+  return <AuthRoute mode="signup" />
 }
 
 export function SetupRoute() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const [googleError, setGoogleError] = useState('')
+  const routeState = location.state as { googleCredential?: string; requiresConsent?: boolean } | null
   return (
     <InitialSetupPage
       onBack={() => navigate('/signup')}
       onLogin={() => navigate('/login')}
+      onCheckNickname={async (nickname) => (await fetchNicknameAvailability(nickname)).available}
+      requiresConsent={routeState?.requiresConsent ?? true}
+      submissionError={googleError}
+      onBeforeComplete={async (values: InitialSetupValues) => {
+        if (!routeState?.googleCredential || !routeState.requiresConsent) return true
+        setGoogleError('')
+        try {
+          await signInWithGoogle(routeState.googleCredential, {
+            termsAgreed: true,
+            privacyAgreed: true,
+            marketingAgreed: values.consents.marketing,
+          })
+          return true
+        } catch (error) {
+          setGoogleError(error instanceof Error ? error.message : 'Google 회원가입을 완료하지 못했어요.')
+          return false
+        }
+      }}
       onComplete={() => {
         markEntryPassed()
         navigate('/', { replace: true })
