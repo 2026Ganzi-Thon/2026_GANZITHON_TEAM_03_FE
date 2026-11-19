@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import islandImage from '@/assets/images/island@2x.webp'
 import type { IslandItem } from './types'
 import styles from './IslandScene.module.css'
@@ -8,6 +8,11 @@ export interface IslandSceneProps {
   placed?: IslandItem[]
   /** 놓일 때 나타나는 움직임. 섬 꾸미기에서는 켜고, 이미 놓인 모습만 보여주는 곳(홈)에서는 끈다. 기본 true */
   animate?: boolean
+  /**
+   * 섬 위에 겹쳐 그릴 것(홈의 양). 섬과 같은 정사각형 안 맨 위에 놓인다 — 스스로 absolute 로 자리를 채운다.
+   * 다른 기능의 것이라(기능끼리 import 금지) 페이지가 넣어 준다
+   */
+  overlay?: ReactNode
 }
 
 /** 물결이 한 번 올라갔다 내려오는 시간(ms). IslandScene.module.css 의 --wave-bob(2.8초)의 두 배 */
@@ -29,7 +34,7 @@ function syncToWave(element: HTMLElement | null) {
  * 물에는 빛 물결이 흐르며 출렁이고, 물에 뜬 아이템(floatAt)은 그 박자에 맞춰 까딱인다.
  * 들어갈 자리에 맞춰 최대 345px 까지 줄어든다. 홈의 섬 자리에도 페이지가 이 컴포넌트를 끼워 넣는다(HomePage).
  */
-export function IslandScene({ placed = [], animate = true }: IslandSceneProps) {
+export function IslandScene({ placed = [], animate = true, overlay }: IslandSceneProps) {
   const layers = placed
     .filter((item) => item.placedImageUrl !== null)
     .sort((a, b) => a.placedOrder - b.placedOrder)
@@ -67,6 +72,7 @@ export function IslandScene({ placed = [], animate = true }: IslandSceneProps) {
             decoding="async"
           />
         ))}
+        {overlay}
       </div>
     </div>
   )

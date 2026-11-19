@@ -27,7 +27,7 @@ export default function OnboardingPage() {
 
 - `pages/` 에서 `@/features/home` 의 `index.ts` 로만 가져온다(`app → pages → features → shared`).
 - **온보딩 feature 안에서 홈 feature를 import 하면 안 된다**(feature끼리 import 금지). 호출은 반드시 페이지에서 한다.
-- 받는 대상은 홈의 섬 일러스트(`island@2x.png`, 약 400KB) 하나다. 더 필요한 이미지가 생기면 `src/features/home/preloadHomeAssets.ts` 의 목록에 홈 담당이 추가한다.
+- 받는 대상은 홈의 섬 일러스트(`island@2x.webp`)와, 섬 디코딩이 끝난 뒤 한가할 때 낮은 우선순위로 받는 섬의 양 그림(`sheep/sheep-atlas.webp`·`cave-front-mask.webp`, 합계 약 135KB, 디코딩까지)이다. 더 필요한 이미지가 생기면 `src/features/home/preloadHomeAssets.ts` 에 홈 담당이 추가한다.
 
 ## 참고
 

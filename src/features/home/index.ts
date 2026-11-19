@@ -1,6 +1,8 @@
 export { HomeHeader } from './HomeHeader'
 export { HomeSummaryPanel } from './HomeSummaryPanel'
 export { IslandHero } from './IslandHero'
+export { IslandSheep } from './sheep/IslandSheep'
+export type { SheepIslandLayer } from './sheep/sheepLayers'
 export { HomeShortcuts } from './HomeShortcuts'
 export { preloadHomeAssets } from './preloadHomeAssets'
 export { useHomeSummary } from './useHomeSummary'
