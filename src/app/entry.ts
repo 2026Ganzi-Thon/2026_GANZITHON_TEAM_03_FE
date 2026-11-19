@@ -3,7 +3,8 @@
 // "온보딩을 본 적이 있는지"를 localStorage 로 본다. 같은 탭 새로고침은 그대로 머물고, 앱을 새로 열면 스플래시부터.
 // storage 를 못 쓰는 환경(사파리 비공개 모드 등)에서는 메모리 값으로만 기억한다(새로고침하면 다시 시작 흐름).
 
-const PASSED_KEY = 'polly.entryPassed'
+// 기존 `polly.entryPassed`는 입력값 없이도 홈으로 보냈던 임시 로그인에서 기록될 수 있어 새 키로 분리한다.
+const PASSED_KEY = 'polly.entryPassed.v2'
 const ONBOARDING_KEY = 'polly.onboardingSeen'
 
 const memory = { passed: false, onboardingSeen: false }

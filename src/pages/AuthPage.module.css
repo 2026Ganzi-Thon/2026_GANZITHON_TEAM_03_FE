@@ -91,6 +91,31 @@
   object-fit: contain;
 }
 
+.googleArea {
+  width: 100%;
+  flex: none;
+}
+
+.googleLoading,
+.googleError {
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-small);
+  text-align: center;
+}
+
+.googleError {
+  color: var(--color-error);
+}
+
+.signupNotice {
+  margin-top: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-small);
+}
+
 .divider {
   flex: none;
   margin: 29px 0 20.5px;

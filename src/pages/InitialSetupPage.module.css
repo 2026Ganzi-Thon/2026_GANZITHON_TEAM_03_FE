@@ -50,6 +50,15 @@
   letter-spacing: -0.375px;
 }
 
+.consentNotice,
+.formError {
+  flex: none;
+  margin-top: var(--space-3);
+  color: var(--color-error);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-small);
+}
+
 .form {
   display: flex;
   min-height: 0;
