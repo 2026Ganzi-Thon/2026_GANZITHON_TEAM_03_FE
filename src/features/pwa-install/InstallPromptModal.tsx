@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button, Modal } from '@/shared/ui'
-import { AddToHomeIcon, ShareIcon } from './icons'
+import { AddToHomeIcon, CheckIcon, ShareIcon } from './icons'
 import styles from './InstallPromptModal.module.css'
 
 /**
@@ -47,9 +47,10 @@ async function copyText(text: string): Promise<boolean> {
 }
 
 /**
- * 앱 설치 안내(공용 Modal). 시안이 없어 동굴 문 열기·섬 구매 확인과 같은 톤으로 만들었다.
- * 임의 결정(확인 필요): 제목 "폴리의 섬을 앱으로 설치해 보세요", 설명 "홈 화면에서 바로 열고 전체 화면으로 쓸 수 있어요.",
- * iOS 순서 문구, 인앱 문구 "여기서는 설치할 수 없어요 …", 버튼 "다음에"·"설치하기"·"알겠어요"·"주소 복사"·"브라우저로 열기" — 시안 없음
+ * 앱 설치 안내(공용 Modal). 앱 아이콘·제목·한 줄 설명을 가운데 정렬하고, iOS 는 아이콘 + 짧은 한 줄 3단계, 버튼은 가로 꽉.
+ * 임의 결정(확인 필요): 제목 "폴리의 섬을 앱으로 설치해 보세요", 설명 "홈 화면에서 바로 열 수 있어요." /
+ * "{Safari|기본 브라우저}에서 열어야 설치할 수 있어요.", iOS 단계 "공유 누르기 → 홈 화면에 추가 고르기 → 추가 누르기",
+ * 버튼 "다음에"·"설치하기"·"알겠어요"·"주소 복사"·"브라우저로 열기" — 시안 없음, 사용자 요청으로 문구를 짧게(2026-11-19)
  */
 export function InstallPromptModal({
   open,
@@ -69,45 +70,43 @@ export function InstallPromptModal({
 
   const title = (
     <span className={styles.heading}>
-      <img className={styles.appIcon} src="/pwa-192x192.png" alt="" width={48} height={48} />
+      <img className={styles.appIcon} src="/pwa-192x192.png" alt="" width={56} height={56} />
       <span>폴리의 섬을 앱으로 설치해 보세요</span>
     </span>
   )
 
-  const footer =
-    variant === 'prompt' ? (
-      <>
-        <Button variant="outline" size="sm" onClick={onClose}>
-          다음에
-        </Button>
-        <Button size="sm" onClick={onInstall}>
-          설치하기
-        </Button>
-      </>
-    ) : variant === 'ios' ? (
-      <Button size="sm" onClick={onClose}>
-        알겠어요
-      </Button>
-    ) : (
-      <>
-        <Button variant="outline" size="sm" onClick={onClose}>
-          다음에
-        </Button>
-        {externalUrl ? (
-          <Button size="sm" onClick={onOpenExternal}>
-            브라우저로 열기
+  // 버튼은 가로를 꽉 채워 가운데 정렬(두 개면 반씩)
+  const footer = (
+    <div className={styles.actions}>
+      {variant === 'prompt' ? (
+        <>
+          <Button variant="outline" onClick={onClose}>
+            다음에
           </Button>
-        ) : (
-          <Button size="sm" onClick={handleCopy}>
-            {copied === 'done' ? '복사했어요' : '주소 복사'}
+          <Button onClick={onInstall}>설치하기</Button>
+        </>
+      ) : variant === 'ios' ? (
+        <Button onClick={onClose}>알겠어요</Button>
+      ) : (
+        <>
+          <Button variant="outline" onClick={onClose}>
+            다음에
           </Button>
-        )}
-      </>
-    )
+          {externalUrl ? (
+            <Button onClick={onOpenExternal}>브라우저로 열기</Button>
+          ) : (
+            <Button onClick={handleCopy}>{copied === 'done' ? '복사했어요' : '주소 복사'}</Button>
+          )}
+        </>
+      )}
+    </div>
+  )
 
   return (
     <Modal open={open} onClose={onClose} title={title} footer={footer}>
-      <p>홈 화면에서 바로 열고 전체 화면으로 쓸 수 있어요.</p>
+      <p className={styles.lead}>
+        {variant === 'openInBrowser' ? `${browserName}에서 열어야 설치할 수 있어요.` : '홈 화면에서 바로 열 수 있어요.'}
+      </p>
       {variant === 'ios' && (
         <ol className={styles.steps}>
           <li>
@@ -115,8 +114,7 @@ export function InstallPromptModal({
               <ShareIcon />
             </span>
             <span>
-              Safari의 <b className={styles.strong}>공유</b> 버튼을 눌러요
-              <span className={styles.hint}>주소창 옆이나 화면 아래, 또는 ··· 메뉴 안에 있어요</span>
+              <b className={styles.strong}>공유</b> 누르기
             </span>
           </li>
           <li>
@@ -124,32 +122,23 @@ export function InstallPromptModal({
               <AddToHomeIcon />
             </span>
             <span>
-              <b className={styles.strong}>홈 화면에 추가</b>를 골라요
-              <span className={styles.hint}>안 보이면 목록을 아래로 내려 보세요</span>
+              <b className={styles.strong}>홈 화면에 추가</b> 고르기
             </span>
           </li>
           <li>
-            <span className={styles.stepIcon} aria-hidden="true">
-              <span className={styles.stepNumber}>3</span>
+            <span className={styles.stepIcon}>
+              <CheckIcon />
             </span>
             <span>
-              오른쪽 위 <b className={styles.strong}>추가</b>를 누르면 끝이에요
+              <b className={styles.strong}>추가</b> 누르기
             </span>
           </li>
         </ol>
       )}
-      {variant === 'openInBrowser' && (
-        <div className={styles.notice}>
-          <p>
-            여기서는 설치할 수 없어요. <b className={styles.strong}>{browserName}</b>로 열어 홈 화면에 추가해 주세요.
-          </p>
-          {!externalUrl && <p className={styles.hint}>주소를 복사해 {browserName} 주소창에 붙여 넣으면 돼요.</p>}
-          {copied === 'failed' && (
-            <p className={styles.warning} role="alert">
-              복사하지 못했어요. 주소창의 주소를 길게 눌러 복사해 주세요.
-            </p>
-          )}
-        </div>
+      {copied === 'failed' && (
+        <p className={styles.warning} role="alert">
+          복사하지 못했어요. 주소창에서 복사해 주세요.
+        </p>
       )}
     </Modal>
   )
