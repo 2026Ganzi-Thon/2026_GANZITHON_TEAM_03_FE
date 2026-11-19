@@ -1,0 +1,141 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.day {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 날짜 제목: 기록 상세 라벨과 같은 16px Medium */
+.dayTitle {
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 행 높이는 두 줄(이름 14px + 시각 12px)과 위아래 여백으로 고정 — 막대도 같은 높이 */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 58px;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.label {
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-small);
+}
+
+.time {
+  font-size: 12px;
+  font-weight: var(--font-weight-light);
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.plus,
+.minus {
+  flex: none;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.plus {
+  color: var(--color-primary);
+}
+
+.minus {
+  color: var(--color-text-muted);
+}
+
+.more {
+  align-self: center;
+}
+
+.message {
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-light);
+  line-height: var(--line-height-small);
+  color: var(--color-text-muted);
+}
+
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 막대: 글자 줄 높이에서 위아래 4px 씩 뺀 두께 */
+.barDay,
+.barLabel,
+.barTime,
+.barAmount {
+  display: block;
+  border-radius: var(--radius-full);
+  background-color: var(--color-border-subtle);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.barDay {
+  width: 64px;
+  height: calc(var(--font-size-normal) * var(--line-height-normal) - 8px);
+  margin: 4px 0;
+}
+
+.barLabel {
+  width: 96px;
+  height: calc(var(--font-size-small) * var(--line-height-small) - 8px);
+  margin: 4px 0;
+}
+
+.barTime {
+  width: 56px;
+  height: 10px;
+  margin: 4px 0;
+}
+
+.barAmount {
+  width: 40px;
+  height: calc(var(--font-size-small) * var(--line-height-small) - 8px);
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barDay,
+  .barLabel,
+  .barTime,
+  .barAmount {
+    animation: none;
+  }
+}

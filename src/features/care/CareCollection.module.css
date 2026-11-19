@@ -274,3 +274,18 @@
     padding: 0 9px;
   }
 }
+
+/* "내 양털" 알약을 감싸는 버튼 — 모양은 알약 그대로, 누를 때만 살짝 흐리게 */
+.woolButton {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.woolButton:active {
+  opacity: 0.7;
+}

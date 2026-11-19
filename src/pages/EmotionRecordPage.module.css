@@ -99,9 +99,11 @@
   color: var(--color-text-muted);
 }
 
-/* 지푸라기와 시안 간격(작성 화면의 먹이주기 버튼과 같은 24px) */
-.delete {
-  align-self: flex-end;
+/* 지푸라기와 시안 간격(작성 화면의 먹이주기 버튼과 같은 24px). 수정·삭제를 오른쪽에 나란히 */
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
   margin-top: var(--space-6);
 }
 

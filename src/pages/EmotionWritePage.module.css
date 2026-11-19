@@ -51,8 +51,50 @@
 }
 
 .notice {
-  margin-top: -33px;
+  /* 버튼 아래 8px(폼 간격 49px를 줄인다). 버튼 아래라 떠도 위쪽이 밀리지 않는다 */
+  margin-top: calc(var(--space-2) - 49px);
   font-size: var(--font-size-small);
   line-height: var(--line-height-small);
   color: var(--color-error);
+}
+
+/* 수정 화면의 "○월 ○일 ○요일 기록 수정" 줄. 감정 칩과 16px(폼 간격 49px를 줄인다) */
+.editing,
+.editingSkeleton {
+  margin-bottom: calc(var(--space-4) - 49px);
+}
+
+.editing {
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+}
+
+/* 기록을 받는 동안 같은 높이의 막대 */
+.editingSkeleton {
+  display: block;
+  width: 60%;
+  height: calc(var(--font-size-normal) * var(--line-height-normal) - 8px);
+  margin-top: 4px;
+  margin-bottom: calc(var(--space-4) - 49px + 4px);
+  border-radius: var(--radius-full);
+  background-color: var(--color-border-subtle);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.notFoundBack {
+  align-self: flex-start;
+  margin-top: var(--space-2);
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .editingSkeleton {
+    animation: none;
+  }
 }

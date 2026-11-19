@@ -1,0 +1,22 @@
+/* 폭·여백·safe-area 는 기록 상세(EmotionRecordPage)와 같다. 탭바가 없어 아래 여백만 둔다 */
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + var(--space-8));
+  max-width: var(--app-max-width);
+  margin: 0 auto;
+  overflow-x: hidden;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--page-padding-x);
+}
+
+/* 터치 영역(44px)만큼 왼쪽으로 빼서 화살표가 시안 위치(왼쪽에서 24px)에 오게 한다 — 기록 상세와 같음 */
+.back {
+  align-self: flex-start;
+  margin: -12px 0 var(--space-2) -8px;
+}
