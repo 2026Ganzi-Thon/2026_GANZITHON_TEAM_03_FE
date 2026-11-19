@@ -1,13 +1,14 @@
 import { queryOptions } from '@tanstack/react-query'
 import type { QueryClient } from '@tanstack/react-query'
-import { fetchConcernDetail, fetchConcernReplies, fetchConcerns, fetchMyConcerns } from './cheeseApi'
-import type { ConcernListResponse } from './types'
+import { fetchConcernDetail, fetchConcernReplies, fetchConcerns, fetchMyConcerns, fetchSavedConcerns } from './cheeseApi'
+import type { ConcernListResponse, MyConcernListResponse, SavedConcernListResponse } from './types'
 
 export const cheeseKeys = {
   all: ['cheese'] as const,
   concerns: () => [...cheeseKeys.all, 'concerns'] as const,
   concern: (concernId: string) => [...cheeseKeys.all, 'concern', concernId] as const,
   myConcerns: () => [...cheeseKeys.all, 'myConcerns'] as const,
+  savedConcerns: () => [...cheeseKeys.all, 'savedConcerns'] as const,
   replies: (concernId: string) => [...cheeseKeys.all, 'replies', concernId] as const,
 }
 
@@ -48,6 +49,15 @@ export const myConcernsQueryOptions = () =>
     queryFn: () => fetchMyConcerns({ page: 0, size: MY_CONCERNS_PAGE_SIZE }),
   })
 
+/**
+ * 보관한 치즈 목록(치즈 보관함의 "보관한 치즈" 탭). 내 고민 목록과 같이 들어올 때마다 뒤에서 다시 받고, 첫 페이지 50개만 받는다.
+ */
+export const savedConcernsQueryOptions = () =>
+  queryOptions({
+    queryKey: cheeseKeys.savedConcerns(),
+    queryFn: () => fetchSavedConcerns({ page: 0, size: MY_CONCERNS_PAGE_SIZE }),
+  })
+
 /** 개봉한 내 치즈의 받은 위로. 개봉 전(409)·남의 고민(404)은 재시도하지 않는다. */
 export const concernRepliesQueryOptions = (concernId: string) =>
   queryOptions({
@@ -63,4 +73,14 @@ export function removeConcernFromList(queryClient: QueryClient, concernId: strin
     const items = old.items.filter((item) => item.concernId !== concernId)
     return { ...old, items, count: items.length }
   })
+}
+
+/** 내 고민 목록·보관함 목록 캐시에서 고민 하나를 뺀다(삭제). 다시 받기는 쓰는 쪽이 정한다. */
+export function removeConcernFromMyLists(queryClient: QueryClient, concernId: string): void {
+  queryClient.setQueryData(cheeseKeys.myConcerns(), (old?: MyConcernListResponse) =>
+    old && { ...old, items: old.items.filter((item) => item.concernId !== concernId) },
+  )
+  queryClient.setQueryData(cheeseKeys.savedConcerns(), (old?: SavedConcernListResponse) =>
+    old && { ...old, items: old.items.filter((item) => item.concernId !== concernId) },
+  )
 }
