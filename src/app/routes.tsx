@@ -40,7 +40,7 @@ import {
 } from '@/features/auth'
 import { fetchNicknameAvailability } from '@/features/account'
 import type { CheeseTab } from '@/features/cheese'
-import { getAccessToken } from '@/shared/api'
+import { getAccessToken, hasErrorCode } from '@/shared/api'
 import type { InitialSetupValues } from '@/pages/InitialSetupPage'
 import AppTabBar from './AppTabBar'
 import { hasSeenOnboarding, markOnboardingSeen } from './entry'
@@ -116,6 +116,8 @@ function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {
   const signupState = mode === 'signup' ? routeState : null
   const [googleLoading, setGoogleLoading] = useState(false)
   const [googleError, setGoogleError] = useState('')
+  // 구글 로그인이 실패하면 올린다 — 버튼이 새 challenge 로 다시 준비돼 바로 다시 누를 수 있다
+  const [googleRetryKey, setGoogleRetryKey] = useState(0)
   const [authLoading, setAuthLoading] = useState(false)
   const [authError, setAuthError] = useState('')
 
@@ -137,6 +139,7 @@ function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {
         navigate('/setup', { state: { googleCredential: credential, requiresConsent: true } })
       } else {
         setGoogleError(error instanceof Error ? error.message : 'Google 로그인을 완료하지 못했어요.')
+        setGoogleRetryKey((key) => key + 1)
       }
     } finally {
       setGoogleLoading(false)
@@ -175,6 +178,7 @@ function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {
       onGoogleCredential={handleGoogleCredential}
       googleLoading={googleLoading}
       googleError={googleError}
+      googleRetryKey={googleRetryKey}
       authLoading={authLoading}
       authError={authError}
       onContinue={handleContinue}
@@ -377,6 +381,11 @@ export function SetupRoute() {
       openSession(result.user.profileCompleted, result.user.onboardingCompleted)
       return true
     } catch (error) {
+      // 약관을 입력하는 동안 challenge 유효시간(서버 5분)이 지나면 같은 credential 로는 가입할 수 없다 → 구글 로그인부터 다시
+      if (hasErrorCode(error, 'AUTH_GOOGLE_CHALLENGE_INVALID') || hasErrorCode(error, 'AUTH_GOOGLE_TOKEN_INVALID')) {
+        fail('구글 인증 시간이 지났어요. 구글로 다시 로그인해 주세요.', { label: '구글로 다시 로그인', onClick: () => navigate('/login') })
+        return false
+      }
       fail(error instanceof Error ? error.message : 'Google 회원가입을 완료하지 못했어요.')
       return false
     }

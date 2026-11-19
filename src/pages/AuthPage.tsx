@@ -12,6 +12,8 @@ export interface AuthPageProps {
   onContinue: (values: { email: string; password: string }) => void | Promise<void>
   onGoogleCredential: (credential: string) => void
   googleLoading: boolean
+  /** 구글 로그인이 실패하면 바뀐다 — 버튼이 새 challenge 로 다시 준비된다 */
+  googleRetryKey?: number
   googleError: string
   authLoading: boolean
   authError: string
@@ -50,6 +52,7 @@ export default function AuthPage(props: AuthPageProps) {
             clientId={googleClientId}
             onCredential={onGoogleCredential}
             disabled={googleLoading}
+            retryKey={props.googleRetryKey}
           />
         ) : (
           <p className={styles.googleError} role="status">Google Client ID 설정이 필요해요.</p>
