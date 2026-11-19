@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { hasErrorCode } from '@/shared/api'
 import { verificationMailErrorMessage } from './authErrors'
 import { sendVerificationEmail } from './emailSignupApi'
 import { rememberSentEmail } from './signupDraft'
+import { useResendCooldown } from './useResendCooldown'
 
-/** 같은 이메일 재발송 간격(서버 60초) */
-export const RESEND_COOLDOWN_SECONDS = 60
+export { RESEND_COOLDOWN_SECONDS } from './useResendCooldown'
 
-/** 메일 링크 유효시간(서버 30분) — 안내 문구용 */
+/** 메일 링크 유효시간(서버 30분) — 안내 문구용. 비밀번호 재설정 링크도 30분 */
 export const VERIFICATION_LINK_MINUTES = 30
 
 /**
@@ -18,29 +18,7 @@ export function useVerificationMail() {
   const [sentTo, setSentTo] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
-  const [cooldownUntil, setCooldownUntil] = useState(0)
-  /** 대기 중인 이메일 — 같은 이메일만 60초 막는다(다른 이메일은 바로 보낼 수 있음, IP 상한은 서버가 429) */
-  const [cooldownEmail, setCooldownEmail] = useState('')
-  const [now, setNow] = useState(() => Date.now())
-
-  useEffect(() => {
-    if (cooldownUntil <= Date.now()) return
-    const timer = window.setInterval(() => {
-      const current = Date.now()
-      setNow(current)
-      if (current >= cooldownUntil) window.clearInterval(timer)
-    }, 1000)
-    return () => window.clearInterval(timer)
-  }, [cooldownUntil])
-
-  const remainingSeconds = Math.max(0, Math.ceil((cooldownUntil - now) / 1000))
-
-  const startCooldown = (email: string) => {
-    const current = Date.now()
-    setCooldownEmail(email)
-    setNow(current)
-    setCooldownUntil(current + RESEND_COOLDOWN_SECONDS * 1000)
-  }
+  const cooldown = useResendCooldown()
 
   /** 보내고 성공 여부를 돌려준다 */
   const send = async (email: string) => {
@@ -51,19 +29,16 @@ export function useVerificationMail() {
       await sendVerificationEmail(email)
       setSentTo(email)
       rememberSentEmail(email)
-      startCooldown(email)
+      cooldown.start(email)
       return true
     } catch (caught) {
       setError(verificationMailErrorMessage(caught))
-      if (hasErrorCode(caught, 'AUTH_RATE_LIMITED')) startCooldown(email)
+      if (hasErrorCode(caught, 'AUTH_RATE_LIMITED')) cooldown.start(email)
       return false
     } finally {
       setSending(false)
     }
   }
-
-  /** 이 이메일로 지금 보낼 수 없으면 남은 초, 보낼 수 있으면 0 */
-  const waitFor = (email: string) => (email === cooldownEmail ? remainingSeconds : 0)
 
   /** 이메일 바꾸기 — 입력 단계로 */
   const changeEmail = () => {
@@ -71,5 +46,5 @@ export function useVerificationMail() {
     setError('')
   }
 
-  return { sentTo, sending, error, waitFor, send, changeEmail, clearError: () => setError('') }
+  return { sentTo, sending, error, waitFor: cooldown.waitFor, send, changeEmail, clearError: () => setError('') }
 }

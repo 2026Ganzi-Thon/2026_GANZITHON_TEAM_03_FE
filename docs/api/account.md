@@ -146,9 +146,12 @@ Response `data: { onboardingCompleted: boolean, onboardingCompletedAt: string }`
 | HTTP | 코드 | 의미 |
 | --- | --- | --- |
 | 200 | - | 성공 (반복 요청은 시각을 덮어쓰지 않고 기존 값 반환) |
-| 400 | COMMON_INVALID_REQUEST | 요청 형식 오류 |
+| 400 | COMMON_INVALID_REQUEST | 요청 형식 오류 (`completed` 외 필드가 있거나 true 가 아님, fieldErrors `completed`) |
 | 401 | AUTH_ACCESS_TOKEN_INVALID / _EXPIRED | 토큰 오류 / 만료 |
+| 404 | USER_NOT_FOUND | 인증 대상 회원 없음 |
 | 500 | COMMON_INTERNAL_ERROR | 서버 오류 |
+
+프론트 처리(2026-11-19): 온보딩은 로그인 전에 보므로 이 기기 기록(localStorage)에 먼저 적고, 로그인·복원 때 서버 값이 false 면 이 API 로 저장한다. 건너뛰기도 완료로 본다. 서버도 이 기기도 안 봤으면 로그인 뒤 온보딩을 먼저 보여준다(`app/session.ts`).
 
 메모: 온보딩 다시 보기는 프론트 기능으로 제공하고 이 값으로 접근을 막지 않는다. 미결정: **"건너뛰기"도 완료로 볼지**(추천은 완료로 간주), 일반·구글 가입 후 초기 설정과 온보딩의 화면 순서.
 
@@ -197,18 +200,19 @@ Response `data: { consentType: 'MARKETING', termsVersion: string, agreed: boolea
 | HTTP | 코드 | 의미 |
 | --- | --- | --- |
 | 200 | - | 성공 (같은 상태·버전 반복은 기존 결과 반환) |
-| 400 | COMMON_INVALID_REQUEST | 요청 형식 오류 |
+| 400 | COMMON_INVALID_REQUEST | 요청 형식 오류 (필드가 정확히 둘이 아님, `agreed` 가 boolean 아님, 버전이 비었거나 50자 초과 — fieldErrors 없음) |
 | 401 | AUTH_ACCESS_TOKEN_INVALID / _EXPIRED | 토큰 오류 / 만료 |
-| 409 | CONSENT_VERSION_MISMATCH | 새 동의에 쓴 약관 버전이 유효하지 않음 |
+| 404 | USER_NOT_FOUND | 인증 대상 회원 없음 |
+| 409 | CONSENT_VERSION_MISMATCH | 동의(true)에 쓴 버전이 서버 `MARKETING_VERSION` 과 다름 |
 | 500 | COMMON_INTERNAL_ERROR | 서버 오류 |
 
-메모: 새 버전 불일치를 이유로 **기존 수신 동의 철회 자체를 막지 않는다.** 마케팅 기능의 실제 제공 여부·문구·버전 관리 담당은 미정.
+메모: 새 버전 불일치를 이유로 **기존 수신 동의 철회 자체를 막지 않는다.** 철회(false)는 보낸 버전과 상관없이 서버가 직전 기록의 버전으로 남긴다(기록이 없으면 현재 버전). `Idempotency-Key` 는 받지 않는다. 마케팅 기능의 실제 제공 여부·문구·버전 관리 담당은 미정.
 
 ## 이 도메인 전용 오류 코드 요약
 
 | 코드 | HTTP | 발생 API |
 | --- | --- | --- |
-| USER_NOT_FOUND | 404 | 내 정보 조회 |
+| USER_NOT_FOUND | 404 | 내 정보 조회·온보딩 완료·마케팅 수신 동의 변경 |
 | USER_NICKNAME_DUPLICATED | 409 | 내 정보 수정·초기 프로필 설정 |
 | USER_INITIAL_PROFILE_ALREADY_COMPLETED | 409 | 초기 프로필 설정 |
 | CONSENT_VERSION_MISMATCH | 409 | 마케팅 수신 동의 변경 |
