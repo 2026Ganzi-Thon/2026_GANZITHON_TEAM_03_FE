@@ -7,18 +7,22 @@ import CaveSessionPage from '@/pages/CaveSessionPage'
 import CheesePage from '@/pages/CheesePage'
 import CheeseVaultPage from '@/pages/CheeseVaultPage'
 import ConcernDetailPage from '@/pages/ConcernDetailPage'
+import ConcernWritePage from '@/pages/ConcernWritePage'
 import EmotionPage from '@/pages/EmotionPage'
 import EmotionRecordPage from '@/pages/EmotionRecordPage'
 import EmotionWritePage from '@/pages/EmotionWritePage'
+import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
 import HomePage from '@/pages/HomePage'
 import InitialSetupPage from '@/pages/InitialSetupPage'
 import IslandDecoratePage from '@/pages/IslandDecoratePage'
 import MyConcernDetailPage from '@/pages/MyConcernDetailPage'
 import OnboardingPage from '@/pages/OnboardingPage'
+import ResetPasswordPage from '@/pages/ResetPasswordPage'
 import SettingsPage from '@/pages/SettingsPage'
 import SplashPage from '@/pages/SplashPage'
 import VerifyEmailPage from '@/pages/VerifyEmailPage'
 import WoolCollectionPage from '@/pages/WoolCollectionPage'
+import WoolHistoryPage from '@/pages/WoolHistoryPage'
 import { useWoolBalance } from '@/shared/wool'
 import {
   getResendEmail,
@@ -35,11 +39,12 @@ import {
   signupFailureOf,
 } from '@/features/auth'
 import { fetchNicknameAvailability } from '@/features/account'
+import type { CheeseTab } from '@/features/cheese'
 import { getAccessToken } from '@/shared/api'
 import type { InitialSetupValues } from '@/pages/InitialSetupPage'
 import AppTabBar from './AppTabBar'
-import { markOnboardingSeen } from './entry'
-import { logout, openSession, useSession } from './session'
+import { hasSeenOnboarding, markOnboardingSeen } from './entry'
+import { closeSessionAfterPasswordReset, finishOnboarding, getSession, logout, openSession, useSession } from './session'
 
 // 라우트 요소: 페이지의 콜백 props 를 useNavigate·useParams 로 경로에 연결한다(페이지는 react-router 를 모른다).
 // 끝난 화면(스플래시 종료·온보딩 완료·로그인 완료·저장·삭제·위로 완료)에서의 이동은 replace — 브라우저 뒤로가기가 끝난 화면으로 돌아가지 않게.
@@ -71,7 +76,8 @@ export function SplashRoute() {
     if (!done || session.status === 'restoring') return
     if (session.status === 'ready') navigate('/', { replace: true })
     else if (session.status === 'needsSetup') navigate('/setup', { replace: true, state: { requiresConsent: false } })
-    else navigate('/onboarding', { replace: true })
+    // 이 기기에서 온보딩을 본 적이 있으면(로그인 전에 봤거나 서버에 완료로 저장된 계정으로 로그인했던 기기) 로그인으로
+    else navigate(hasSeenOnboarding() ? '/login' : '/onboarding', { replace: true })
   }, [done, session.status, navigate])
   return <SplashPage onComplete={() => setDone(true)} />
 }
@@ -81,6 +87,14 @@ export function OnboardingRoute() {
   return (
     <OnboardingPage
       onComplete={() => {
+        // 완료·건너뛰기 모두 완료로 본다. 로그인돼 있으면(로그인 뒤 처음 보는 계정) 서버에도 저장하고 앱 화면으로,
+        // 로그인 전이면 이 기기에만 적어 두고 로그인 뒤에 서버에 저장한다(session.ts openSession)
+        const status = getSession().status
+        if (status === 'ready' || status === 'needsSetup') {
+          finishOnboarding()
+          navigate('/', { replace: true })
+          return
+        }
         markOnboardingSeen()
         // 임의 결정(확인 필요): 온보딩도 끝난 화면으로 보고 replace. 로그인의 뒤로 버튼은 그대로 /onboarding 으로 간다
         navigate('/login', { replace: true })
@@ -89,7 +103,7 @@ export function OnboardingRoute() {
   )
 }
 
-/** 회원가입 첫 화면(/signup)으로 올 때의 state — 인증 메일 다시 받기에서 이메일·안내를 채운다 */
+/** 회원가입 첫 화면(/signup)·로그인·비밀번호 찾기로 올 때의 state — 이메일·안내를 채운다 */
 interface SignupRouteState {
   email?: string
   notice?: string
@@ -98,7 +112,8 @@ interface SignupRouteState {
 function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const signupState = (mode === 'signup' ? location.state : null) as SignupRouteState | null
+  const routeState = location.state as SignupRouteState | null
+  const signupState = mode === 'signup' ? routeState : null
   const [googleLoading, setGoogleLoading] = useState(false)
   const [googleError, setGoogleError] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
@@ -109,7 +124,7 @@ function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {
     setGoogleError('')
     try {
       const result = await signInWithGoogle(credential)
-      openSession(result.user.profileCompleted)
+      openSession(result.user.profileCompleted, result.user.onboardingCompleted)
       if (result.isNewUser) {
         navigate('/setup', { state: { googleCredential: credential, requiresConsent: false } })
       } else if (!result.user.profileCompleted) {
@@ -133,7 +148,7 @@ function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {
     setAuthLoading(true)
     try {
       const result = await signInWithEmail(email, password)
-      openSession(result.user.profileCompleted)
+      openSession(result.user.profileCompleted, result.user.onboardingCompleted)
       if (!result.user.profileCompleted) {
         navigate('/setup', { state: { requiresConsent: false } })
       } else {
@@ -153,6 +168,8 @@ function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {
       mode={mode}
       initialEmail={signupState?.email}
       signupNotice={signupState?.notice}
+      loginNotice={mode === 'login' ? routeState?.notice : undefined}
+      onForgotPassword={(email) => navigate('/forgot-password', { state: { email: email || undefined } satisfies SignupRouteState })}
       onBack={() => navigate(mode === 'login' ? '/onboarding' : '/login')}
       onSwitchMode={() => navigate(mode === 'login' ? '/signup' : '/login')}
       onGoogleCredential={handleGoogleCredential}
@@ -209,6 +226,63 @@ export function VerifyEmailRoute() {
         })
       }
       onNext={() => navigate('/setup', { state: { emailSignup: true } satisfies SetupRouteState })}
+    />
+  )
+}
+
+/** 비밀번호 찾기 — 재설정 메일 요청. 로그인 화면의 "비밀번호 찾기"·재설정 링크 실패의 "다시 받기"로 온다 */
+export function ForgotPasswordRoute() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const routeState = location.state as SignupRouteState | null
+  return (
+    <ForgotPasswordPage
+      key={location.key}
+      initialEmail={routeState?.email}
+      notice={routeState?.notice}
+      onBack={() => (location.key === 'default' ? navigate('/login', { replace: true }) : navigate(-1))}
+      onLogin={() => navigate('/login')}
+    />
+  )
+}
+
+/**
+ * 비밀번호 재설정 메일 링크(백엔드 PASSWORD_RESET_FRONTEND_URL, 기본 FRONTEND_ORIGIN/reset-password#token=…).
+ * 토큰은 읽자마자 주소창에서 지우고 메모리(state)에만 둔다. 바꾸면 이 기기 세션도 닫고(서버가 모든 세션을 끊음) 로그인 화면으로.
+ */
+export function ResetPasswordRoute() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [token] = useState(() => new URLSearchParams(location.hash.slice(1)).get('token'))
+
+  useEffect(() => {
+    if (location.hash) navigate({ pathname: location.pathname, search: location.search }, { replace: true })
+  }, [location.hash, location.pathname, location.search, navigate])
+
+  return (
+    <ResetPasswordPage
+      token={token}
+      onBack={() => navigate('/login')}
+      onLogin={() => navigate('/login')}
+      onRequestAgain={(reason) =>
+        navigate('/forgot-password', {
+          state: {
+            notice:
+              reason === 'expired'
+                ? '재설정 링크가 만료됐어요. 재설정 메일을 다시 받아주세요.'
+                : reason === 'used'
+                  ? '이미 사용한 재설정 링크예요. 재설정 메일을 다시 받아주세요.'
+                  : '재설정 메일을 다시 받아주세요.',
+          } satisfies SignupRouteState,
+        })
+      }
+      onDone={() => {
+        closeSessionAfterPasswordReset()
+        navigate('/login', {
+          replace: true,
+          state: { notice: '비밀번호를 바꿨어요. 새 비밀번호로 로그인해주세요.' } satisfies SignupRouteState,
+        })
+      }}
     />
   )
 }
@@ -277,7 +351,7 @@ export function SetupRoute() {
         consent: { termsAgreed: true, privacyAgreed: true, marketingAgreed },
       })
       markSignedUp()
-      openSession(result.user.profileCompleted)
+      openSession(result.user.profileCompleted, result.user.onboardingCompleted)
       return true
     } catch (error) {
       const failure = signupFailureOf(error)
@@ -300,7 +374,7 @@ export function SetupRoute() {
     try {
       const result = await signInWithGoogle(credential, { termsAgreed: true, privacyAgreed: true, marketingAgreed })
       googleSignedUp.current = true
-      openSession(result.user.profileCompleted)
+      openSession(result.user.profileCompleted, result.user.onboardingCompleted)
       return true
     } catch (error) {
       fail(error instanceof Error ? error.message : 'Google 회원가입을 완료하지 못했어요.')
@@ -358,6 +432,9 @@ interface AppShellContext {
   /** 치즈 보관함의 현재 페이지 — 내 고민 상세에 다녀와도 유지 */
   vaultPage: number
   setVaultPage: Dispatch<SetStateAction<number>>
+  /** 치즈 보관함의 탭(내 고민 / 보관한 치즈) — 내 고민 상세에 다녀와도 유지 */
+  vaultTab: CheeseTab
+  setVaultTab: Dispatch<SetStateAction<CheeseTab>>
 }
 
 /**
@@ -370,11 +447,16 @@ interface AppShellContext {
 export function AppShell() {
   const [cheeseList, setCheeseList] = useState<CheeseListState>({ page: 0, selectedId: null })
   const [vaultPage, setVaultPage] = useState(0)
+  const [vaultTab, setVaultTab] = useState<CheeseTab>('mine')
   const session = useSession()
   if (session.status === 'restoring') return null
   if (session.status === 'signedOut') return <Navigate to={session.reason === 'initial' ? '/splash' : '/login'} replace />
   if (session.status === 'needsSetup') return <Navigate to="/setup" replace state={{ requiresConsent: false }} />
-  return <Outlet context={{ cheeseList, setCheeseList, vaultPage, setVaultPage } satisfies AppShellContext} />
+  // 로그인했지만 이 계정이 온보딩을 본 적이 없고 이 기기에서도 안 봤으면 먼저 온보딩(session.ts "온보딩 완료")
+  if (session.needsOnboarding) return <Navigate to="/onboarding" replace />
+  return (
+    <Outlet context={{ cheeseList, setCheeseList, vaultPage, setVaultPage, vaultTab, setVaultTab } satisfies AppShellContext} />
+  )
 }
 
 const TAB_PATHS: Record<string, string> = { home: '/', sheep: '/emotion', cheese: '/cheese', cloud: '/wool', cave: '/cave' }
@@ -410,6 +492,7 @@ export function TabLayout() {
 
 export function HomeRoute() {
   const navigate = useNavigate()
+  const { setVaultTab, setVaultPage } = useOutletContext<AppShellContext>()
   // 홈의 "내 기록, 보관함" 카드는 보관함 화면이 생기기 전까지 양 먹이주기(지난 기록·지푸라기 목록)로 보낸다
   return (
     <HomePage
@@ -420,6 +503,12 @@ export function HomeRoute() {
       // 섬 꾸미기와 같이 섬 그림이 홈 자리에서 동굴 화면 자리로 옮겨 간다
       onCloseCave={() => navigate('/cave', { viewTransition: true })}
       onOpenSettings={() => navigate('/settings')}
+      // 숙성이 끝난 치즈 알림 — 치즈 보관함 "내 고민" 탭 첫 페이지로(열어볼 치즈가 맨 앞에 모여 있다)
+      onOpenMaturedCheese={() => {
+        setVaultTab('mine')
+        setVaultPage(0)
+        navigate('/cheese/vault')
+      }}
     />
   )
 }
@@ -465,8 +554,16 @@ export function EmotionRoute() {
 }
 
 export function WoolCollectionRoute() {
+  const navigate = useNavigate()
   const woolCount = useWoolBalance()
-  return <WoolCollectionPage woolCount={woolCount} />
+  return <WoolCollectionPage woolCount={woolCount} onOpenWoolHistory={() => navigate('/wool/history')} />
+}
+
+/** 양털 내역 — 탭바 없음(시안 없음). 뒤로가기는 양털 모으기로. */
+export function WoolHistoryRoute() {
+  const navigate = useNavigate()
+  const woolCount = useWoolBalance()
+  return <WoolHistoryPage woolCount={woolCount} onBack={() => navigate('/wool')} />
 }
 
 export function EmotionWriteRoute() {
@@ -493,6 +590,25 @@ export function EmotionRecordRoute() {
       recordId={recordId}
       onBack={() => navigate('/emotion')}
       onDeleted={() => navigate('/emotion', { replace: true })}
+      onEdit={() => navigate(`/emotion/records/${encodeURIComponent(recordId)}/edit`)}
+    />
+  )
+}
+
+/** 감정 기록 수정 — 작성 화면 재사용, 탭바 없음. 저장하면 상세로(replace — 뒤로가기가 수정 화면으로 돌아오지 않게). */
+export function EmotionEditRoute() {
+  const navigate = useNavigate()
+  const woolCount = useWoolBalance()
+  const { recordId = '' } = useParams()
+  const detail = `/emotion/records/${encodeURIComponent(recordId)}`
+  return (
+    <EmotionWritePage
+      key={recordId}
+      woolCount={woolCount}
+      recordId={recordId}
+      onBack={() => navigate(detail)}
+      onSaved={() => navigate(detail, { replace: true })}
+      onNotFound={() => navigate('/emotion', { replace: true })}
     />
   )
 }
@@ -509,22 +625,48 @@ export function CheeseRoute() {
       selectedId={cheeseList.selectedId}
       onSelect={(selectedId) => setCheeseList((prev) => ({ ...prev, selectedId }))}
       onOpenConcern={(id) => navigate(`/cheese/${encodeURIComponent(id)}`)}
+      onWrite={() => navigate('/cheese/write')}
       onOpenVault={() => navigate('/cheese/vault')}
     />
   )
 }
 
-/** 내 치즈 보관함 — 탭바 있음(시안 290:636), "고민치즈" 탭. 뒤로가기는 우유와 치즈 목록으로, "더보기"는 내 고민 상세로. */
+/** 고민 쓰기 — 탭바 없음. 다 쓰면 새 고민의 상세(숙성 중)로 replace — 뒤로가기가 쓰기 화면으로 돌아가지 않게. */
+export function ConcernWriteRoute() {
+  const navigate = useNavigate()
+  const woolCount = useWoolBalance()
+  const { setVaultTab, setVaultPage } = useOutletContext<AppShellContext>()
+  return (
+    <ConcernWritePage
+      woolCount={woolCount}
+      onBack={() => navigate('/cheese')}
+      onCreated={(id) => {
+        // 상세에서 뒤로 가면 새 고민이 맨 앞에 있는 보관함 "내 고민" 탭 첫 페이지로
+        setVaultTab('mine')
+        setVaultPage(0)
+        navigate(`/cheese/vault/${encodeURIComponent(id)}`, { replace: true })
+      }}
+    />
+  )
+}
+
+/** 내 치즈 보관함 — 탭바 있음(시안 290:636), "고민치즈" 탭. 뒤로가기는 우유와 치즈 목록으로, "더보기"는 내 고민 상세로, 빈 "내 고민"은 고민 쓰기로. */
 export function CheeseVaultRoute() {
   const navigate = useNavigate()
   const woolCount = useWoolBalance()
-  const { vaultPage, setVaultPage } = useOutletContext<AppShellContext>()
+  const { vaultPage, setVaultPage, vaultTab, setVaultTab } = useOutletContext<AppShellContext>()
   return (
     <CheeseVaultPage
       woolCount={woolCount}
+      tab={vaultTab}
+      onTabChange={(tab) => {
+        setVaultTab(tab)
+        setVaultPage(0)
+      }}
       page={vaultPage}
       onPageChange={setVaultPage}
       onOpenConcern={(id) => navigate(`/cheese/vault/${encodeURIComponent(id)}`)}
+      onWrite={() => navigate('/cheese/write')}
       onBack={() => navigate('/cheese')}
     />
   )
@@ -535,7 +677,15 @@ export function MyConcernDetailRoute() {
   const navigate = useNavigate()
   const woolCount = useWoolBalance()
   const { concernId = '' } = useParams()
-  return <MyConcernDetailPage key={concernId} woolCount={woolCount} concernId={concernId} onBack={() => navigate('/cheese/vault')} />
+  return (
+    <MyConcernDetailPage
+      key={concernId}
+      woolCount={woolCount}
+      concernId={concernId}
+      onBack={() => navigate('/cheese/vault')}
+      onDeleted={() => navigate('/cheese/vault', { replace: true })}
+    />
+  )
 }
 
 export function ConcernDetailRoute() {

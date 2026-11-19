@@ -2,6 +2,7 @@ import { api, hasErrorCode } from '@/shared/api'
 import { getTodaySeoul } from '@/shared/lib/formatRelativeDate'
 import type {
   CreateEmotionRecordRequest,
+  UpdateEmotionRecordRequest,
   EmotionRecord,
   EmotionRecordListResponse,
   EmotionsResponse,
@@ -17,6 +18,12 @@ export const EMOTION_RECORD_NOT_FOUND = 'EMOTION_RECORD_NOT_FOUND'
 
 /** 감정 ID 가 비었거나 중복·없는·비활성 감정일 때(400) */
 export const EMOTION_INVALID_SELECTION = 'EMOTION_INVALID_SELECTION'
+
+/** 수정 본문에 바꿀 필드가 하나도 없을 때(400, `{}`) */
+export const COMMON_EMPTY_UPDATE = 'COMMON_EMPTY_UPDATE'
+
+/** 같은 사용자의 다른 저장과 겹쳐 잠금을 못 잡았을 때(409). 잠시 뒤 다시 보내면 된다 */
+export const COMMON_STATE_CONFLICT = 'COMMON_STATE_CONFLICT'
 
 /** from·to 가 형식에 안 맞거나 미래·366일 이상일 때(400) */
 export const EMOTION_INVALID_DATE_RANGE = 'EMOTION_INVALID_DATE_RANGE'
@@ -71,4 +78,14 @@ export async function deleteEmotionRecord(recordId: string): Promise<void> {
  */
 export function createEmotionRecord({ emotionIds, memo }: CreateEmotionRecordRequest): Promise<EmotionRecord> {
   return api.post<EmotionRecord>('/emotion-records', { emotionIds: [...new Set(emotionIds)], memo: memo ?? null })
+}
+
+/**
+ * 기록의 감정·메모를 고친다(200, 고친 기록). 보낸 필드만 바뀌고 날짜는 그대로다. `PATCH /api/v1/emotion-records/{recordId}`.
+ * - emotionIds: 전체 교체, 1개 이상·중복 불가. 새로 넣는 감정은 활성만, 원래 고른 비활성 감정은 남길 수 있다(400 EMOTION_INVALID_SELECTION)
+ * - memo: null·공백뿐이면 지운다. 1,000자(코드 포인트) 넘으면 400 COMMON_INVALID_REQUEST
+ * - `{}` 는 400 COMMON_EMPTY_UPDATE, 없거나 남의 기록은 404 EMOTION_RECORD_NOT_FOUND, 잠금 충돌은 409 COMMON_STATE_CONFLICT
+ */
+export function updateEmotionRecord(recordId: string, body: UpdateEmotionRecordRequest): Promise<EmotionRecord> {
+  return api.patch<EmotionRecord>(`/emotion-records/${encodeURIComponent(recordId)}`, body)
 }

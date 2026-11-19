@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent, ReactNode } from 'react'
 import { cx } from '@/shared/lib/cx'
 import { Button, Select, TextField, Toggle } from '@/shared/ui'
+import { MarketingConsent } from './MarketingConsent'
 import { loadNightAlarm, saveNightAlarm } from './nightAlarm'
 import { normalizeNickname } from './nickname'
 import { useNicknameCheck } from './useNicknameCheck'
@@ -250,6 +251,7 @@ export function SettingsForm({ info }: SettingsFormProps) {
         >
           야간 알림 (22:00~07:00)
         </Toggle>
+        <MarketingConsent />
       </section>
 
       <div className={styles.footer}>

@@ -15,7 +15,7 @@ export interface Reply {
   createdAt: IsoDateTime
 }
 
-/** 고민 작성. Idempotency-Key 헤더가 필요하다(제안). */
+/** 고민 작성. Idempotency-Key 헤더가 필요하다(백엔드 필수, 없으면 400). content 는 앞뒤 공백을 뺀 1~1000자 */
 export interface CreateConcernRequest {
   content: string
   comfortType: ComfortType
@@ -103,9 +103,10 @@ export interface SaveConcernResponse {
   savedAt: IsoDateTime
 }
 
+/** status 는 서버가 다시 계산한 값 — 개봉한 치즈면 OPENED(개봉 전 고민에 부르면 MATURING·MATURED) */
 export interface UnsaveConcernResponse {
   concernId: Id
-  status: 'OPENED'
+  status: ConcernStatus
   savedAt: null
 }
 
