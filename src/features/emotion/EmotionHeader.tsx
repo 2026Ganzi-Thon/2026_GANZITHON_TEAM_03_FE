@@ -16,7 +16,7 @@ export function EmotionHeader({ woolCount, onOpenGuide }: EmotionHeaderProps) {
         <>
           <WoolCounter count={woolCount} loading={woolCount === undefined} />
           {/* 안내 내용은 아직 없다 — 콜백만 연결 */}
-          <IconButton icon="alert-circle" aria-label="안내" className={styles.guide} onClick={onOpenGuide} />
+          <IconButton icon="alert-circle" data-guide="guide-button" aria-label="안내" className={styles.guide} onClick={onOpenGuide} />
         </>
       }
     />

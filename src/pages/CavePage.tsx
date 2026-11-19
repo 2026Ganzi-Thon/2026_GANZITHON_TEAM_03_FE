@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
+  CAVE_GUIDE_STEPS,
   CaveHeader,
   CaveScene,
   DEFAULT_REST_DURATION,
@@ -15,7 +16,8 @@ import {
 import type { CaveDecoration } from '@/features/rest'
 import { useIslandItems } from '@/features/island'
 import type { IslandItem } from '@/features/island'
-import { Banner, Button } from '@/shared/ui'
+import { Banner, Button, GuideNudge, GuideTour } from '@/shared/ui'
+import { hasSeenGuide, markGuideSeen } from '@/shared/lib/guideSeen'
 import styles from './CavePage.module.css'
 
 export interface CavePageProps {
@@ -25,9 +27,6 @@ export interface CavePageProps {
   onRunning?: () => void
   /** 휴식을 시작하고 문이 다 닫혔을 때 — 진행 중 화면으로 */
   onStarted?: () => void
-  onOpenGuide?: () => void
-  /** 안내 배너. 이동할 곳이 아직 없다 */
-  onOpenBanner?: () => void
 }
 
 /** 섬 꾸미기에서 산 가구를 동굴 섬에 놓을 모양으로 — 두 기능을 아는 페이지가 잇는다(규칙 2). 받는 중·실패면 빈 섬 */
@@ -47,12 +46,21 @@ function toDecorations(items: IslandItem[]): CaveDecoration[] {
  * "동굴 문 닫기" 시작 전(시안 37:26): 열린 동굴 섬, 휴식 시간 알약 3개, "동굴 문 닫기" 버튼. 탭바 있는 화면.
  * 들어오면 현재 휴식 상태를 조회해 쉬는 중이면 진행 중 화면으로 보낸다. 시작하면 문이 닫히는 전환 뒤 진행 중 화면으로 간다.
  */
-export default function CavePage({ woolCount, onRunning, onStarted, onOpenGuide, onOpenBanner }: CavePageProps) {
+export default function CavePage({ woolCount, onRunning, onStarted }: CavePageProps) {
   const { state, retry } = useCurrentRestSession()
   const { state: startState, start } = useStartRestSession()
   const { state: islandState } = useIslandItems()
-  const decorations = islandState.status === 'success' ? toDecorations(islandState.items) : []
-  const [duration, setDuration] = useState(DEFAULT_REST_DURATION)
+  // 오른쪽 위 `!` — 사용법 안내. 안내 중에는 가구 없는 섬·기본 시간으로 그린다(화살표가 늘 같은 자리를 가리키게)
+  const [guideOpen, setGuideOpen] = useState(false)
+  // 이 기기에서 이 화면에 처음 들어왔으면 `!` 아래에 "처음이신가요?" 말풍선(화면마다 한 번, 뜬 순간 본 것으로 기억)
+  const [nudgeOpen, setNudgeOpen] = useState(() => !hasSeenGuide('cave'))
+  const openGuide = () => {
+    setNudgeOpen(false)
+    setGuideOpen(true)
+  }
+  const decorations = !guideOpen && islandState.status === 'success' ? toDecorations(islandState.items) : []
+  const [chosenDuration, setDuration] = useState(DEFAULT_REST_DURATION)
+  const duration = guideOpen ? DEFAULT_REST_DURATION : chosenDuration
   /** 시작을 누른 뒤 진행 중 화면으로 갈 때까지. 그동안은 "이미 쉬는 중" 이동을 하지 않는다(문 닫히는 전환을 보여야 해서) */
   const [closing, setClosing] = useState(false)
   const [doorClosed, setDoorClosed] = useState(false)
@@ -116,15 +124,16 @@ export default function CavePage({ woolCount, onRunning, onStarted, onOpenGuide,
 
   return (
     <main className={styles.page}>
-      <CaveHeader woolCount={woolCount} onOpenGuide={onOpenGuide} />
+      <CaveHeader woolCount={woolCount} onOpenGuide={openGuide} />
       <div className={styles.body}>
-        <Banner className={styles.banner} onClick={onOpenBanner}>동굴 문을 닫고 나의 시간에 집중해보세요</Banner>
+        {/* 누를 곳이 없는 안내라 `>` 없이 글자만 */}
+        <Banner className={styles.banner}>동굴 문을 닫고 나의 시간에 집중해보세요</Banner>
 
-        <div className={styles.scene}>
+        <div className={styles.scene} data-guide="scene">
           <CaveScene closed={doorClosed || running} decorations={decorations} />
         </div>
 
-        <div className={styles.picker}>
+        <div className={styles.picker} data-guide="duration">
           <DurationPicker options={REST_DURATION_OPTIONS} value={duration} onChange={setDuration} disabled={closing} />
         </div>
 
@@ -141,13 +150,21 @@ export default function CavePage({ woolCount, onRunning, onStarted, onOpenGuide,
               동굴 문을 닫지 못했어요. 잠시 후 다시 시도해 주세요.
             </p>
           ) : null}
-          <Button className={styles.action} size="lg" fullWidth disabled={busy} onClick={handleStart}>
+          <Button className={styles.action} data-guide="close" size="lg" fullWidth disabled={busy} onClick={handleStart}>
             동굴 문 닫기
           </Button>
         </div>
       </div>
 
       <LayDownModal open={waitingFlat} onCancel={() => setWaitingFlat(false)} />
+      <GuideNudge
+        open={nudgeOpen && !guideOpen}
+        target="guide-button"
+        onOpen={openGuide}
+        onDismiss={() => setNudgeOpen(false)}
+        onShown={() => markGuideSeen('cave')}
+      />
+      <GuideTour open={guideOpen} steps={CAVE_GUIDE_STEPS} onClose={() => setGuideOpen(false)} />
     </main>
   )
 }

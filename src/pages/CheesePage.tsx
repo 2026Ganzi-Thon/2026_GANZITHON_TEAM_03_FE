@@ -1,5 +1,15 @@
-import { CheeseBanner, CheeseHeader, CheeseVaultButton, MilkCarousel, useConcerns } from '@/features/cheese'
-import { Button } from '@/shared/ui'
+import { useState } from 'react'
+import {
+  CHEESE_GUIDE_CONCERNS,
+  CHEESE_GUIDE_STEPS,
+  CheeseBanner,
+  CheeseHeader,
+  CheeseVaultButton,
+  MilkCarousel,
+  useConcerns,
+} from '@/features/cheese'
+import { Button, GuideNudge, GuideTour } from '@/shared/ui'
+import { hasSeenGuide, markGuideSeen } from '@/shared/lib/guideSeen'
 import styles from './CheesePage.module.css'
 
 export interface CheesePageProps {
@@ -17,7 +27,6 @@ export interface CheesePageProps {
   onWrite?: () => void
   /** "고민 목록" 줄 오른쪽 "내 치즈 보관함" 버튼 */
   onOpenVault?: () => void
-  onOpenGuide?: () => void
 }
 
 /**
@@ -33,16 +42,28 @@ export default function CheesePage({
   onOpenConcern,
   onWrite,
   onOpenVault,
-  onOpenGuide,
 }: CheesePageProps) {
-  const { state, retry } = useConcerns()
+  const { state: loaded, retry } = useConcerns()
+  // 오른쪽 위 `!` — 사용법 안내. 안내 중에는 고정 예시 우유로 그리고 첫 우유를 고른 상태로 보인다(화살표가 늘 같은 자리를 가리키게)
+  const [guideOpen, setGuideOpen] = useState(false)
+  // 이 기기에서 이 화면에 처음 들어왔으면 `!` 아래에 "처음이신가요?" 말풍선(화면마다 한 번, 뜬 순간 본 것으로 기억)
+  const [nudgeOpen, setNudgeOpen] = useState(() => !hasSeenGuide('cheese'))
+  const openGuide = () => {
+    setNudgeOpen(false)
+    setGuideOpen(true)
+  }
+  const state = guideOpen ? ({ status: 'success', items: CHEESE_GUIDE_CONCERNS } as const) : loaded
   const items = state.status === 'success' ? state.items : []
   // 목록이 줄어서(위로를 남긴 고민이 빠짐) 선택한 고민이 사라졌으면 선택 없음으로 본다
-  const selected = items.some((item) => item.concernId === selectedId) ? selectedId : null
+  const selected = guideOpen
+    ? CHEESE_GUIDE_CONCERNS[0].concernId
+    : items.some((item) => item.concernId === selectedId)
+      ? selectedId
+      : null
 
   return (
     <main className={styles.page}>
-      <CheeseHeader woolCount={woolCount} onOpenGuide={onOpenGuide} />
+      <CheeseHeader woolCount={woolCount} onOpenGuide={openGuide} />
       <p className={styles.intro}>
         이웃 폴리의 우유를 골라 답변하고
         <br />
@@ -51,7 +72,9 @@ export default function CheesePage({
 
       <div className={styles.listHead}>
         <h2 className={styles.listTitle}>고민 목록</h2>
-        <CheeseVaultButton onClick={onOpenVault} />
+        <div data-guide="vault">
+          <CheeseVaultButton onClick={onOpenVault} />
+        </div>
       </div>
 
       {state.status === 'error' ? (
@@ -67,26 +90,37 @@ export default function CheesePage({
           <p className={styles.message}>지금은 위로를 기다리는 우유가 없어요</p>
         </div>
       ) : (
+        <div data-guide="milk-list">
         <MilkCarousel
           loading={state.status === 'loading'}
           items={items}
-          page={page}
+          page={guideOpen ? 0 : page}
           onPageChange={onPageChange}
           selectedId={selected}
           onSelect={onSelect}
           onOpen={onOpenConcern}
         />
+        </div>
       )}
 
       <div className={styles.actions}>
-        <Button disabled={!selected} onClick={() => selected && onOpenConcern(selected)}>
+        <Button data-guide="reply" disabled={!selected} onClick={() => selected && onOpenConcern(selected)}>
           위로 남기기
         </Button>
       </div>
 
-      <div className={styles.banner}>
+      <div className={styles.banner} data-guide="write">
         <CheeseBanner title="고민 치즈 남기기" caption="내 치즈는 보관함에 보관돼요" onClick={onWrite} />
       </div>
+
+      <GuideNudge
+        open={nudgeOpen && !guideOpen}
+        target="guide-button"
+        onOpen={openGuide}
+        onDismiss={() => setNudgeOpen(false)}
+        onShown={() => markGuideSeen('cheese')}
+      />
+      <GuideTour open={guideOpen} steps={CHEESE_GUIDE_STEPS} onClose={() => setGuideOpen(false)} />
     </main>
   )
 }
