@@ -17,10 +17,12 @@ export interface VaultCarouselProps {
   onPageChange: (page: number) => void
   /** 카드의 "더보기" — 그 고민의 상세로 */
   onOpen: (concernId: string) => void
+  /** 사용법 안내 중 — 첫 카드의 상태 글자와 "더보기"를 안내가 가리킬 수 있게 표시한다 */
+  guideTargets?: boolean
 }
 
 /** 치즈 보관함: 내 고민·보관한 치즈 카드를 4개씩 좌우 페이지로 넘겨 보는 목록(scroll-snap)과 페이지 점. 우유 목록과 같은 방식. */
-export function VaultCarousel({ loading, items, page, onPageChange, onOpen }: VaultCarouselProps) {
+export function VaultCarousel({ loading, items, page, onPageChange, onOpen, guideTargets = false }: VaultCarouselProps) {
   const pages = chunkPages(items, CARDS_PER_PAGE)
   const pageCount = Math.max(pages.length, 1)
   const { scrollerRef, safePage, handleScroll } = usePageScroller({ page, pageCount, onPageChange, resetKey: loading })
@@ -40,8 +42,13 @@ export function VaultCarousel({ loading, items, page, onPageChange, onOpen }: Va
             {pages.map((cards, pageIndex) => (
               <li key={pageIndex} className={styles.slide} aria-label={`${pageCount}페이지 중 ${pageIndex + 1}페이지`}>
                 <ul className={styles.page}>
-                  {cards.map((concern) => (
-                    <VaultCard key={concern.concernId} concern={concern} onOpen={() => onOpen(concern.concernId)} />
+                  {cards.map((concern, index) => (
+                    <VaultCard
+                      key={concern.concernId}
+                      concern={concern}
+                      onOpen={() => onOpen(concern.concernId)}
+                      guideTargets={guideTargets && pageIndex === 0 && index === 0}
+                    />
                   ))}
                 </ul>
               </li>

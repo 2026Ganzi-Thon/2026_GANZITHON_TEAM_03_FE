@@ -32,3 +32,14 @@
 .text {
   min-width: 0;
 }
+
+/* 누를 수 없는 안내: 눌림·마우스 올림 색 변화 없음 */
+.static {
+  margin: 0;
+  cursor: default;
+}
+
+.static:hover,
+.static:active {
+  background-color: var(--color-surface);
+}

@@ -26,8 +26,6 @@ export interface CaveSessionPageProps {
   /** 진행 중 휴식 없이 들어왔을 때 — 시작 전 화면으로 */
   onNoSession?: () => void
   onOpenGuide?: () => void
-  /** 안내 배너. 이동할 곳이 아직 없다 */
-  onOpenBanner?: () => void
 }
 
 /** 섬 꾸미기에서 산 가구를 동굴 섬에 놓을 모양으로 — 두 기능을 아는 페이지가 잇는다(규칙 2). 받는 중·실패면 빈 섬 */
@@ -55,7 +53,7 @@ function toDecorations(items: IslandItem[]): CaveDecoration[] {
  * 임의 결정(확인 필요): 시안 83:293(열린 동굴 + 남은 시간 + "동굴 문 닫기")은 이 화면의 이전 안으로 보고 따로 만들지 않는다.
  * 임의 결정(확인 필요): 진행 중 휴식 없이 들어오면 안내 없이 시작 전 화면으로 보낸다.
  */
-export default function CaveSessionPage({ onEnded, onNoSession, onOpenGuide, onOpenBanner }: CaveSessionPageProps) {
+export default function CaveSessionPage({ onEnded, onNoSession, onOpenGuide }: CaveSessionPageProps) {
   const { state, retry } = useCurrentRestSession()
   const { state: cancelState, cancel, reset } = useCancelRestSession()
   const { state: memoState, save: saveMemo } = useSaveAfterMemo()
@@ -149,7 +147,8 @@ export default function CaveSessionPage({ onEnded, onNoSession, onOpenGuide, onO
     <main className={styles.page}>
       <CaveHeader showWool={false} onOpenGuide={onOpenGuide} />
       <div className={styles.body}>
-        <Banner className={styles.banner} onClick={onOpenBanner}>동굴 문을 닫고 나의 시간에 집중해보세요</Banner>
+        {/* 누를 곳이 없는 안내라 `>` 없이 글자만 */}
+        <Banner className={styles.banner}>동굴 문을 닫고 나의 시간에 집중해보세요</Banner>
 
         <div className={styles.scene}>
           {/* 끝났다는 응답을 받기 전까지는 닫혀 있다 — 열리는 것이 곧 끝났다는 표시 */}

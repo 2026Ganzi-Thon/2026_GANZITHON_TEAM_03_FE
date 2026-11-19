@@ -8,6 +8,8 @@ export interface VaultCardProps {
   concern: VaultCardItem
   /** "더보기" — 그 고민의 상세(받은 위로)로 */
   onOpen: () => void
+  /** 사용법 안내가 가리킬 카드 — 상태 글자와 "더보기"에 data-guide 를 단다 */
+  guideTargets?: boolean
 }
 
 /**
@@ -15,7 +17,7 @@ export interface VaultCardProps {
  * 카드 자체는 누를 수 없고 "더보기"만 상세로 간다(우유 목록과 같음). 본문이 짧아도 "더보기"는 늘 보인다 — 상세로 가는 유일한 길.
  * 임의 결정(확인 필요): 그림은 상태와 상관없이 같은 우유병(시안), 상태는 "더보기" 줄 오른쪽 작은 글자로만 구분 — 카드 높이 그대로
  */
-export function VaultCard({ concern, onOpen }: VaultCardProps) {
+export function VaultCard({ concern, onOpen, guideTargets = false }: VaultCardProps) {
   const { title } = concern
   const preview = toPreviewBody(concernBody(title, concern.preview))
 
@@ -26,10 +28,18 @@ export function VaultCard({ concern, onOpen }: VaultCardProps) {
         <h3 className={styles.title}>{title}</h3>
         {preview && <p className={styles.body}>{preview}</p>}
         <div className={styles.footer}>
-          <button type="button" className={styles.more} aria-label={`${title} 더보기`} onClick={onOpen}>
+          <button
+            type="button"
+            className={styles.more}
+            aria-label={`${title} 더보기`}
+            onClick={onOpen}
+            data-guide={guideTargets ? 'more' : undefined}
+          >
             더보기
           </button>
-          <span className={cx(styles.label, concern.highlight && styles.highlight)}>{concern.label}</span>
+          <span className={cx(styles.label, concern.highlight && styles.highlight)} data-guide={guideTargets ? 'status' : undefined}>
+            {concern.label}
+          </span>
         </div>
       </div>
     </li>
