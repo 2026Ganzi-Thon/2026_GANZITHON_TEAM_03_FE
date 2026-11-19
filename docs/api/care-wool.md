@@ -6,7 +6,7 @@
 
 - **돌봄 행동**(예: 물 한 잔 마시기)을 오늘 완료하면 서버가 정한 **양털**을 적립한다. 보상량은 클라이언트가 정하지 않는다. 행동 이름·설명·보상값은 문서의 예시이고 기획에서 확정한다.
 - 같은 날 같은 행동은 "현재 완료"가 하나만 유지된다. **당일에 한해 취소하면 양털을 회수**하고, 취소 후 다시 완료할 수 있다(초안).
-- 양털 변동은 거래(`EARN` 적립, `REVERSE` 회수)로 쌓고, 과거 거래는 지우거나 수정하지 않는다.
+- 양털 변동은 거래(`EARN` 적립, `REVERSE` 회수, `SPEND` 섬 꾸미기 구매)로 쌓고, 과거 거래는 지우거나 수정하지 않는다.
 - 체크박스는 행 존재 여부가 아니라 **`isCompleted`** 로 표시한다.
 
 ```ts
@@ -195,7 +195,7 @@ Response `data`
 
 `GET /api/v1/wool-transactions?page=0&size=20` · 200
 
-내 양털 증감 이력을 최신순으로 조회한다. **백엔드 `CareService.transactions` 기준(2026-11-19 대조)** — 아래 형식과 같다. 지금 백엔드가 만드는 종류는 돌봄 완료 적립 `EARN`(+)과 완료 취소 회수 `REVERSE`(−)뿐이고, 행동 이름·거래 후 잔액은 응답에 없다.
+내 양털 증감 이력을 최신순으로 조회한다. **백엔드 `CareService.transactions` 기준(2026-11-19 대조)** — 아래 형식과 같다. 백엔드가 만드는 종류는 돌봄 완료 적립 `EARN`(+), 완료 취소 회수 `REVERSE`(−), 섬 꾸미기 구매 `SPEND`(−, 2026-11-20 추가 — [island.md](./island.md))다. 행동 이름·산 아이템·거래 후 잔액은 응답에 없다.
 
 | 필드 | 위치 | 타입 | 필수 | 제약 |
 | --- | --- | --- | --- | --- |
@@ -208,10 +208,10 @@ Response `data` (`createdAt` 내림차순 → `id` 내림차순)
 {
   items: {
     transactionId: string
-    amount: number                       // EARN 양수, REVERSE 음수
-    transactionType: 'EARN' | 'REVERSE'  // 제안
-    careCompletionId: string | null
-    reversesTransactionId: string | null // 회수 대상 원거래, EARN은 null
+    amount: number                       // EARN 양수, REVERSE·SPEND 음수
+    transactionType: 'EARN' | 'REVERSE' | 'SPEND'
+    careCompletionId: string | null      // SPEND 는 null
+    reversesTransactionId: string | null // 회수 대상 원거래, EARN·SPEND는 null
     createdAt: string
   }[]
   page: number      // 0부터
@@ -239,7 +239,7 @@ Response `data` (`createdAt` 내림차순 → `id` 내림차순)
 | 401 | AUTH_ACCESS_TOKEN_INVALID / _EXPIRED | 토큰 오류 / 만료 |
 | 500 | COMMON_INTERNAL_ERROR | 서버 오류 |
 
-메모: 현재 잔액을 과거 거래의 잔액처럼 표시하지 않는다. offset 방식이라 페이지 사이에 새 거래가 생기면 다음 페이지에 같은 거래가 다시 올 수 있다(프론트는 transactionId 로 중복 제거). 프론트: 양털 모으기의 "내 양털" 알약 → `/wool/history`, 날짜별·무한 스크롤(size 20). 구매·선물 같은 소비는 이 초안 범위가 아니다.
+메모: 현재 잔액을 과거 거래의 잔액처럼 표시하지 않는다. offset 방식이라 페이지 사이에 새 거래가 생기면 다음 페이지에 같은 거래가 다시 올 수 있다(프론트는 transactionId 로 중복 제거). 프론트: 양털 모으기의 "내 양털" 알약 → `/wool/history`, 날짜별·무한 스크롤(size 20). 섬 꾸미기 구매는 "섬 꾸미기 구매"로 보여준다(산 아이템은 응답에 없음).
 
 ## 미결정 사항 (이 도메인)
 

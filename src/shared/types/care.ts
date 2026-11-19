@@ -60,14 +60,15 @@ export interface WoolWallet {
   updatedAt: IsoDateTime | null
 }
 
-/** EARN 적립 / REVERSE 회수 */
-export type WoolTransactionType = 'EARN' | 'REVERSE'
+/** EARN 돌봄 완료 적립 / REVERSE 완료 취소 회수 / SPEND 섬 꾸미기 구매(백엔드 IslandService) */
+export type WoolTransactionType = 'EARN' | 'REVERSE' | 'SPEND'
 
 export interface WoolTransaction {
   transactionId: Id
-  /** EARN 양수, REVERSE 음수 */
+  /** EARN 양수, REVERSE·SPEND 음수 */
   amount: number
   transactionType: WoolTransactionType
+  /** 돌봄 거래(EARN·REVERSE)의 완료 ID. SPEND 는 null */
   careCompletionId: Id | null
   /** 회수 대상 원거래 ID. EARN은 null */
   reversesTransactionId: Id | null
