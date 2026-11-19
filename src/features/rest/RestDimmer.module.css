@@ -1,4 +1,4 @@
-/* 임의 결정(확인 필요): 눕혀 둔 동안 화면을 순검정으로 덮고 남은 시간만 아주 흐리게 — 시안 없음 */
+/* 임의 결정(확인 필요): 눕혀 둔 동안 화면을 검정 88%로 덮어 동굴이 아주 희미하게 비치게 하고, 남은 시간만 흐리게 — 시안 없음(사용자: 100%는 너무 어둡다) */
 .root {
   position: fixed;
   inset: 0;
@@ -14,17 +14,8 @@
 }
 
 .active {
-  opacity: 1;
+  opacity: 0.88;
   transition: opacity 1.5s ease-in;
-}
-
-/* 남은 시간: 검은 바탕 위 아주 흐린 회색(어두운 방에서도 눈부시지 않게) */
-.time {
-  color: rgb(255 255 255 / 0.22);
-  font-size: 28px;
-  font-weight: var(--font-weight-medium);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 1px;
 }
 
 @media (prefers-reduced-motion: reduce) {

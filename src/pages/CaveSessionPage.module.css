@@ -74,3 +74,14 @@
 .action {
   view-transition-name: cave-action;
 }
+
+/* 눕혀 어두워진 동안: 남은 시간 알약만 덮개(RestDimmer, z-index 50) 위에 은은하게 */
+.timer {
+  transition: opacity 1.5s ease-in;
+}
+
+.timerDimmed {
+  position: relative;
+  z-index: 51;
+  opacity: 0.45;
+}
