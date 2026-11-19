@@ -75,13 +75,22 @@
   view-transition-name: cave-action;
 }
 
-/* 눕혀 어두워진 동안: 남은 시간 알약만 덮개(RestDimmer, z-index 50) 위에 은은하게 */
+/* 눕혀 어두워진 동안: 남은 시간 알약만 덮개(RestDimmer, z-index 50) 위에 은은하게, 살짝 크게(1.3배) */
 .timer {
-  transition: opacity 1.5s ease-in;
+  transition:
+    opacity 1.5s ease-in,
+    transform 1.5s cubic-bezier(0.33, 1, 0.68, 1);
 }
 
 .timerDimmed {
   position: relative;
   z-index: 51;
   opacity: 0.45;
+  transform: scale(1.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timer {
+    transition: opacity 1.5s ease-in;
+  }
 }
