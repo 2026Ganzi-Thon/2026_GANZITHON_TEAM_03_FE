@@ -1,0 +1,26 @@
+/* 로그인 화면(AuthPage.module.css 의 .google)과 같은 값 — 345×37 흰 버튼, 로고는 왼쪽 12px */
+.google {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 37px;
+  align-items: center;
+  justify-content: center;
+  /* 시안: 로고 자리만큼 글자가 오른쪽으로 치우침(글자 가운데가 208px) */
+  padding-left: 23px;
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  box-shadow: var(--shadow-float);
+  color: var(--color-text);
+  font-size: var(--font-size-small);
+  line-height: 20px;
+  letter-spacing: -0.5px;
+}
+
+.mark {
+  position: absolute;
+  left: 12px;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}

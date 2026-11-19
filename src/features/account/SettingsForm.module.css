@@ -1,0 +1,160 @@
+/*
+ * 시안 290:891 기준(상태바 44 를 뺀 값). 섹션 제목은 앞 섹션 끝에서 45px 아래, 내용은 제목 아래 10px(알림은 8px).
+ * 저장하기 버튼은 화면 아래에 붙는다(남는 높이는 버튼 위가 차지).
+ */
+.form {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  margin-top: 45px;
+}
+
+/* 섹션 제목: SemiBold 16 */
+.heading {
+  padding: 1px 0;
+  color: var(--color-black-1);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  letter-spacing: -0.4px;
+}
+
+/* 보기 상태: 라벨(공용 Field 라벨과 같은 모양) + 닉네임·버튼 줄 */
+.nicknameView {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: 10px;
+}
+
+.label {
+  padding: 1px 0;
+  color: var(--color-black-1);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-small);
+  letter-spacing: -0.35px;
+}
+
+.nicknameRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.nickname {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-black-1);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-small);
+  letter-spacing: -0.35px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skeleton {
+  width: 48px;
+  height: 18px;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-border-subtle);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+/* 수정 상태: 공용 TextField(밑줄) — 시안은 버튼과 밑줄 사이 4px */
+.nicknameField {
+  margin-top: 10px;
+}
+
+.nicknameField > div {
+  padding-bottom: var(--space-1);
+}
+
+/* 시안: 114×35, Medium 14 (초기 설정의 중복확인 버튼과 같음) */
+.nicknameButton {
+  width: 114px;
+  min-width: 114px;
+  flex: none;
+  font-weight: var(--font-weight-medium);
+}
+
+.available {
+  color: var(--color-primary);
+}
+
+/* 시안: 닉네임 묶음 아래 16px, 라벨과 선택창 사이 8px(공용 Field 는 4px) */
+.age {
+  width: auto;
+  align-self: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+/* 시안: 선택창 폭 75px. 네이티브 select 는 가장 긴 선택지("50대 이상")에 맞춰 넓어지므로 감싼 칸 폭을 고정한다 */
+.age > div {
+  width: 75px;
+}
+
+/* 임의 결정(확인 필요): "50대 이상"을 고르면 75px 에 글자가 잘려서 그때만 글자에 맞춰 넓힌다 */
+.ageWide > div {
+  width: auto;
+}
+
+.age label {
+  color: var(--color-black-1);
+}
+
+/* 시안: 50px 줄, 글자 SemiBold 14 #111 왼쪽 · 토글 오른쪽 */
+.alarm {
+  display: flex;
+  min-height: 50px;
+  justify-content: space-between;
+  margin-top: var(--space-2);
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-6);
+}
+
+/* 저장 결과 한 줄 — 비어 있어도 자리를 차지해 버튼이 움직이지 않는다 */
+.notice,
+.noticeError {
+  min-height: 20px;
+  font-size: var(--font-size-hint);
+  line-height: 20px;
+  text-align: center;
+}
+
+.notice {
+  color: var(--color-primary);
+}
+
+.noticeError {
+  color: var(--color-error);
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}

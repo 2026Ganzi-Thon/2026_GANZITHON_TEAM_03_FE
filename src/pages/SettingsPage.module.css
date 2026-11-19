@@ -1,0 +1,63 @@
+/*
+ * 시안 290:891(393×852) 기준. 상태바(44)·홈 인디케이터(34) 자리는 safe-area 로 대신한다.
+ * 저장하기 버튼은 화면 아래(시안: 아래 끝에서 80px = 홈 인디케이터 34 + 46)에 붙고, 낮은 화면에서는 페이지가 스크롤된다.
+ */
+.page {
+  display: flex;
+  width: 100%;
+  max-width: var(--app-max-width);
+  min-height: 100dvh;
+  flex-direction: column;
+  margin: 0 auto;
+  padding: env(safe-area-inset-top) var(--page-padding-x) calc(env(safe-area-inset-bottom) + 46px);
+  background: var(--color-bg);
+}
+
+/* 공용 Header 의 가로 여백은 페이지가 대신 준다 */
+.header {
+  padding-inline: 0;
+}
+
+/* 시안: 화살표(28px)는 왼쪽 24px, 제목 아래 11px. 터치 영역(44px)만큼 빼서 맞춘다 */
+.back {
+  align-self: flex-start;
+  margin: -7px 0 0 -8px;
+  color: var(--color-black-1);
+}
+
+.account {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+}
+
+/* 섹션 제목: SemiBold 16 — features/account 의 SettingsForm 과 같은 모양 */
+.heading {
+  padding: 1px 0;
+  color: var(--color-black-1);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  letter-spacing: -0.4px;
+}
+
+/* 시안: 제목 아래 11px */
+.google {
+  margin-top: 11px;
+}
+
+.status {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.message {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-light);
+  line-height: var(--line-height-small);
+}

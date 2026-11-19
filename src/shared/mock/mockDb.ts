@@ -1,15 +1,18 @@
 import { ApiError } from '@/shared/api'
 import { getTodaySeoul } from '@/shared/lib/formatRelativeDate'
-import type { Emotion, EmotionRecord, Id, IsoDateTime } from '@/shared/types'
+import type { Emotion, EmotionRecord, Id, IsoDateTime, Reply, RestSession } from '@/shared/types'
 import { createSeed } from './seed'
-import type { MockConcernRow, MockDbState, MockEmotionRecordRow } from './seed'
+import type { MockConcernRow, MockDbState, MockEmotionRecordRow, MockMyConcernRow } from './seed'
 
 // 가짜 DB(서버 DB 역할). 메모리 상태 하나를 두고 쓸 때마다 localStorage 에 저장, 처음 쓸 때 불러온다.
 // 저장 형식이 바뀌면 VERSION 을 올린다 — 버전이 다르거나 읽지 못하면 시드로 다시 시작한다.
 // storage 를 못 쓰면(사파리 비공개 모드 등) 메모리로만 동작한다(새로고침하면 시드).
 
 const STORAGE_KEY = 'polly.mockDb'
-const VERSION = 1
+// 2: 휴식 세션(restSessions) 추가
+// 3: 내가 쓴 고민(myConcerns) 추가
+// 4: 내가 쓴 고민에 받은 위로(replies) 추가
+const VERSION = 4
 
 let state: MockDbState | null = null
 
@@ -86,6 +89,12 @@ export const mockDb = {
         draft.user = { ...profile, profileCompleted: true }
         return clone(draft.user)
       }),
+    /** 내 정보 수정(설정 화면). 넘긴 항목만 바꾸고 반영 뒤 값을 돌려준다 — 저장 형식은 그대로 */
+    update: (patch: Partial<Pick<MockDbState['user'], 'nickname' | 'ageGroup' | 'introduction'>>) =>
+      write((draft) => {
+        draft.user = { ...draft.user, ...patch }
+        return clone(draft.user)
+      }),
   },
 
   wool: {
@@ -146,6 +155,22 @@ export const mockDb = {
         const found = draft.concerns.find((item) => item.concernId === concernId)
         if (found) found.alreadyReplied = true
       }),
+    /** 내가 쓴 고민(최신이 앞). 상태 계산은 하지 않은 원래 값 */
+    listMine: (): MockMyConcernRow[] => clone(db().myConcerns),
+    getMine: (concernId: Id): MockMyConcernRow | undefined =>
+      clone(db().myConcerns.find((item) => item.concernId === concernId)),
+    /** 개봉 표시(이미 열었으면 그대로). 위로가 하나도 없으면 `fallbackReply`(기본 위로)를 넣는다. 바뀐 행을 돌려준다 */
+    openMine: (concernId: Id, fallbackReply: Omit<Reply, 'replyId' | 'createdAt'>): MockMyConcernRow | undefined =>
+      write((draft) => {
+        const row = draft.myConcerns.find((item) => item.concernId === concernId)
+        if (!row) return undefined
+        if (!row.openedAt) {
+          const at = now()
+          row.openedAt = at
+          if (row.replies.length === 0) row.replies.push({ replyId: `${concernId}-system`, createdAt: at, ...fallbackReply })
+        }
+        return clone(row)
+      }),
   },
 
   island: {
@@ -153,6 +178,26 @@ export const mockDb = {
     addOwnedItem: (itemId: string) =>
       write((draft) => {
         if (!draft.island.ownedItemIds.includes(itemId)) draft.island.ownedItemIds.push(itemId)
+      }),
+  },
+
+  rest: {
+    /** 저장된 세션 행 전체(최근 것이 앞). 상태 계산(예정 종료 지남 → COMPLETED)은 하지 않은 원래 값 */
+    list: (): RestSession[] => clone(db().restSessions),
+    /** 새 세션을 만든다. ID 는 여기서 매긴다 */
+    create: (input: Omit<RestSession, 'sessionId'>): RestSession =>
+      write((draft) => {
+        const row: RestSession = { sessionId: String(draft.nextRestSessionId++), ...input }
+        draft.restSessions.unshift(row)
+        return clone(row)
+      }),
+    /** 세션 행을 고친다. 없으면 undefined */
+    update: (sessionId: Id, patch: Partial<Omit<RestSession, 'sessionId'>>): RestSession | undefined =>
+      write((draft) => {
+        const row = draft.restSessions.find((item) => item.sessionId === sessionId)
+        if (!row) return undefined
+        Object.assign(row, patch)
+        return clone(row)
       }),
   },
 }
