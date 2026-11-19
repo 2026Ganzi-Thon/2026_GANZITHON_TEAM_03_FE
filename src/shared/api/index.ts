@@ -1,4 +1,4 @@
-export { api, http, newIdempotencyKey, refreshAccessToken, restoreSession } from './client'
+export { api, http, isOutcomeUnknown, newIdempotencyKey, refreshAccessToken, restoreSession } from './client'
 export type { RequestOptions } from './client'
 export {
   ApiError,

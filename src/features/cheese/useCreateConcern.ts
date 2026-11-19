@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { hasErrorCode, newIdempotencyKey } from '@/shared/api'
-import { COMMON_IDEMPOTENCY_CONFLICT, COMMON_INVALID_REQUEST, createConcern } from './cheeseApi'
+import { hasErrorCode, isOutcomeUnknown, newIdempotencyKey } from '@/shared/api'
+import { COMMON_INVALID_REQUEST, createConcern } from './cheeseApi'
 import { cheeseKeys } from './cheeseQueries'
 import type { ComfortType, ConcernDetail, CreateConcernResponse, MyConcernListResponse } from './types'
 
@@ -24,7 +24,7 @@ const toPreview = (content: string) => Array.from(content).slice(0, 100).join(''
 /**
  * 고민을 쓰고 숙성을 시작한다. `Idempotency-Key` 는 같은 내용으로 다시 보내는 동안 같은 키를 쓴다 —
  * 응답을 못 받은 실패(네트워크·시간 초과·5xx·잠금 충돌 COMMON_STATE_CONFLICT)는 서버에 저장됐을 수 있어서, 같은 키로 보내면 서버가 처음 응답을 돌려준다(중복 작성 없음).
- * 내용을 고치면 새 키(같은 키·다른 본문은 409). 성공·키 충돌(409 COMMON_IDEMPOTENCY_CONFLICT)이면 키를 버린다.
+ * 내용을 고치면 새 키(같은 키·다른 본문은 409). 성공했거나 서버가 처리하지 않은 게 확실한 실패(키 충돌 409 등 4xx)면 키를 버린다.
  * 성공하면 새 고민을 내 고민 목록과 상세 캐시에 바로 넣는다(보관함·상세가 스켈레톤 없이 보이게). 홈 요약은 app/queryClient.ts 공통 규칙이 다시 받는다.
  */
 export function useCreateConcern() {
@@ -75,7 +75,8 @@ export function useCreateConcern() {
       void queryClient.invalidateQueries({ queryKey: cheeseKeys.myConcerns() })
     },
     onError: (error) => {
-      if (hasErrorCode(error, COMMON_IDEMPOTENCY_CONFLICT)) keyRef.current = null
+      // 서버가 처리했는지 모르는 실패만 같은 키를 남긴다(같은 내용으로 다시 보내면 처음 응답이 온다). 키 충돌(409)·형식 오류 등은 새 키로
+      if (!isOutcomeUnknown(error)) keyRef.current = null
     },
   })
 
