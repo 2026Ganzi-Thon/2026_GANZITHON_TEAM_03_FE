@@ -195,7 +195,7 @@ Response `data`
 
 `GET /api/v1/wool-transactions?page=0&size=20` · 200
 
-내 양털 증감 이력을 최신순으로 조회한다.
+내 양털 증감 이력을 최신순으로 조회한다. **백엔드 `CareService.transactions` 기준(2026-11-19 대조)** — 아래 형식과 같다. 지금 백엔드가 만드는 종류는 돌봄 완료 적립 `EARN`(+)과 완료 취소 회수 `REVERSE`(−)뿐이고, 행동 이름·거래 후 잔액은 응답에 없다.
 
 | 필드 | 위치 | 타입 | 필수 | 제약 |
 | --- | --- | --- | --- | --- |
@@ -235,11 +235,11 @@ Response `data` (`createdAt` 내림차순 → `id` 내림차순)
 | HTTP | 코드 | 의미 |
 | --- | --- | --- |
 | 200 | - | 성공. 이력이 없으면 `items: []` |
-| 400 | COMMON_INVALID_REQUEST | 페이지 값 오류 |
+| 400 | COMMON_INVALID_REQUEST | 페이지 값 오류(page < 0, size 1~100 밖, 숫자 아님) |
 | 401 | AUTH_ACCESS_TOKEN_INVALID / _EXPIRED | 토큰 오류 / 만료 |
 | 500 | COMMON_INTERNAL_ERROR | 서버 오류 |
 
-메모: 현재 잔액을 과거 거래의 잔액처럼 표시하지 않는다. 구매·선물 같은 소비는 이 초안 범위가 아니다.
+메모: 현재 잔액을 과거 거래의 잔액처럼 표시하지 않는다. offset 방식이라 페이지 사이에 새 거래가 생기면 다음 페이지에 같은 거래가 다시 올 수 있다(프론트는 transactionId 로 중복 제거). 프론트: 양털 모으기의 "내 양털" 알약 → `/wool/history`, 날짜별·무한 스크롤(size 20). 구매·선물 같은 소비는 이 초안 범위가 아니다.
 
 ## 미결정 사항 (이 도메인)
 

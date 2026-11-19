@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { EmotionHeader, useDeleteEmotionRecord, useEmotionRecord } from '@/features/emotion'
+import { EmotionHeader, formatRecordDate, useDeleteEmotionRecord, useEmotionRecord } from '@/features/emotion'
 import type { EmotionRecord } from '@/features/emotion'
 import { formatRelativeDate } from '@/shared/lib/formatRelativeDate'
 import { Badge, BackButton, Button, Modal } from '@/shared/ui'
@@ -12,23 +12,17 @@ export interface EmotionRecordPageProps {
   onBack?: () => void
   /** 기록을 지웠을 때 — 목록으로 돌아간다 */
   onDeleted?: () => void
+  /** "수정" — 같은 기록의 수정 화면(작성 화면 재사용)으로 */
+  onEdit?: () => void
   onOpenGuide?: () => void
 }
 
-const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
-
-/** `YYYY-MM-DD` → "2026년 11월 14일 금요일". 기록 날짜는 서울 날짜라 시간대 변환 없이 그 날짜의 요일을 쓴다. */
-function formatRecordDate(date: string): string {
-  const [year, month, day] = date.split('-').map(Number)
-  const weekday = WEEKDAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()]
-  return `${year}년 ${month}월 ${day}일 ${weekday}요일`
-}
-
 /**
- * 감정 기록 상세: 날짜, 그날의 감정, 지푸라기(메모)를 읽고 삭제한다. 탭바는 없다.
- * 임의 결정(확인 필요): 시안에 없는 화면이라 작성 화면·고민 상세의 글자 크기·간격·공통 컴포넌트만으로 구성했다. 수정은 다음 단계.
+ * 감정 기록 상세: 날짜, 그날의 감정, 지푸라기(메모)를 읽고 고치거나 삭제한다. 탭바는 없다.
+ * 임의 결정(확인 필요): 시안에 없는 화면이라 작성 화면·고민 상세의 글자 크기·간격·공통 컴포넌트만으로 구성했다.
+ * 임의 결정(확인 필요): "수정"·"삭제"를 지푸라기 아래 오른쪽에 나란히 둔다 — 수정은 작성 화면을 수정 모드로 연다.
  */
-export default function EmotionRecordPage({ woolCount, recordId, onBack, onDeleted, onOpenGuide }: EmotionRecordPageProps) {
+export default function EmotionRecordPage({ woolCount, recordId, onBack, onDeleted, onEdit, onOpenGuide }: EmotionRecordPageProps) {
   const { state, retry } = useEmotionRecord(recordId)
   const { state: deleteState, remove, reset } = useDeleteEmotionRecord()
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -76,9 +70,14 @@ export default function EmotionRecordPage({ woolCount, recordId, onBack, onDelet
         {state.status === 'success' && (
           <>
             <RecordContent record={state.record} />
-            <Button variant="outline" size="md" className={styles.delete} onClick={openConfirm}>
-              삭제
-            </Button>
+            <div className={styles.actions}>
+              <Button variant="outline" size="md" onClick={onEdit}>
+                수정
+              </Button>
+              <Button variant="outline" size="md" onClick={openConfirm}>
+                삭제
+              </Button>
+            </div>
           </>
         )}
       </div>

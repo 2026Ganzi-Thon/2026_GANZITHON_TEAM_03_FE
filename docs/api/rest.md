@@ -131,12 +131,12 @@ Response `data`
 
 `PATCH /api/v1/rest-sessions/{sessionId}/after-memo` · 200
 
-종료된 내 휴식 세션에 선택 메모를 작성·수정·삭제한다. 중도 종료한 세션에도 허용하는 초안이다. 감정 기록과 별개의 메모이고, 감정 기록을 자동으로 만들거나 고치지 않는다. 감정 선택·점수 입력은 포함하지 않는다.
+종료된 내 휴식 세션(정상 완료·중도 종료 모두)에 선택 메모를 작성·수정·삭제한다. 감정 기록과 별개의 메모이고, 감정 기록을 자동으로 만들거나 고치지 않는다. **백엔드 `RestService.memo` 기준(2026-11-19 대조).** Idempotency-Key 없음.
 
 | 필드 | 위치 | 타입 | 필수 | 제약 |
 | --- | --- | --- | --- | --- |
 | sessionId | Path | ID | 필수 | 본인 소유의 종료된 세션 |
-| afterMemo | Body | string \| null | 필수 | 최대 500자. null·공백뿐이면 삭제. **생략은 오류** |
+| afterMemo | Body | string \| null | 필수 | 최대 500자(코드 포인트, 설정 `app.activity.after-memo-limit`). null·공백뿐이면 삭제. **생략은 400**, 다른 필드도 400 |
 
 ```json
 { "afterMemo": "잠깐 쉬니 머리가 맑아졌다." }
@@ -147,13 +147,16 @@ Response `data: { session: RestSession }` (메모 반영 후)
 | HTTP | 코드 | 의미 |
 | --- | --- | --- |
 | 200 | - | 저장·수정·비우기 성공 |
-| 400 | COMMON_INVALID_REQUEST | 필드 누락·길이·타입 오류 |
+| 400 | COMMON_INVALID_REQUEST | 필드 누락·다른 필드·길이·타입 오류, sessionId 형식 |
 | 401 | AUTH_ACCESS_TOKEN_INVALID / _EXPIRED | 토큰 오류 / 만료 |
 | 404 | REST_SESSION_NOT_FOUND | 없거나 내 세션이 아님 |
 | 409 | REST_NOT_ENDED | 예정 종료 전 진행 중 세션 |
+| 409 | COMMON_STATE_CONFLICT | 같은 사용자의 다른 저장과 겹쳐 잠금을 못 잡음 |
 | 500 | COMMON_INTERNAL_ERROR | 서버 오류 |
 
-메모: 예정 종료를 지났지만 DB에 `RUNNING`으로 남은 세션은 서버가 정상 완료 처리한 뒤 메모를 저장한다. 진행 중 세션에 메모를 보내 종료 상태를 만드는 것은 허용하지 않는다.
+검사 순서: 본문(400) → (사용자 잠금) → 404 → 예정 종료가 지난 RUNNING 은 COMPLETED 로 정리 → 409 REST_NOT_ENDED. 진행 중 세션에 메모를 보내 종료 상태를 만드는 것은 허용하지 않는다.
+
+프론트: 동굴 문 닫기 진행 화면에서 문이 열린 뒤(시간 다 됨·중도 종료) 한 줄 메모 팝업, 건너뛸 수 있다.
 
 ## Idempotency-Key
 
@@ -167,6 +170,7 @@ Response `data: { session: RestSession }` (메모 반영 후)
 | REST_ALREADY_RUNNING | 409 | 휴식 시작 |
 | REST_SESSION_NOT_FOUND | 404 | 중도 종료·후 상태 기록 |
 | REST_NOT_ENDED | 409 | 후 상태 기록 |
+| COMMON_STATE_CONFLICT | 409 | 사용자 잠금을 쓰는 쓰기 API 공통(잠금 실패) |
 
 ## 미결정 사항
 

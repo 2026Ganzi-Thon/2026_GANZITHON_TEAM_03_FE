@@ -7,6 +7,7 @@ import {
   CheeseVaultRoute,
   ConcernDetailRoute,
   ConcernWriteRoute,
+  EmotionEditRoute,
   EmotionRecordRoute,
   EmotionRoute,
   EmotionWriteRoute,
@@ -23,6 +24,7 @@ import {
   TabLayout,
   VerifyEmailRoute,
   WoolCollectionRoute,
+  WoolHistoryRoute,
 } from './routes'
 
 // 경로 정의는 여기 한곳. 페이지는 콜백 props 만 받고, 이동은 ./routes 의 라우트 요소가 연결한다.
@@ -56,6 +58,7 @@ export const router = createBrowserRouter([
           },
           { path: 'emotion/write', element: <EmotionWriteRoute /> },
           { path: 'emotion/records/:recordId', element: <EmotionRecordRoute /> },
+          { path: 'emotion/records/:recordId/edit', element: <EmotionEditRoute /> },
           // 정적 경로라 'cheese/:concernId'(고민 상세)보다 먼저 맞는다
           { path: 'cheese/write', element: <ConcernWriteRoute /> },
           { path: 'cheese/:concernId', element: <ConcernDetailRoute /> },
@@ -63,6 +66,7 @@ export const router = createBrowserRouter([
           { path: 'island', element: <IslandDecorateRoute /> },
           { path: 'cave/session', element: <CaveSessionRoute /> },
           { path: 'settings', element: <SettingsRoute /> },
+          { path: 'wool/history', element: <WoolHistoryRoute /> },
         ],
       },
       { path: '*', element: <Navigate to="/" replace /> },
