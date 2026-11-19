@@ -388,7 +388,7 @@ function tabOf(pathname: string) {
   return 'home'
 }
 
-/** 탭바가 있는 화면(홈·양 먹이주기·우유와 치즈 목록·치즈 보관함·동굴 문 닫기). cloud 탭은 이동할 화면이 없어 동작 없음. */
+/** 탭바가 있는 화면(홈·양 먹이주기·우유와 치즈 목록·치즈 보관함·양털 모으기·동굴 문 닫기). */
 export function TabLayout() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
