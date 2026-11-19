@@ -25,7 +25,7 @@ export interface EmotionRecordListProps {
 /** 로딩 막대 길이(행마다 조금 다르게) */
 const SKELETON_WIDTHS = ['62%', '48%', '56%']
 
-/** "지난 먹이주기 기록"·"내 지푸라기들"처럼 왼쪽에 글, 오른쪽에 상대 날짜가 있는 목록. `onSelect` 가 있으면 행이 버튼이 된다. */
+/** "지난 먹이주기 기록"처럼 왼쪽에 글, 오른쪽에 상대 날짜가 있는 목록. `onSelect` 가 있으면 행이 버튼이 된다. */
 export function EmotionRecordList({ title, status, rows, today, emptyText, onRetry, onSelect }: EmotionRecordListProps) {
   const headingId = `${title}-heading`
 
