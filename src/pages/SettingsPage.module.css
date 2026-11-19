@@ -46,6 +46,13 @@
   margin-top: 11px;
 }
 
+/* 계정 바꾸기 버튼 아래 오른쪽 끝, 작은 회색 글자 버튼 — 글자 끝을 구글 버튼 오른쪽 끝에 맞춘다(sm 가로 여백 10px 만큼 밖으로) */
+.logout {
+  align-self: flex-end;
+  margin: var(--space-2) -10px 0 0;
+  color: var(--color-text-muted);
+}
+
 .status {
   display: flex;
   flex: 1;
