@@ -6,6 +6,11 @@ import { fileURLToPath } from 'node:url'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // API 는 같은 출처(/api)로 부르고 개발 서버가 백엔드로 넘긴다 — 배포는 vercel.json 의 rewrites 가 같은 일을 한다.
+  // 같은 출처여야 iPhone Safari(다른 사이트 쿠키 차단)에서도 로그인 쿠키(Refresh·구글 challenge)가 저장된다
+  server: {
+    proxy: { '/api': { target: 'https://3.38.62.168', changeOrigin: true } },
+  },
   plugins: [
     react(),
     babel({ presets: [reactCompilerPreset()] }),
@@ -38,6 +43,8 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,webp,ico,woff2}'],
         navigateFallback: '/index.html',
+        // API 는 Vercel 이 백엔드로 넘긴다(vercel.json) — 서비스 워커가 index.html 로 가로채지 않게
+        navigateFallbackDenylist: [/^\/api\//],
       },
       devOptions: { enabled: true },
     }),
