@@ -20,6 +20,8 @@ import styles from './CareCollection.module.css'
 
 interface CareCollectionProps {
   woolCount: number | undefined
+  /** "내 양털" 알약을 눌렀을 때 — 양털 내역으로 */
+  onOpenWoolHistory?: () => void
 }
 
 /** 시안 한 탭의 행 수. 목록 자리를 이만큼 늘 잡아 두어 로딩·탭 전환에 버튼이 오르내리지 않는다 */
@@ -55,7 +57,7 @@ function pickRecommendation(actions: CareAction[], doneIds: Set<string>, actionD
   return candidates[day % candidates.length]
 }
 
-export function CareCollection({ woolCount }: CareCollectionProps) {
+export function CareCollection({ woolCount, onOpenWoolHistory }: CareCollectionProps) {
   const actionsQuery = useCareActions()
   const todayQuery = useTodayCareCompletions()
   const complete = useCompleteCareAction()
@@ -164,7 +166,10 @@ export function CareCollection({ woolCount }: CareCollectionProps) {
         title="양털 모으기"
         actions={
           <>
-            <WoolCounter count={woolCount} loading={woolCount === undefined} />
+            {/* 임의 결정(확인 필요): 시안에 내역 화면·진입점이 없어 이 화면의 "내 양털" 알약을 누르면 양털 내역으로 간다 */}
+            <button type="button" className={styles.woolButton} aria-label="양털 내역 보기" onClick={onOpenWoolHistory}>
+              <WoolCounter count={woolCount} loading={woolCount === undefined} />
+            </button>
             <IconButton icon="alert-circle" aria-label="양털 모으기 안내" />
           </>
         }

@@ -20,6 +20,7 @@ import SettingsPage from '@/pages/SettingsPage'
 import SplashPage from '@/pages/SplashPage'
 import VerifyEmailPage from '@/pages/VerifyEmailPage'
 import WoolCollectionPage from '@/pages/WoolCollectionPage'
+import WoolHistoryPage from '@/pages/WoolHistoryPage'
 import { useWoolBalance } from '@/shared/wool'
 import {
   getResendEmail,
@@ -480,8 +481,16 @@ export function EmotionRoute() {
 }
 
 export function WoolCollectionRoute() {
+  const navigate = useNavigate()
   const woolCount = useWoolBalance()
-  return <WoolCollectionPage woolCount={woolCount} />
+  return <WoolCollectionPage woolCount={woolCount} onOpenWoolHistory={() => navigate('/wool/history')} />
+}
+
+/** 양털 내역 — 탭바 없음(시안 없음). 뒤로가기는 양털 모으기로. */
+export function WoolHistoryRoute() {
+  const navigate = useNavigate()
+  const woolCount = useWoolBalance()
+  return <WoolHistoryPage woolCount={woolCount} onBack={() => navigate('/wool')} />
 }
 
 export function EmotionWriteRoute() {
@@ -508,6 +517,25 @@ export function EmotionRecordRoute() {
       recordId={recordId}
       onBack={() => navigate('/emotion')}
       onDeleted={() => navigate('/emotion', { replace: true })}
+      onEdit={() => navigate(`/emotion/records/${encodeURIComponent(recordId)}/edit`)}
+    />
+  )
+}
+
+/** 감정 기록 수정 — 작성 화면 재사용, 탭바 없음. 저장하면 상세로(replace — 뒤로가기가 수정 화면으로 돌아오지 않게). */
+export function EmotionEditRoute() {
+  const navigate = useNavigate()
+  const woolCount = useWoolBalance()
+  const { recordId = '' } = useParams()
+  const detail = `/emotion/records/${encodeURIComponent(recordId)}`
+  return (
+    <EmotionWritePage
+      key={recordId}
+      woolCount={woolCount}
+      recordId={recordId}
+      onBack={() => navigate(detail)}
+      onSaved={() => navigate(detail, { replace: true })}
+      onNotFound={() => navigate('/emotion', { replace: true })}
     />
   )
 }

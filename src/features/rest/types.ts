@@ -67,6 +67,17 @@ export type CancelRestSessionState =
   | { status: 'cancelling' }
   | { status: 'error' }
 
+export type SaveAfterMemoState =
+  | { status: 'idle' }
+  | { status: 'saving' }
+  /** 400 — 500자 초과 등 */
+  | { status: 'invalid' }
+  /** 404 — 휴식 기록이 없음 */
+  | { status: 'not-found' }
+  /** 409 REST_NOT_ENDED — 아직 끝나지 않은 휴식 */
+  | { status: 'not-ended' }
+  | { status: 'error' }
+
 /** 현재 세션이 없으면 null */
 export type CurrentRestSession = RestSession | null
 

@@ -129,32 +129,35 @@ data: {
 
 `PATCH /api/v1/emotion-records/{recordId}` · 200 · 요구사항 F-1-2
 
-내 기록의 감정과 메모를 부분 수정한다. 과거 기록 수정은 허용하고 날짜는 바꾸지 않는다(초안).
+내 기록의 감정과 메모를 부분 수정한다. 과거 기록도 고칠 수 있고 날짜는 바뀌지 않는다. **백엔드 `EmotionService.patch` 기준(2026-11-19 대조).** Idempotency-Key 없음.
 
-Request body (생략한 필드는 유지)
+Request body (생략한 필드는 유지, 이 두 필드 말고 다른 필드가 있으면 400 `COMMON_INVALID_REQUEST`)
 
 | 필드 | 타입 | 필수 | 제약 |
 | --- | --- | --- | --- |
-| emotionIds | string[] | 선택 | 전달 시 전체 감정 선택을 교체. 1개 이상, 중복·null 불가, `[]` 불가. 새로 추가하는 감정은 활성만 허용 (기존 연결된 비활성 감정 유지는 허용) |
-| memo | string \| null | 선택 | 최대 1,000자. null 또는 공백뿐이면 메모 삭제 |
+| emotionIds | string[] | 선택 | 전달 시 전체 감정 선택을 교체. 1개 이상, 문자열 ID만, 중복 불가. `[]`·`null`·배열 아님·숫자 원소도 `EMOTION_INVALID_SELECTION`. 새로 넣는 감정은 활성만, 원래 연결돼 있던 비활성 감정은 남길 수 있다 |
+| memo | string \| null | 선택 | 최대 1,000자(코드 포인트, 설정 `app.activity.emotion-memo-limit`). null 또는 공백뿐이면 메모 삭제. 문자열 아닌 값은 400 |
 
 ```json
 { "emotionIds": ["2"], "memo": null }
 ```
 
-Response `data: EmotionRecord` (수정 후)
+Response `data: EmotionRecord` (수정 후, `updatedAt`은 바뀐 값이 없어도 새 시각)
 
 | HTTP | 코드 | 의미 |
 | --- | --- | --- |
 | 200 | - | 수정 성공 |
-| 400 | COMMON_EMPTY_UPDATE | 수정할 필드가 하나도 없음 |
+| 400 | COMMON_EMPTY_UPDATE | 본문이 `{}` |
 | 400 | EMOTION_INVALID_SELECTION | 감정 선택 오류 |
-| 400 | COMMON_INVALID_REQUEST | 길이·타입·허용하지 않은 필드 |
+| 400 | COMMON_INVALID_REQUEST | 본문이 객체가 아님·허용하지 않은 필드·메모 길이·타입, recordId 형식 |
 | 401 | AUTH_ACCESS_TOKEN_INVALID / AUTH_ACCESS_TOKEN_EXPIRED | 토큰 오류 / 만료 |
 | 404 | EMOTION_RECORD_NOT_FOUND | 없거나 내 소유가 아님 |
+| 409 | COMMON_STATE_CONFLICT | 같은 사용자의 다른 저장과 겹쳐 잠금을 못 잡음(잠시 뒤 다시) |
 | 500 | COMMON_INTERNAL_ERROR | 서버 오류 |
 
-메모: `recordDate`, `userId`, `createdAt` 등 서버 관리 필드는 수정 불가. 동시 수정은 마지막 성공 변경이 적용된다(제안).
+검사 순서: 필드 → 빈 본문 → (사용자 잠금) → 404 → 감정 → 메모. 동시 수정은 마지막 성공 변경이 적용된다.
+
+프론트: 기록 상세 "수정" → `/emotion/records/{id}/edit`(작성 화면 재사용). 바뀐 필드만 보내고, 바뀐 것이 없으면 버튼을 막아 `COMMON_EMPTY_UPDATE`를 보내지 않는다.
 
 ## 6. 감정 기록 삭제
 

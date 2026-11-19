@@ -1,0 +1,22 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* 안내·오류 자리: 비어 있어도 한 줄 높이를 잡아 둔다 */
+.error,
+.counter {
+  min-height: calc(12px * 1.5);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.error {
+  color: var(--color-error);
+}
+
+.counter {
+  align-self: flex-end;
+  color: var(--color-text-muted);
+}

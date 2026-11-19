@@ -49,3 +49,10 @@ export function removeEmotionRecordFromList(queryClient: QueryClient, recordId: 
     old ? { ...old, items: old.items.filter((record) => record.recordId !== recordId) } : old,
   )
 }
+
+/** 고친 기록을 목록 캐시의 같은 자리에 넣는다(순서는 날짜순이라 그대로). */
+export function replaceEmotionRecordInList(queryClient: QueryClient, record: EmotionRecord): void {
+  queryClient.setQueryData(emotionKeys.records(), (old?: EmotionRecordListResponse) =>
+    old ? { ...old, items: old.items.map((item) => (item.recordId === record.recordId ? record : item)) } : old,
+  )
+}
