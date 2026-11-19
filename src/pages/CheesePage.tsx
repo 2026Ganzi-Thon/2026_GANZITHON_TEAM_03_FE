@@ -8,7 +8,8 @@ import {
   MilkCarousel,
   useConcerns,
 } from '@/features/cheese'
-import { Button, GuideTour } from '@/shared/ui'
+import { Button, GuideNudge, GuideTour } from '@/shared/ui'
+import { hasSeenGuide, markGuideSeen } from '@/shared/lib/guideSeen'
 import styles from './CheesePage.module.css'
 
 export interface CheesePageProps {
@@ -45,6 +46,12 @@ export default function CheesePage({
   const { state: loaded, retry } = useConcerns()
   // 오른쪽 위 `!` — 사용법 안내. 안내 중에는 고정 예시 우유로 그리고 첫 우유를 고른 상태로 보인다(화살표가 늘 같은 자리를 가리키게)
   const [guideOpen, setGuideOpen] = useState(false)
+  // 이 기기에서 이 화면에 처음 들어왔으면 `!` 아래에 "처음이신가요?" 말풍선(화면마다 한 번, 뜬 순간 본 것으로 기억)
+  const [nudgeOpen, setNudgeOpen] = useState(() => !hasSeenGuide('cheese'))
+  const openGuide = () => {
+    setNudgeOpen(false)
+    setGuideOpen(true)
+  }
   const state = guideOpen ? ({ status: 'success', items: CHEESE_GUIDE_CONCERNS } as const) : loaded
   const items = state.status === 'success' ? state.items : []
   // 목록이 줄어서(위로를 남긴 고민이 빠짐) 선택한 고민이 사라졌으면 선택 없음으로 본다
@@ -56,7 +63,7 @@ export default function CheesePage({
 
   return (
     <main className={styles.page}>
-      <CheeseHeader woolCount={woolCount} onOpenGuide={() => setGuideOpen(true)} />
+      <CheeseHeader woolCount={woolCount} onOpenGuide={openGuide} />
       <p className={styles.intro}>
         이웃 폴리의 우유를 골라 답변하고
         <br />
@@ -106,6 +113,13 @@ export default function CheesePage({
         <CheeseBanner title="고민 치즈 남기기" caption="내 치즈는 보관함에 보관돼요" onClick={onWrite} />
       </div>
 
+      <GuideNudge
+        open={nudgeOpen && !guideOpen}
+        target="guide-button"
+        onOpen={openGuide}
+        onDismiss={() => setNudgeOpen(false)}
+        onShown={() => markGuideSeen('cheese')}
+      />
       <GuideTour open={guideOpen} steps={CHEESE_GUIDE_STEPS} onClose={() => setGuideOpen(false)} />
     </main>
   )

@@ -10,7 +10,8 @@ import {
 } from '@/features/emotion'
 import type { EmotionRecordRow } from '@/features/emotion'
 import { getTodaySeoul } from '@/shared/lib/formatRelativeDate'
-import { Button, GuideTour } from '@/shared/ui'
+import { Button, GuideNudge, GuideTour } from '@/shared/ui'
+import { hasSeenGuide, markGuideSeen } from '@/shared/lib/guideSeen'
 import styles from './EmotionPage.module.css'
 
 export interface EmotionPageProps {
@@ -31,6 +32,12 @@ export default function EmotionPage({ woolCount, onOpenWrite, onOpenRecord }: Em
   const today = getTodaySeoul()
   // 오른쪽 위 `!` — 사용법 안내. 안내 중에는 고정 예시 기록으로 그린다(화살표가 늘 같은 자리를 가리키게)
   const [guideOpen, setGuideOpen] = useState(false)
+  // 이 기기에서 이 화면에 처음 들어왔으면 `!` 아래에 "처음이신가요?" 말풍선(화면마다 한 번, 뜬 순간 본 것으로 기억)
+  const [nudgeOpen, setNudgeOpen] = useState(() => !hasSeenGuide('emotion'))
+  const openGuide = () => {
+    setNudgeOpen(false)
+    setGuideOpen(true)
+  }
 
   const records = state.status === 'success' ? state.records : []
   const recordedToday = records.some((record) => record.recordDate === today)
@@ -50,7 +57,7 @@ export default function EmotionPage({ woolCount, onOpenWrite, onOpenRecord }: Em
 
   return (
     <main className={styles.page}>
-      <EmotionHeader woolCount={woolCount} onOpenGuide={() => setGuideOpen(true)} />
+      <EmotionHeader woolCount={woolCount} onOpenGuide={openGuide} />
       <div className={styles.body}>
         <SheepHero />
 
@@ -83,6 +90,13 @@ export default function EmotionPage({ woolCount, onOpenWrite, onOpenRecord }: Em
         </div>
       </div>
 
+      <GuideNudge
+        open={nudgeOpen && !guideOpen}
+        target="guide-button"
+        onOpen={openGuide}
+        onDismiss={() => setNudgeOpen(false)}
+        onShown={() => markGuideSeen('emotion')}
+      />
       <GuideTour open={guideOpen} steps={EMOTION_GUIDE_STEPS} onClose={() => setGuideOpen(false)} />
     </main>
   )

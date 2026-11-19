@@ -12,7 +12,8 @@ import {
 } from '@/features/cheese'
 import type { CheeseTab, VaultCardItem } from '@/features/cheese'
 import sheepSadImage from '@/assets/images/sheep-sad.webp'
-import { BackButton, Button, EmptyState, GuideTour, Tabs } from '@/shared/ui'
+import { BackButton, Button, EmptyState, GuideNudge, GuideTour, Tabs } from '@/shared/ui'
+import { hasSeenGuide, markGuideSeen } from '@/shared/lib/guideSeen'
 import styles from './CheeseVaultPage.module.css'
 
 export interface CheeseVaultPageProps {
@@ -51,10 +52,16 @@ export default function CheeseVaultPage({
 }: CheeseVaultPageProps) {
   // 오른쪽 위 `!` — 사용법 안내. 안내 중에는 "내 고민" 탭에 고정 예시 카드로 그린다(화살표가 늘 같은 자리를 가리키게)
   const [guideOpen, setGuideOpen] = useState(false)
+  // 이 기기에서 이 화면에 처음 들어왔으면 `!` 아래에 "처음이신가요?" 말풍선(화면마다 한 번, 뜬 순간 본 것으로 기억)
+  const [nudgeOpen, setNudgeOpen] = useState(() => !hasSeenGuide('vault'))
+  const openGuide = () => {
+    setNudgeOpen(false)
+    setGuideOpen(true)
+  }
   const shownTab = guideOpen ? 'mine' : tab
   return (
     <main className={styles.page}>
-      <CheeseHeader title="내 치즈 보관함" woolCount={woolCount} onOpenGuide={() => setGuideOpen(true)} />
+      <CheeseHeader title="내 치즈 보관함" woolCount={woolCount} onOpenGuide={openGuide} />
       <BackButton className={styles.back} onClick={onBack} />
       <div data-guide="tabs">
         <Tabs
@@ -75,6 +82,13 @@ export default function CheeseVaultPage({
         )}
       </div>
 
+      <GuideNudge
+        open={nudgeOpen && !guideOpen}
+        target="guide-button"
+        onOpen={openGuide}
+        onDismiss={() => setNudgeOpen(false)}
+        onShown={() => markGuideSeen('vault')}
+      />
       <GuideTour open={guideOpen} steps={VAULT_GUIDE_STEPS} onClose={() => setGuideOpen(false)} />
     </main>
   )

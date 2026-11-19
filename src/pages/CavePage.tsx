@@ -16,7 +16,8 @@ import {
 import type { CaveDecoration } from '@/features/rest'
 import { useIslandItems } from '@/features/island'
 import type { IslandItem } from '@/features/island'
-import { Banner, Button, GuideTour } from '@/shared/ui'
+import { Banner, Button, GuideNudge, GuideTour } from '@/shared/ui'
+import { hasSeenGuide, markGuideSeen } from '@/shared/lib/guideSeen'
 import styles from './CavePage.module.css'
 
 export interface CavePageProps {
@@ -53,6 +54,12 @@ export default function CavePage({ woolCount, onRunning, onStarted, onOpenBanner
   const { state: islandState } = useIslandItems()
   // 오른쪽 위 `!` — 사용법 안내. 안내 중에는 가구 없는 섬·기본 시간으로 그린다(화살표가 늘 같은 자리를 가리키게)
   const [guideOpen, setGuideOpen] = useState(false)
+  // 이 기기에서 이 화면에 처음 들어왔으면 `!` 아래에 "처음이신가요?" 말풍선(화면마다 한 번, 뜬 순간 본 것으로 기억)
+  const [nudgeOpen, setNudgeOpen] = useState(() => !hasSeenGuide('cave'))
+  const openGuide = () => {
+    setNudgeOpen(false)
+    setGuideOpen(true)
+  }
   const decorations = !guideOpen && islandState.status === 'success' ? toDecorations(islandState.items) : []
   const [chosenDuration, setDuration] = useState(DEFAULT_REST_DURATION)
   const duration = guideOpen ? DEFAULT_REST_DURATION : chosenDuration
@@ -119,7 +126,7 @@ export default function CavePage({ woolCount, onRunning, onStarted, onOpenBanner
 
   return (
     <main className={styles.page}>
-      <CaveHeader woolCount={woolCount} onOpenGuide={() => setGuideOpen(true)} />
+      <CaveHeader woolCount={woolCount} onOpenGuide={openGuide} />
       <div className={styles.body}>
         <Banner className={styles.banner} onClick={onOpenBanner}>동굴 문을 닫고 나의 시간에 집중해보세요</Banner>
 
@@ -151,6 +158,13 @@ export default function CavePage({ woolCount, onRunning, onStarted, onOpenBanner
       </div>
 
       <LayDownModal open={waitingFlat} onCancel={() => setWaitingFlat(false)} />
+      <GuideNudge
+        open={nudgeOpen && !guideOpen}
+        target="guide-button"
+        onOpen={openGuide}
+        onDismiss={() => setNudgeOpen(false)}
+        onShown={() => markGuideSeen('cave')}
+      />
       <GuideTour open={guideOpen} steps={CAVE_GUIDE_STEPS} onClose={() => setGuideOpen(false)} />
     </main>
   )

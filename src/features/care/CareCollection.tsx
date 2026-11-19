@@ -182,7 +182,7 @@ export function CareCollection({ woolCount, onOpenWoolHistory, onOpenGuide, guid
             <button type="button" className={styles.woolButton} aria-label="양털 내역 보기" onClick={onOpenWoolHistory}>
               <WoolCounter count={woolCount} loading={woolCount === undefined} />
             </button>
-            <IconButton icon="alert-circle" aria-label="양털 모으기 안내" onClick={onOpenGuide} />
+            <IconButton icon="alert-circle" data-guide="guide-button" aria-label="양털 모으기 안내" onClick={onOpenGuide} />
           </>
         }
       />
