@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { QueryClient } from '@tanstack/react-query'
-import { hasErrorCode, isApiError, newIdempotencyKey } from '@/shared/api'
+import { hasErrorCode, isOutcomeUnknown, newIdempotencyKey } from '@/shared/api'
 import { woolKeys } from '@/shared/wool'
 import type { WoolWallet } from '@/shared/types'
 import {
@@ -66,9 +66,11 @@ function applyCompletion(queryClient: QueryClient, completion: CareCompletion, b
   void queryClient.invalidateQueries({ queryKey: careKeys.today() })
 }
 
-/** 응답을 못 받은 실패(네트워크·시간 초과)·처리 중 충돌은 서버에 반영됐을 수 있어 같은 키로 다시 보낸다 */
-const shouldKeepKey = (error: unknown) =>
-  !isApiError(error) || error.status === 0 || error.code === 'COMMON_IDEMPOTENCY_CONFLICT'
+/**
+ * 서버가 처리했는지 모르는 실패(응답 못 받음·5xx·Vercel 502/504·잠금 충돌)면 같은 키로 다시 보낸다(@/shared/api isOutcomeUnknown).
+ * 확실히 처리 안 된 실패(이미 완료·행동 없음·키 충돌 409 COMMON_IDEMPOTENCY_CONFLICT 등)는 키를 버려 다음 시도는 새 키로.
+ */
+const shouldKeepKey = (error: unknown) => isOutcomeUnknown(error)
 
 /** 같은 동작(행동·완료 회차)을 다시 시도할 때 같은 Idempotency-Key 를 쓰게 키를 보관한다 */
 function useIdempotencyKeys() {
