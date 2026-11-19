@@ -84,11 +84,11 @@ export function CareCollection({ woolCount, onOpenWoolHistory }: CareCollectionP
   const categories = loading ? SKELETON_CATEGORIES : groups.categories
   const autoCategory: CareCategoryId =
     (recommended && categoryOf(recommended)) ??
-    groups.categories.find((item) => groups.byCategory[item.id].length > 0)?.id ??
-    'move'
+    groups.categories.find((item) => groups.byCategory(item.id).length > 0)?.id ??
+    categories[0].id
   const category: CareCategoryId =
     pickedCategory && categories.some((item) => item.id === pickedCategory) ? pickedCategory : autoCategory
-  const visible = groups.byCategory[category]
+  const visible = groups.byCategory(category)
 
   const started = actions?.find((action) => action.careActionId === startedId) ?? null
   const selected =

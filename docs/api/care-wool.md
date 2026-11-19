@@ -45,7 +45,8 @@ Response `data.items` (`active=true`, `displayOrder` 오름차순 → `id` 오�
 | --- | --- | --- | --- |
 | careActionId | string | N | |
 | name | string | N | 예: 물 한 잔 마시기 |
-| description | string \| null | Y | 예: 지금 물을 한 잔 마셔보세요. |
+| category | string | N | 분류(탭) — `움직이기`·`마음돌봄`·`쉬어가기`·`일상가꾸기`, 그 밖의 행동은 `기타`(V13 기본값). 2026-11-20 추가 |
+| description | string \| null | Y | 예: 지금 물을 한 잔 마셔보세요. V14 기본 행동은 null |
 | rewardAmount | integer | N | 현재 지급량, 0 이상 |
 | displayOrder | integer | N | 표시 순서 |
 
@@ -55,6 +56,19 @@ Response `data.items` (`active=true`, `displayOrder` 오름차순 → `id` 오�
 | 400 | COMMON_INVALID_REQUEST | 요청 형식 오류 |
 | 401 | AUTH_ACCESS_TOKEN_INVALID / _EXPIRED | 토큰 오류 / 만료 |
 | 500 | COMMON_INTERNAL_ERROR | 서버 오류 |
+
+### 기본 데이터(V14, 백엔드 `docs/care-catalog.md`)
+
+없는 행동만 보상 양털 4개·활성으로 넣는다(이름이 같은 기존 행동은 ID·보상·순서·활성 그대로, 분류가 `기타`면 분류만 채움).
+
+| displayOrder | category | name |
+| --- | --- | --- |
+| 1~4 | 움직이기 | 물 한 잔 마시기 · 간단한 간식 먹기 · 10분 산책하기 · 편안한 옷으로 갈아입기 |
+| 5~8 | 마음돌봄 | 양 먹이주기: 오늘의 마음을 한 줄로 적기 · 오늘 내가 애쓴 일 하나 알아주기 · 내 기분을 색이나 낙서로 표현하기 · 편한 사람에게 내 기분 이야기하기 |
+| 9~12 | 쉬어가기 | 동굴 5분 닫기: 휴대폰을 5분 뒤집어보세요 · 불필요한 알림 잠시 끄기 · 좋아하는 음악 한 곡 듣기 · 따뜻한 음료 천천히 마시기 |
+| 13~16 | 일상가꾸기 | 침구 정리하기 · 책상 위 물건 정리하기 · 사용한 컵 하나 씻기 · 마음에 드는 순간 사진으로 남기기 |
+
+프론트는 `category`를 그대로 탭으로 쓴다(`features/care/careCategories.ts`). 기본 4개 탭은 늘 보이고, 그 밖의 분류는 뒤에(`기타`는 맨 뒤).
 
 ## 2. 오늘의 돌봄 완료 내역 조회
 
