@@ -1,7 +1,7 @@
 import axios from 'axios'
 import type { AxiosError, AxiosRequestConfig } from 'axios'
 import type { ApiErrorBody, ApiResponse, TokenResponse } from '@/shared/types'
-import { ApiError, NETWORK_ERROR_CODE, TIMEOUT_ERROR_CODE } from './ApiError'
+import { ApiError, NETWORK_ERROR_CODE, TIMEOUT_ERROR_CODE, isApiError } from './ApiError'
 import { getAccessToken, notifyAuthLost, setAccessToken } from './token'
 
 declare module 'axios' {
@@ -40,8 +40,27 @@ export interface RequestOptions {
   idempotencyKey?: boolean | string
 }
 
-export function newIdempotencyKey() {
-  return crypto.randomUUID()
+/** 새 Idempotency-Key(UUID v4). `crypto.randomUUID` 가 없는 브라우저(iOS 15.4 미만 등)는 `getRandomValues` 로 만든다 */
+export function newIdempotencyKey(): string {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+  const bytes = crypto.getRandomValues(new Uint8Array(16))
+  bytes[6] = (bytes[6] & 0x0f) | 0x40
+  bytes[8] = (bytes[8] & 0x3f) | 0x80
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
+}
+
+/**
+ * 서버가 이 요청을 처리했는지 알 수 없는 실패인가 — 그렇다면 다시 보낼 때 **같은** Idempotency-Key 를 써야 한다
+ * (서버가 이미 처리했으면 같은 키에 처음 응답을 돌려주고, 아니면 이번에 처리한다. 새 키면 두 번 처리될 수 있다).
+ * - 응답을 못 받음(네트워크 끊김·시간 초과, status 0)
+ * - 5xx·408 — 서버 오류이거나, Vercel 이 백엔드로 넘기다 끊긴 경우(502·504)
+ * - 409 COMMON_STATE_CONFLICT — 같은 사용자의 다른 요청이 처리 중이라 잠금에 걸림
+ * 그 밖의 4xx(형식 오류·이미 완료·키 충돌 등)는 서버가 확실히 처리하지 않은 것이라 다음 시도는 새 키로 한다.
+ */
+export function isOutcomeUnknown(error: unknown): boolean {
+  if (!isApiError(error)) return true
+  return error.status === 0 || error.status === 408 || error.status >= 500 || error.code === 'COMMON_STATE_CONFLICT'
 }
 
 /**

@@ -1,5 +1,6 @@
+import { useRef } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { hasErrorCode, newIdempotencyKey } from '@/shared/api'
+import { hasErrorCode, isOutcomeUnknown, newIdempotencyKey } from '@/shared/api'
 import { REST_ALREADY_RUNNING, startRestSession } from './restApi'
 import { applyRestSession, restKeys, serverOffsetOf } from './restQueries'
 import type { StartRestSessionState } from './types'
@@ -10,13 +11,22 @@ import type { StartRestSessionState } from './types'
  */
 export function useStartRestSession() {
   const queryClient = useQueryClient()
+  // 같은 시간으로 다시 시작할 때, 앞 시도가 서버에 반영됐는지 모르면(응답 못 받음·5xx) 같은 키를 쓴다 — 두 번 시작되지 않게
+  const keyRef = useRef<{ durationSeconds: number; key: string } | null>(null)
+  const takeKey = (durationSeconds: number) => {
+    if (keyRef.current?.durationSeconds !== durationSeconds) keyRef.current = { durationSeconds, key: newIdempotencyKey() }
+    return keyRef.current.key
+  }
 
   const mutation = useMutation({
-    // 한 번의 시작 시도마다 키를 하나 만든다 — 실제 API 연결 때 헤더로 나간다
     mutationFn: ({ durationSeconds, idempotencyKey }: { durationSeconds: number; idempotencyKey: string }) =>
       startRestSession(durationSeconds, idempotencyKey),
-    onSuccess: ({ serverTime, session }) => applyRestSession(queryClient, session, serverOffsetOf(serverTime)),
+    onSuccess: ({ serverTime, session }) => {
+      keyRef.current = null
+      applyRestSession(queryClient, session, serverOffsetOf(serverTime))
+    },
     onError: (error) => {
+      if (!isOutcomeUnknown(error)) keyRef.current = null
       if (hasErrorCode(error, REST_ALREADY_RUNNING)) void queryClient.invalidateQueries({ queryKey: restKeys.current() })
     },
   })
@@ -34,7 +44,7 @@ export function useStartRestSession() {
   const start = async (durationSeconds: number): Promise<boolean> => {
     if (mutation.isPending) return false
     try {
-      await mutation.mutateAsync({ durationSeconds, idempotencyKey: newIdempotencyKey() })
+      await mutation.mutateAsync({ durationSeconds, idempotencyKey: takeKey(durationSeconds) })
       return true
     } catch {
       return false
