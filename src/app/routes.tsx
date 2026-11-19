@@ -7,6 +7,7 @@ import CaveSessionPage from '@/pages/CaveSessionPage'
 import CheesePage from '@/pages/CheesePage'
 import CheeseVaultPage from '@/pages/CheeseVaultPage'
 import ConcernDetailPage from '@/pages/ConcernDetailPage'
+import ConcernWritePage from '@/pages/ConcernWritePage'
 import EmotionPage from '@/pages/EmotionPage'
 import EmotionRecordPage from '@/pages/EmotionRecordPage'
 import EmotionWritePage from '@/pages/EmotionWritePage'
@@ -35,6 +36,7 @@ import {
   signupFailureOf,
 } from '@/features/auth'
 import { fetchNicknameAvailability } from '@/features/account'
+import type { CheeseTab } from '@/features/cheese'
 import { getAccessToken } from '@/shared/api'
 import type { InitialSetupValues } from '@/pages/InitialSetupPage'
 import AppTabBar from './AppTabBar'
@@ -358,6 +360,9 @@ interface AppShellContext {
   /** 치즈 보관함의 현재 페이지 — 내 고민 상세에 다녀와도 유지 */
   vaultPage: number
   setVaultPage: Dispatch<SetStateAction<number>>
+  /** 치즈 보관함의 탭(내 고민 / 보관한 치즈) — 내 고민 상세에 다녀와도 유지 */
+  vaultTab: CheeseTab
+  setVaultTab: Dispatch<SetStateAction<CheeseTab>>
 }
 
 /**
@@ -370,11 +375,14 @@ interface AppShellContext {
 export function AppShell() {
   const [cheeseList, setCheeseList] = useState<CheeseListState>({ page: 0, selectedId: null })
   const [vaultPage, setVaultPage] = useState(0)
+  const [vaultTab, setVaultTab] = useState<CheeseTab>('mine')
   const session = useSession()
   if (session.status === 'restoring') return null
   if (session.status === 'signedOut') return <Navigate to={session.reason === 'initial' ? '/splash' : '/login'} replace />
   if (session.status === 'needsSetup') return <Navigate to="/setup" replace state={{ requiresConsent: false }} />
-  return <Outlet context={{ cheeseList, setCheeseList, vaultPage, setVaultPage } satisfies AppShellContext} />
+  return (
+    <Outlet context={{ cheeseList, setCheeseList, vaultPage, setVaultPage, vaultTab, setVaultTab } satisfies AppShellContext} />
+  )
 }
 
 const TAB_PATHS: Record<string, string> = { home: '/', sheep: '/emotion', cheese: '/cheese', cloud: '/wool', cave: '/cave' }
@@ -410,6 +418,7 @@ export function TabLayout() {
 
 export function HomeRoute() {
   const navigate = useNavigate()
+  const { setVaultTab, setVaultPage } = useOutletContext<AppShellContext>()
   // 홈의 "내 기록, 보관함" 카드는 보관함 화면이 생기기 전까지 양 먹이주기(지난 기록·지푸라기 목록)로 보낸다
   return (
     <HomePage
@@ -420,6 +429,12 @@ export function HomeRoute() {
       // 섬 꾸미기와 같이 섬 그림이 홈 자리에서 동굴 화면 자리로 옮겨 간다
       onCloseCave={() => navigate('/cave', { viewTransition: true })}
       onOpenSettings={() => navigate('/settings')}
+      // 숙성이 끝난 치즈 알림 — 치즈 보관함 "내 고민" 탭 첫 페이지로(열어볼 치즈가 맨 앞에 모여 있다)
+      onOpenMaturedCheese={() => {
+        setVaultTab('mine')
+        setVaultPage(0)
+        navigate('/cheese/vault')
+      }}
     />
   )
 }
@@ -509,22 +524,48 @@ export function CheeseRoute() {
       selectedId={cheeseList.selectedId}
       onSelect={(selectedId) => setCheeseList((prev) => ({ ...prev, selectedId }))}
       onOpenConcern={(id) => navigate(`/cheese/${encodeURIComponent(id)}`)}
+      onWrite={() => navigate('/cheese/write')}
       onOpenVault={() => navigate('/cheese/vault')}
     />
   )
 }
 
-/** 내 치즈 보관함 — 탭바 있음(시안 290:636), "고민치즈" 탭. 뒤로가기는 우유와 치즈 목록으로, "더보기"는 내 고민 상세로. */
+/** 고민 쓰기 — 탭바 없음. 다 쓰면 새 고민의 상세(숙성 중)로 replace — 뒤로가기가 쓰기 화면으로 돌아가지 않게. */
+export function ConcernWriteRoute() {
+  const navigate = useNavigate()
+  const woolCount = useWoolBalance()
+  const { setVaultTab, setVaultPage } = useOutletContext<AppShellContext>()
+  return (
+    <ConcernWritePage
+      woolCount={woolCount}
+      onBack={() => navigate('/cheese')}
+      onCreated={(id) => {
+        // 상세에서 뒤로 가면 새 고민이 맨 앞에 있는 보관함 "내 고민" 탭 첫 페이지로
+        setVaultTab('mine')
+        setVaultPage(0)
+        navigate(`/cheese/vault/${encodeURIComponent(id)}`, { replace: true })
+      }}
+    />
+  )
+}
+
+/** 내 치즈 보관함 — 탭바 있음(시안 290:636), "고민치즈" 탭. 뒤로가기는 우유와 치즈 목록으로, "더보기"는 내 고민 상세로, 빈 "내 고민"은 고민 쓰기로. */
 export function CheeseVaultRoute() {
   const navigate = useNavigate()
   const woolCount = useWoolBalance()
-  const { vaultPage, setVaultPage } = useOutletContext<AppShellContext>()
+  const { vaultPage, setVaultPage, vaultTab, setVaultTab } = useOutletContext<AppShellContext>()
   return (
     <CheeseVaultPage
       woolCount={woolCount}
+      tab={vaultTab}
+      onTabChange={(tab) => {
+        setVaultTab(tab)
+        setVaultPage(0)
+      }}
       page={vaultPage}
       onPageChange={setVaultPage}
       onOpenConcern={(id) => navigate(`/cheese/vault/${encodeURIComponent(id)}`)}
+      onWrite={() => navigate('/cheese/write')}
       onBack={() => navigate('/cheese')}
     />
   )
@@ -535,7 +576,15 @@ export function MyConcernDetailRoute() {
   const navigate = useNavigate()
   const woolCount = useWoolBalance()
   const { concernId = '' } = useParams()
-  return <MyConcernDetailPage key={concernId} woolCount={woolCount} concernId={concernId} onBack={() => navigate('/cheese/vault')} />
+  return (
+    <MyConcernDetailPage
+      key={concernId}
+      woolCount={woolCount}
+      concernId={concernId}
+      onBack={() => navigate('/cheese/vault')}
+      onDeleted={() => navigate('/cheese/vault', { replace: true })}
+    />
+  )
 }
 
 export function ConcernDetailRoute() {

@@ -6,6 +6,7 @@ import {
   CheeseRoute,
   CheeseVaultRoute,
   ConcernDetailRoute,
+  ConcernWriteRoute,
   EmotionRecordRoute,
   EmotionRoute,
   EmotionWriteRoute,
@@ -55,6 +56,8 @@ export const router = createBrowserRouter([
           },
           { path: 'emotion/write', element: <EmotionWriteRoute /> },
           { path: 'emotion/records/:recordId', element: <EmotionRecordRoute /> },
+          // 정적 경로라 'cheese/:concernId'(고민 상세)보다 먼저 맞는다
+          { path: 'cheese/write', element: <ConcernWriteRoute /> },
           { path: 'cheese/:concernId', element: <ConcernDetailRoute /> },
           { path: 'cheese/vault/:concernId', element: <MyConcernDetailRoute /> },
           { path: 'island', element: <IslandDecorateRoute /> },

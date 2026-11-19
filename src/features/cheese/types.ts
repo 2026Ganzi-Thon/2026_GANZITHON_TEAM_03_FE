@@ -48,7 +48,7 @@ export type ConcernListState =
   | { status: 'error' }
   | { status: 'success'; snapshot: ConcernListSnapshot }
 
-/** 내 치즈 화면의 탭 (제안): 만드는 중·개봉한 치즈 목록 / 보관함 */
+/** 치즈 보관함 화면의 탭: 내가 쓴 고민 전체(숙성 중·숙성 끝·개봉·보관) / 보관한 치즈만 */
 export type CheeseTab = 'mine' | 'saved'
 
 export type MyConcernListState =
