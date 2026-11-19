@@ -1,0 +1,276 @@
+/* 시안: 4 양털 모으기(37:25 목록, 290:491 돌봄 중, 290:573 완료). 393 기준 좌우 24px */
+.page {
+  display: flex;
+  min-height: 100%;
+  max-width: var(--app-max-width);
+  flex-direction: column;
+  margin: 0 auto;
+  padding: env(safe-area-inset-top) 0 calc(var(--tabbar-height) + var(--space-6));
+  overflow-x: hidden;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--page-padding-x);
+}
+
+.status {
+  align-self: flex-start;
+  min-height: 21.5px;
+}
+
+/* 상태 배지 자리(배지와 같은 크기) */
+.badgeSkeleton {
+  align-self: flex-start;
+  width: 50px;
+  height: 21.5px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-border-subtle);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.section {
+  margin-top: 18px;
+}
+
+.section h2 {
+  font-size: var(--font-size-h6);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.5;
+}
+
+.description {
+  margin-top: 2px;
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-light);
+  line-height: var(--line-height-normal);
+}
+
+.recommendation {
+  display: flex;
+  width: 100%;
+  height: 36px;
+  align-items: center;
+  gap: 12px;
+  margin-top: 13px;
+  padding: 0 12px;
+  border-radius: var(--radius-full);
+  background: #f3ece0;
+  color: var(--color-text);
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.recommendation:disabled {
+  cursor: default;
+}
+
+.recommendation strong {
+  flex: none;
+  color: var(--color-accent);
+  font-weight: var(--font-weight-semibold);
+}
+
+.recommendationText {
+  display: block;
+  height: 21px;
+  min-width: 0;
+  font-weight: var(--font-weight-light);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.categories {
+  display: flex;
+  height: 40px;
+  margin-top: 16px;
+  border: 1px solid var(--color-accent);
+}
+
+.categories button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0 2px;
+  border-right: 1px solid var(--color-accent);
+  color: var(--color-accent);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+  white-space: nowrap;
+}
+
+.categories button:last-child {
+  border-right: 0;
+}
+
+.categories button:disabled {
+  cursor: default;
+}
+
+.categories .categoryActive {
+  background: var(--color-accent);
+  color: var(--color-white);
+}
+
+/* 목록 자리: 한 탭 4행(50px × 4 + 사이 2px × 3)을 늘 잡아 둔다 — 로딩·빈 탭·탭 전환에 버튼이 움직이지 않게 */
+.listBox {
+  display: flex;
+  min-height: 206px;
+  flex-direction: column;
+  margin-top: 8px;
+}
+
+.actionList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.action,
+.actionSelected,
+.focusRow,
+.rowSkeleton {
+  display: flex;
+  min-height: 50px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 18px;
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.action {
+  background: var(--color-bg);
+  color: var(--color-black-1);
+  font-weight: var(--font-weight-light);
+}
+
+.actionSelected,
+.focusRow {
+  background: var(--color-accent);
+  color: var(--color-white);
+  font-weight: var(--font-weight-medium);
+}
+
+/* 돌봄 중·완료: 고른 행동 하나만(290:491) */
+.focusRow {
+  margin-top: 31px;
+}
+
+.doneLabel {
+  flex: none;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+}
+
+.rowSkeleton {
+  justify-content: flex-start;
+}
+
+.bar,
+.barInline {
+  display: block;
+  height: 12px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-border-subtle);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.barInline {
+  display: inline-block;
+  width: 140px;
+  vertical-align: middle;
+}
+
+.boxMessage {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+  text-align: center;
+  white-space: pre-line;
+}
+
+.submit {
+  margin-top: 32px;
+}
+
+.submitFocused {
+  margin-top: 31px;
+}
+
+.submit[aria-disabled='true'],
+.submitFocused[aria-disabled='true'] {
+  cursor: default;
+}
+
+/* 버튼 아래 안내 자리. 높이를 잡아 두지 않아도 위쪽은 움직이지 않지만, 페이지 높이가 덜 바뀌게 한 줄 + 링크 자리를 둔다 */
+.feedback {
+  display: flex;
+  min-height: 60px;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.error {
+  color: var(--color-error);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+  text-align: center;
+}
+
+.links {
+  display: flex;
+  gap: 16px;
+}
+
+.textButton {
+  color: var(--color-gray-2);
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.textButton:disabled {
+  color: var(--color-text-muted);
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badgeSkeleton,
+  .bar,
+  .barInline {
+    animation: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .categories button {
+    font-size: var(--font-size-small);
+  }
+
+  .recommendation {
+    gap: 6px;
+    padding: 0 9px;
+  }
+}
