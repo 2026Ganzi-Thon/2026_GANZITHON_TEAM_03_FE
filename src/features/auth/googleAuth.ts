@@ -1,17 +1,9 @@
 import type { GoogleLoginRequest, GoogleLoginResponse } from '@/shared/types'
 import { api, hasErrorCode, setAccessToken } from '@/shared/api'
+import { consentVersions } from './consent'
+import type { SignupConsent } from './consent'
 
-const consentVersions = {
-  termsVersion: import.meta.env.VITE_TERMS_VERSION || 'v1',
-  privacyVersion: import.meta.env.VITE_PRIVACY_VERSION || 'v1',
-  marketingVersion: import.meta.env.VITE_MARKETING_VERSION || 'v1',
-}
-
-export interface GoogleSignupConsent {
-  termsAgreed: true
-  privacyAgreed: true
-  marketingAgreed: boolean
-}
+export type GoogleSignupConsent = SignupConsent
 
 export interface GoogleLoginChallenge {
   nonce: string

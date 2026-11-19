@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { useCompleteInitialProfile } from '@/features/account'
+import { COMMON_INVALID_REQUEST, USER_NICKNAME_DUPLICATED, useCompleteInitialProfile } from '@/features/account'
+import { hasErrorCode } from '@/shared/api'
 import { BackButton, Button, Checkbox, Icon, Select, TextField } from '@/shared/ui'
 import styles from './InitialSetupPage.module.css'
 
@@ -14,6 +15,8 @@ export interface InitialSetupValues {
   channels: Record<ChannelKey, boolean>
 }
 
+const channelLabels: Record<ChannelKey, string> = { push: '앱 PUSH', email: '이메일', sms: 'SMS/MMS' }
+
 const consentLabels: Record<ConsentKey, { marker: string; label: string }> = {
   terms: { marker: '필수', label: '서비스 이용약관' },
   privacy: { marker: '필수', label: '개인정보 처리방침' },
@@ -24,12 +27,16 @@ export interface InitialSetupPageProps {
   onBack: () => void
   onLogin: () => void
   onComplete: (values: InitialSetupValues) => void | Promise<void>
+  /** 프로필 저장 전에 할 일(가입 등). false 면 멈춘다 */
   onBeforeComplete?: (values: InitialSetupValues) => boolean | Promise<boolean>
-  onCheckNickname?: (nickname: string) => Promise<boolean>
+  /** 닉네임 사용 가능 여부. null 이면 아직 확인할 수 없음(가입 전이라 토큰 없음) — 저장할 때 서버가 확인한다 */
+  onCheckNickname?: (nickname: string) => Promise<boolean | null>
   requiresConsent?: boolean
   consentNotice?: string
   isSubmitting?: boolean
   submissionError?: string
+  /** 제출 오류 아래에 붙는 이어갈 동작(예: 인증 메일 다시 받기) */
+  submissionAction?: { label: string; onClick: () => void }
 }
 
 export default function InitialSetupPage({
@@ -42,6 +49,7 @@ export default function InitialSetupPage({
   consentNotice,
   isSubmitting = false,
   submissionError = '',
+  submissionAction,
 }: InitialSetupPageProps) {
   const profile = useCompleteInitialProfile()
   const [nickname, setNickname] = useState('')
@@ -81,8 +89,15 @@ export default function InitialSetupPage({
 
     const values: InitialSetupValues = { nickname: nickname.trim(), ageGroup: age, consents, channels }
     if (onBeforeComplete && !(await onBeforeComplete(values))) return
-    if (!(await profile.submit({ nickname: values.nickname, ageGroup: age }))) {
-      setFormError('프로필을 저장하지 못했어요. 잠시 뒤 다시 시도해주세요.')
+    const saved = await profile.submit({ nickname: values.nickname, ageGroup: age })
+    if (!saved.ok) {
+      if (hasErrorCode(saved.error, USER_NICKNAME_DUPLICATED)) {
+        setNicknameMessage('이미 사용 중인 닉네임이에요. 다른 닉네임을 입력해주세요.')
+      } else if (hasErrorCode(saved.error, COMMON_INVALID_REQUEST)) {
+        setNicknameMessage('닉네임은 한글·영문·숫자·_ 2~8자로 입력해주세요.')
+      } else if (saved.error !== undefined) {
+        setFormError('프로필을 저장하지 못했어요. 잠시 뒤 다시 시도해주세요.')
+      }
       return
     }
     await onComplete(values)
@@ -101,7 +116,13 @@ export default function InitialSetupPage({
     setNicknameChecking(true)
     try {
       const available = await onCheckNickname(value)
-      setNicknameMessage(available ? '사용할 수 있는 닉네임이에요.' : '이미 사용 중인 닉네임이에요.')
+      setNicknameMessage(
+        available === null
+          ? '회원가입을 누르면 닉네임 중복도 함께 확인해요.'
+          : available
+            ? '사용할 수 있는 닉네임이에요.'
+            : '이미 사용 중인 닉네임이에요.',
+      )
     } catch {
       setNicknameMessage('중복 확인을 하지 못했어요. 다시 시도해주세요.')
     } finally {
@@ -183,7 +204,11 @@ export default function InitialSetupPage({
               <div className={styles.consentRow} key={key}>
                 <Checkbox
                   checked={consents[key]}
-                  onChange={(event) => setConsents((current) => ({ ...current, [key]: event.currentTarget.checked }))}
+                  onChange={(event) => {
+                    // 업데이트 함수는 나중에 실행돼 그때는 event.currentTarget 이 null — 값을 먼저 읽는다
+                    const checked = event.currentTarget.checked
+                    setConsents((current) => ({ ...current, [key]: checked }))
+                  }}
                 >
                   <span className={key === 'marketing' ? styles.optional : styles.required}>
                     [{consentLabels[key].marker}]
@@ -200,15 +225,33 @@ export default function InitialSetupPage({
 
           <p className={styles.channelHeading}>수신 방법</p>
           <div className={styles.channels}>
-            <Checkbox checked={channels.push} onChange={(event) => setChannels((current) => ({ ...current, push: event.currentTarget.checked }))}>앱 PUSH</Checkbox>
-            <Checkbox checked={channels.email} onChange={(event) => setChannels((current) => ({ ...current, email: event.currentTarget.checked }))}>이메일</Checkbox>
-            <Checkbox checked={channels.sms} onChange={(event) => setChannels((current) => ({ ...current, sms: event.currentTarget.checked }))}>SMS/MMS</Checkbox>
+            {(Object.keys(channelLabels) as ChannelKey[]).map((key) => (
+              <Checkbox
+                key={key}
+                checked={channels[key]}
+                onChange={(event) => {
+                  const checked = event.currentTarget.checked
+                  setChannels((current) => ({ ...current, [key]: checked }))
+                }}
+              >
+                {channelLabels[key]}
+              </Checkbox>
+            ))}
           </div>
         </section>}
 
       </form>
 
-      {(formError || submissionError) && <p className={styles.formError} role="alert">{formError || submissionError}</p>}
+      {(formError || submissionError) && (
+        <p className={styles.formError} role="alert">
+          {formError || submissionError}
+          {!formError && submissionAction && (
+            <button className={styles.errorAction} type="button" onClick={submissionAction.onClick}>
+              {submissionAction.label}
+            </button>
+          )}
+        </p>
+      )}
       <Button className={styles.submit} variant="primary" size="lg" fullWidth type="submit" form="setup-form" disabled={isSubmitting || profile.state.status === 'submitting'}>
         회원가입
       </Button>

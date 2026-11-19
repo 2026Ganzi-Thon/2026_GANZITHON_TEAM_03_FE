@@ -1,19 +1,19 @@
-# shared/mock — 가짜 DB
+# shared/mock — 섬 꾸미기 가짜 DB
 
-실제 API 가 붙기 전까지 **서버 DB 역할**을 한다. 기능마다 따로 있던 mock 을 한곳에 모아서
-닉네임·양털·감정 기록·고민(위로할 고민·내가 쓴 고민)·섬 꾸미기 보유 가구·휴식 세션이 화면 사이에서 이어지고, 새로고침해도 남는다.
+다른 기능은 실제 백엔드 API 에 연결됐고, **섬 꾸미기만** 백엔드 API 가 없어 여기 남았다.
+섬 꾸미기에서 산 아이템 ID 만 이 기기의 `localStorage['polly.mockDb']` 에 `{ version: 5, ownedItemIds }` 로 저장한다.
 
-- 상태 하나를 메모리에 두고 쓸 때마다 `localStorage['polly.mockDb']` 에 `{ version, ...state }` 로 저장한다.
-  처음 쓸 때 불러오고, 읽지 못하거나 `version` 이 다르면 시드(`seed.ts`)로 다시 시작한다.
+- 아이템 목록(이름·값·그림)은 그림 import 가 있어 `features/island/islandApi.ts` 상수.
+- 양털 잔액은 서버 값(`GET /wool-wallet`)을 보여준다. 서버 양털을 깎을 수 없어서 구매는 잔액이 값 이상인지만 확인하고 차감하지 않는다.
+- 이전 형식(버전 1~4, 감정·고민·휴식까지 흉내 내던 통합 가짜 DB)의 산 아이템은 이어받는다.
+- 기기에 저장하므로 계정과 상관없다(같은 기기에서 계정을 바꿔도 산 가구가 남는다).
 - storage 를 못 쓰면(사파리 비공개 모드 등) 메모리로만 동작한다.
-- 시드의 "N일 전" 날짜는 시드를 만들 때 한 번 계산해 절대 날짜로 저장한다.
-- 주소에 `?reset` 을 붙여 열면 이 DB 와 시작 흐름 기록을 지운다(`app/resetDemo.ts`).
+- 주소에 `?reset` 을 붙여 열면 산 아이템과 온보딩 본 기록을 지운다(`app/resetDemo.ts`).
 
 ## 누가 import 하나
 
-**기능의 `*Api.ts`(와 `shared/wool/woolApi.ts`)만.** 예외는 `app/resetDemo.ts` 의 `resetMockDb` 하나.
-컴포넌트·훅·쿼리는 import 하지 않는다.
+`features/island/islandApi.ts` 만. 예외는 `app/resetDemo.ts` 의 `resetMockIsland` 하나.
 
 ## API 연결 때
 
-각 `*Api.ts` 함수 본문을 `api.get/post…` 호출로 바꾸고 `app/resetDemo.ts` 를 지우면 이 폴더는 통째로 지울 수 있다.
+섬 꾸미기 API 가 생기면 `islandApi.ts` 본문을 호출로 바꾸고(그 파일의 `TODO(API 연결)`), `app/resetDemo.ts` 의 초기화를 지우면 이 폴더는 통째로 지울 수 있다.

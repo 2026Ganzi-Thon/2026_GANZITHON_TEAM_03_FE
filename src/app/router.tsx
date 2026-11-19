@@ -20,6 +20,7 @@ import {
   SignupRoute,
   SplashRoute,
   TabLayout,
+  VerifyEmailRoute,
   WoolCollectionRoute,
 } from './routes'
 
@@ -33,6 +34,8 @@ export const router = createBrowserRouter([
       { path: 'onboarding', element: <OnboardingRoute /> },
       { path: 'login', element: <LoginRoute /> },
       { path: 'signup', element: <SignupRoute /> },
+      // 메일 인증 링크(백엔드 FRONTEND_ORIGIN/verify-email#token=…) — 가입 전이라 가드 밖
+      { path: 'verify-email', element: <VerifyEmailRoute /> },
       { path: 'setup', element: <SetupRoute /> },
       // 앱 화면 — 시작 흐름 통과 전이면 /splash 로
       {
